@@ -7,3 +7,4 @@ AGENTS.md
 .wasp/
 node_modules/
 dist/
+!.env.*.example
