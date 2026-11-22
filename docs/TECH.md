@@ -1,14 +1,14 @@
 # Technical plan: user-interview agent
 
-High-level plan for the idea in [IDEA.md](IDEA.md). It names the parts, how they connect, and who can build what in parallel. It is not a line-by-line spec.
+High-level plan for the idea in [IDEA.md](IDEA.md). It names the parts, how they connect, and who builds what. Files and owners are in [OWNERSHIP.md](OWNERSHIP.md).
 
-Facts marked **verified** were checked against the Wasp 0.26 and ElevenLabs docs on 2026-11-22. Anything marked **check** is an assumption to confirm in the first 30 minutes.
+Each section says what exists in the skeleton today and what is planned. Facts marked **verified** were checked against the Wasp 0.26 docs or the ElevenLabs SDK source on 2026-11-22; **check** means not confirmed yet.
 
 ## System at a glance
 
 ```mermaid
 flowchart LR
-  F[Founder<br/>laptop browser] -->|sign up, create study| W[Wasp app<br/>React client + Node server]
+  F[Founder<br/>laptop browser] -->|create study| W[Wasp app<br/>React client + Node server]
   W -->|suggest questions,<br/>synthesize report| L[LLM API]
   W --> DB[(Postgres<br/>via Prisma)]
   P[Participant<br/>phone browser] -->|opens /i/:studyId| W
@@ -17,13 +17,11 @@ flowchart LR
   F -->|reads report,<br/>plays quote clips| W
 ```
 
-Two outside services, one app:
-
 | Part | Does | Owner of the hard part |
 | --- | --- | --- |
-| **Wasp app** | Auth, pages, database, background job | Us |
+| **Wasp app** | Pages, database, background job | Us |
 | **ElevenLabs agent** | The whole spoken interview: listening, follow-ups, speaking | ElevenLabs |
-| **LLM API** | Writes the questions; turns a transcript into themes and quotes | LLM provider |
+| **LLM API** | Writes the questions; turns a transcript into themes and quotes | LLM provider (not chosen yet) |
 
 ## The agent loop
 
@@ -35,13 +33,13 @@ sequenceDiagram
   participant P as Participant phone
   participant E as ElevenLabs agent
 
-  F->>W: createStudy(productUrl, goal)
+  F->>W: add product context (website, description, PDF, MCP)
   W->>L: suggest 3 to 5 questions
   L-->>W: questions
-  W-->>F: questions page (editable) + QR code
+  W-->>F: questionnaire page (editable) + QR code
   P->>W: open /i/:studyId
   W-->>P: study questions
-  P->>E: start voice session (questions passed in)
+  P->>E: start voice session (questions as dynamic variables)
   E-->>P: spoken interview with follow-ups
   P->>W: finishInterview(studyId, conversationId)
   W->>W: enqueue processInterview job
@@ -52,92 +50,87 @@ sequenceDiagram
 
 No human acts between "create study" and "report updates". That is the theme: one agent doing the researcher's whole job.
 
-## Data model
+## What the skeleton has today
+
+- **Pages**: Knowledge base (`/` and `/knowledge`), Questionnaire (`/questionnaire`), Report (`/report`, empty states only).
+- **Server actions**: `importWebsite` scrapes a public URL; `importMcp` reads text resources from an MCP server. PDF text is extracted in the browser.
+- **State**: one study, held in browser storage (`src/store.ts`). Nothing is in the database yet.
+- **Database**: SQLite with no tables.
+- **Auth**: none.
+- **Starter questions**: `starterQuestions` in `src/store.ts` fills in template questions; track 3 replaces it with the LLM.
+
+## Data model (planned, track 1)
 
 ```mermaid
 erDiagram
-  User ||--o{ Study : owns
   Study ||--o{ Question : has
   Study ||--o{ Interview : collects
   Interview ||--o{ Quote : yields
   Study ||--o{ Theme : summarizes
   Theme ||--o{ Quote : groups
 
-  Study { string id string productUrl string goal }
-  Question { string id string text int order }
+  Study { string id string name string goal string audience string context }
+  Question { string id string text int order bool followUp }
   Interview { string id string conversationId string status string audioUrl }
   Theme { string id string label int count }
   Quote { string id string text float startSec float endSec }
 ```
 
+- `Study.context` is the joined text of the knowledge sources.
 - `Interview.status` moves `started` → `processing` → `done` (or `failed`).
 - `Quote.startSec` is the offset into that interview's audio. A quote clip is the full audio played from that offset, so no audio is cut on the server.
-- The schema is append-only once the skeleton lands: add fields and tables, never rename or reorder.
+- The demo needs at least two studies, the judge's and the hall study, so the study leaves browser storage and gets an ID.
+- The schema is append-only: add fields and tables, never rename or reorder.
 
 ## Wasp pieces
 
-| Wasp feature | Used for | Notes |
+| Wasp feature | Used for | Status |
 | --- | --- | --- |
-| `main.wasp.ts` | Declares routes, pages, auth, operations, the job | **Verified**: 0.26 uses a TypeScript config file |
-| Auth | Founder sign-up and login | Username and password. Email auth sends nothing in dev (**check**) |
-| Entities (`schema.prisma`) | The data model above | **Verified** |
-| Queries | `getStudies`, `getStudy`, `getReport`, `getPublicStudy` | `getPublicStudy` needs no login: participants don't sign up |
-| Actions | `createStudy`, `updateQuestions`, `finishInterview` | `finishInterview` needs no login |
-| Job | `processInterview` | **Verified**: jobs run on PgBoss and need Postgres, not the default SQLite |
-| API route | Only if we switch to the ElevenLabs post-call webhook | Not needed in the default plan |
+| `main.wasp.ts` | Routes, operations, the job | Exists. **Verified**: 0.26 uses a TypeScript config file |
+| `schema.prisma` | The data model above | Exists, empty, SQLite. Switch to Postgres |
+| Queries | `getPublicStudy`, `getReport`, and whatever track 1 needs to load a study | Planned. No login on any of them |
+| Actions | `importWebsite`, `importMcp` exist; `createStudy`, `updateQuestions`, `finishInterview` planned | `finishInterview` is called from the phone |
+| Job | `processInterview` | Planned. **Verified**: jobs run on PgBoss and need Postgres |
+| API route | Serves quote audio by proxying "get conversation audio", so the ElevenLabs key stays on the server | Planned |
+| Auth | Not used | Sign-up is nice-to-have in IDEA.md |
 
-**Database**: Postgres from the first commit, because the job needs it. Use `wasp start db` (needs Docker) or a hosted Postgres connection string in `.env.server` as `DATABASE_URL`.
+**Database**: the local Postgres on port 5432 works; set `DATABASE_URL` in `.env.server`. `wasp start db` also works but needs Docker.
 
-**Install**: `npm i -g @wasp.sh/wasp-cli@latest` (**verified**). Wasp also ships a coding-agent plugin: `claude plugin install wasp@wasp-agent-plugins --scope project`.
+**Run it**: Node 24.22.1 or newer (`nvm use 24.22.3`), Wasp CLI 0.26.1, then `npm run dev` (client on 3002, server on 3003). `npm run check` runs `wasp compile`, which typechecks.
 
-## ElevenLabs pieces
+## ElevenLabs pieces (track 2, fetch helpers track 3)
 
-- **One agent, configured once** in the ElevenLabs dashboard. Its prompt has placeholders for the product, the goal, and the questions.
-- **Per-interview values**: the phone passes that study's questions in when it starts the session, using dynamic variables or overrides (**check** which one the React SDK takes; both exist in the docs).
-- **Client**: `@elevenlabs/react` `useConversation` with `startSession`, `onDisconnect`, and `getId` for the conversation ID (**verified** these exist).
-- **After the call**: the server calls "get conversation details" for the transcript and "get conversation audio" for the recording (**verified** both endpoints exist). The transcript may take a few seconds to appear, so the job retries.
+- **One agent, configured once** in the ElevenLabs dashboard. Its prompt uses the dynamic variables `product_url`, `goal`, and `questions` (types in `src/contract.ts`).
+- **Per-interview values**: the phone passes them to `startSession` as `dynamicVariables`. **Verified** in the SDK source; this needs no overrides enabled on the agent.
+- **Client**: `@elevenlabs/react` `useConversation` with `startSession`, `onDisconnect`, and `getId` for the conversation ID. **Verified**.
+- **After the call**: the server calls "get conversation details" for the transcript and "get conversation audio" for the recording. Each transcript turn has `time_in_call_secs` (**verified**), which gives quotes their start time. The transcript may take a few seconds to appear, so the job retries.
 - **API key** stays on the server in `.env.server`. It never reaches the phone.
 
 ## Pages
 
-| Route | Who | Shows |
-| --- | --- | --- |
-| `/login`, `/signup` | Founder | Wasp auth forms |
-| `/` | Founder | List of studies, "new study" form (URL + goal) |
-| `/study/:id/questions` | Founder | Suggested questions, editable; link and QR code |
-| `/study/:id/report` | Founder | Interviews completed, themes with counts, quotes with play buttons |
-| `/i/:studyId` | Participant | Start button, the on-screen character slot, live interview |
+| Route | Who | Shows | Status |
+| --- | --- | --- | --- |
+| `/`, `/knowledge` | Founder | Product context sources | Exists |
+| `/questionnaire` | Founder | Goal, audience, editable questions; later the link and QR code | Exists |
+| `/report` | Founder | Interviews completed, themes with counts, quotes with play buttons | Empty states only |
+| `/i/:studyId` | Participant | Start button, the character, the live interview | Planned, track 2 |
 
-The character is one React component on `/i/:studyId` that receives "is the agent speaking" as a prop. Swapping or removing it must not touch the interview logic.
+How the founder routes carry a study ID is track 1's call.
+
+The character is one React component on `/i/:studyId` that takes `speaking` as a prop. Swapping or removing it must not touch the interview logic.
 
 ## Code layout
 
-One folder per concern, so each person edits their own files:
+See the file tree in [OWNERSHIP.md](OWNERSHIP.md). The three files in `src/agent/` take plain inputs and return plain objects, with no Wasp imports, so they move to another stack unchanged.
 
-```text
-main.wasp.ts            shared: routes, auth, operations, job (one owner)
-schema.prisma           shared: data model (one owner)
-src/study/              founder pages + createStudy, updateQuestions
-src/interview/          participant page, useConversation, finishInterview
-src/report/             report page + getReport
-src/agent/suggestQuestions.ts     plain TypeScript, no Wasp imports
-src/agent/synthesizeInterview.ts  plain TypeScript, no Wasp imports
-src/agent/elevenlabsClient.ts     transcript + audio fetch
-src/character/          the on-screen character component
-```
-
-The three files in `src/agent/` take plain inputs and return plain objects. If we leave Wasp, they move to another stack unchanged.
-
-## Who builds what, in parallel
+## Tracks
 
 | Track | Work | Depends on |
 | --- | --- | --- |
-| **A. Wasp skeleton** | Install, auth, schema, empty pages, the job wiring, phone reaches the app over HTTPS | Nothing |
-| **B. Voice interview** | ElevenLabs agent prompt, `/i/:studyId` talking on a phone, conversation ID captured | Nothing (can start in a bare page) |
-| **C. Agent brains** | `suggestQuestions`, `synthesizeInterview`, tested on a pasted transcript | Nothing |
-| **D. Report + character** | Report page from fixture data, quote play buttons, the character | The data model |
-
-Tracks B and C need no Wasp, so they are safe whichever stack we end on.
+| **1. Data and wiring** | Postgres, tables, study in the database, operations, job, audio route, deploy | Nothing |
+| **2. Voice interview** | ElevenLabs agent, `/i/:studyId` on a phone, conversation ID captured, QR code | Track 1's `getPublicStudy` and `finishInterview`; hardcoded questions until then |
+| **3. Agent brains** | `suggestQuestions`, `synthesizeInterview`, `elevenlabsClient`, tested on a pasted transcript | Nothing |
+| **4. Report and character** | Report page from fixture data shaped like `ReportView`, quote playback, the character | Track 1's `getReport`; fixtures until then |
 
 ## Reaching the app from a phone
 
@@ -149,9 +142,9 @@ The phone needs HTTPS for the microphone, and Wasp dev runs the client and serve
 ## Risks, in order
 
 1. **Interview in a loud hall.** Test one real phone interview before building anything else. Fallback: push-to-talk.
-2. **Wasp is new to all of us.** The 30-minute check in [IDEA.md](IDEA.md) decides. Fallback: the same design on a stack we know; tracks B and C carry over.
-3. **Two-port tunnels.** The most likely place to lose time. Fallback: deploy early.
-4. **Transcript not ready when the job runs.** The job retries a few times before marking the interview `failed`.
+2. **Two-port tunnels.** The most likely place to lose time. Fallback: deploy early.
+3. **Transcript not ready when the job runs.** The job retries a few times before marking the interview `failed`.
+4. **No LLM provider or key yet.** Blocks track 3.
 5. **The character eats time.** It is last, and optional.
 
 ## Not building
