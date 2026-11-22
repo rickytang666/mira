@@ -53,31 +53,33 @@ If the transcripts only contain greetings, irrelevant text, or refusals, return 
     if (themeIds.has(labelKey)) throw new Error('The report returned duplicate themes. Try again.');
     const id = `theme-${themeIndex + 1}`;
     themeIds.set(labelKey, id);
-    if (!Array.isArray(theme.evidence) || !theme.evidence.length || theme.evidence.length > calls.length * 2) throw new Error('A report theme has no valid supporting evidence. Try again.');
+    if (!Array.isArray(theme.evidence) || !theme.evidence.length) throw new Error('A report theme has no valid supporting evidence. Try again.');
     const seen = new Set<string>();
     const supportingCalls = new Set<string>();
-    const quotes = theme.evidence.flatMap(value => {
+    // The model sometimes cites one turn too many; trimming keeps the report instead of failing the whole interview.
+    const quotes = theme.evidence.slice(0, calls.length * 2).flatMap(value => {
       const evidence = object(value);
       const call = calls.find(call => call.id === evidence.callId);
       const turn = call?.turns.find(turn => turn.id === evidence.turnId && turn.role === 'user');
-      if (!call || !turn) throw new Error('The report cited a missing call or non-participant statement. Try again.');
+      if (!call || !turn) return [];
       const quoteId = JSON.stringify([call.id, turn.id]);
       if (seen.has(quoteId)) return [];
       seen.add(quoteId); supportingCalls.add(call.id);
       return [{ id: quoteId, text: turn.text, startSec: turn.startSec ?? 0, untimed: turn.startSec === null, endSec: turn.endSec ?? undefined, interviewId: call.id, participantLabel: call.title, audioUrl: '' }];
     });
+    if (!quotes.length) throw new Error('A report theme has no valid supporting evidence. Try again.');
     return { id, label, summary: requiredText(theme.summary, 1000), count: supportingCalls.size, quotes };
   }).sort((a, b) => b.count - a.count);
   if (!Array.isArray(raw.recommendations) || raw.recommendations.length > 3) throw new Error('The report returned invalid next steps. Try again.');
-  const recommendations = raw.recommendations.map(value => {
+  const recommendations = raw.recommendations.flatMap(value => {
     const recommendation = object(value);
-    if (!Array.isArray(recommendation.themeLabels) || recommendation.themeLabels.length < 1 || recommendation.themeLabels.length > 5) throw new Error('A next step is missing supporting themes.');
-    const ids = recommendation.themeLabels.map(label => {
+    const labels = Array.isArray(recommendation.themeLabels) ? recommendation.themeLabels.slice(0, 5) : [];
+    const ids = labels.flatMap(label => {
       const id = typeof label === 'string' ? themeIds.get(label.toLowerCase().trim().replace(/\s+/g, ' ')) : undefined;
-      if (!id) throw new Error('A next step cites a theme that is not in the report.');
-      return id;
+      return id ? [id] : [];
     });
-    return { text: requiredText(recommendation.text, 600), themeIds: [...new Set(ids)] };
+    // A next step with no theme behind it is dropped rather than failing the report.
+    return ids.length ? [{ text: requiredText(recommendation.text, 600), themeIds: [...new Set(ids)] }] : [];
   });
   const findings = raw.questionFindings ?? [];
   if (!Array.isArray(findings) || findings.length !== questions.length) throw new Error('The report did not address each research question. Try again.');
@@ -90,13 +92,13 @@ If the transcripts only contain greetings, irrelevant text, or refusals, return 
     if (!['answered', 'partial', 'unanswered'].includes(String(finding.status))) throw new Error('Invalid research question status.');
     const status = finding.status as 'answered' | 'partial' | 'unanswered';
     if (!Array.isArray(finding.themeLabels)) throw new Error('Research question findings need evidence references.');
-    const ids = finding.themeLabels.map(label => {
+    // Model citation slips are repaired instead of failing the whole report: unknown labels drop, status follows the evidence.
+    const ids = finding.themeLabels.flatMap(label => {
       const id = typeof label === 'string' ? themeIds.get(label.toLowerCase().trim().replace(/\s+/g, ' ')) : undefined;
-      if (!id) throw new Error('A question finding cites a missing theme.');
-      return id;
+      return id ? [id] : [];
     });
-    if ((status === 'unanswered' && ids.length > 0) || (status !== 'unanswered' && ids.length === 0)) throw new Error('Question status does not match its supporting evidence.');
-    return { question: questions[index], status, finding: requiredText(finding.finding, 1000), themeIds: [...new Set(ids)], index };
+    const repairedStatus: typeof status = status === 'unanswered' ? (ids.length ? 'partial' : 'unanswered') : (ids.length ? status : 'unanswered');
+    return { question: questions[index], status: repairedStatus, finding: requiredText(finding.finding, 1000), themeIds: [...new Set(ids)], index };
   }).sort((a, b) => a.index - b.index).map(({ index, ...finding }) => finding);
   return { ...base, summary: requiredText(raw.summary, 2400), themes, recommendations, questionFindings };
 }
