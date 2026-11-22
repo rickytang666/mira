@@ -10,8 +10,14 @@ Mira is a user researcher you can hire in a minute. Give her your product's URL 
 
 ## Built with
 
-- **ElevenLabs** Conversational AI runs the spoken interview; its transcripts and recordings feed the report.
-- **Wasp** (React, Node.js, Prisma, PostgreSQL) for the app, the data and the background job that builds each report.
+- **ElevenLabs Conversational AI** runs every interview:
+  - one voice agent, given each study's product, goal and questions as dynamic variables when the call starts
+  - expressive speech, natural follow-ups, and the `end_call` tool so Mira ends the interview herself
+  - after the call, the transcript with per-turn timestamps and the recording, which let each quote play from the moment it was said
+- **Wasp** is the full stack:
+  - React pages, operations and auth-free participant links on Prisma and PostgreSQL
+  - a PgBoss background job that processes each finished interview, with retries
+  - a custom API route that serves recordings with byte ranges, so the player can seek to a quote
 - **OpenRouter** (Gemini 2.5 Flash) writes the questions and synthesizes the report.
 
 ## Run it locally
