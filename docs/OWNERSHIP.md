@@ -19,16 +19,17 @@ schema.prisma              1    data model, append-only
 package.json + lock file   1    installs every dependency; regenerate the lock, never merge it
 .gitignore, .env.*.example 1    new env variables: ask track 1 to append a line
 docs/                      all  IDEA.md, TECH.md, this file
+scripts/, migrations/      1    tunnels; Prisma migrations
 src/
   contract.ts              3    types that cross tracks; a change is a team announcement
   Layout.tsx, Main.css     1    sidebar, page header, shared styles
-  store.ts                 1    study held in browser storage today; replaced by the database
+  store.ts                 1    template questions and source kinds (browser storage is legacy, report placeholder only)
   sources.ts               1    website and MCP import (server actions)
-  study/                   1    KnowledgePage, QuestionnairePage
+  study/                   1    NewStudyPage, KnowledgePage, QuestionnairePage, operations.ts (all server operations)
   interview/  (new)        2    /i/:studyId, useConversation, finishInterview call
   agent/      (new)        3    suggestQuestions, synthesizeInterview
   report/                  3    ReportPage, quote playback
-  jobs/       (new)        1    processInterview, elevenlabsClient (transcript + audio fetch)
+  jobs/                    1    processInterview, elevenlabsClient, interviewAudio (audio API)
   character/  (new)        4    the character, one component with a `speaking` prop; track 2 mounts it
 ElevenLabs dashboard agent 2    prompt, voice, dynamic variables
 ```

@@ -50,16 +50,15 @@ sequenceDiagram
 
 No human acts between "create study" and "report updates". That is the theme: one agent doing the researcher's whole job.
 
-## What the skeleton has today
+## What exists today
 
-- **Pages**: Knowledge base (`/` and `/knowledge`), Questionnaire (`/questionnaire`), Report (`/report`, empty states only).
-- **Server actions**: `importWebsite` scrapes a public URL; `importMcp` reads text resources from an MCP server. PDF text is extracted in the browser.
-- **State**: one study, held in browser storage (`src/store.ts`). Nothing is in the database yet.
-- **Database**: SQLite with no tables.
-- **Auth**: none.
-- **Starter questions**: `starterQuestions` in `src/store.ts` fills in template questions; track 3 replaces it with the LLM.
+- **Pages**: `/` creates a study from a URL and a goal (or a description) and lists studies. `/study/:studyId/knowledge` and `/study/:studyId/questionnaire` read and write the database; the questionnaire shows the interview link and QR code. `/study/:studyId/report` is mounted but still shows the skeleton's placeholder (track 3).
+- **Operations** (`src/study/operations.ts`): `createStudy`, `getStudies`, `getStudy`, `updateStudy`, `addSource`, `deleteSource`, `getPublicStudy`, `finishInterview`, `getReport`, plus the skeleton's `importWebsite` and `importMcp` in `src/sources.ts`. No login on any of them.
+- **Job and audio** (`src/jobs/`): `processInterview` polls ElevenLabs until the transcript is ready, writes themes and quotes, and marks the interview `done` or `failed`. `GET /api/interviews/:interviewId/audio` serves the recording with byte ranges, so the player can seek.
+- **Seams for track 3**: `suggestQuestions` in `operations.ts` returns template questions, and `synthesizeInterview` in `processInterview.ts` turns each long answer into a quote under one theme. Each becomes one import from `src/agent/` when the LLM versions land.
+- **Verified**: the founder flow in the browser through the HTTPS tunnel, and the job, report and audio ranges against a local fake ElevenLabs server. **Not yet verified**: a real ElevenLabs conversation, which needs `ELEVENLABS_API_KEY` and track 2's interview page.
 
-## Data model (planned, track 1)
+## Data model
 
 ```mermaid
 erDiagram
@@ -68,33 +67,34 @@ erDiagram
   Interview ||--o{ Quote : yields
   Study ||--o{ Theme : summarizes
   Theme ||--o{ Quote : groups
+  Study ||--o{ Source : knows
 
   Study { string id string name string goal string audience string context }
   Question { string id string text int order bool followUp }
-  Interview { string id string conversationId string status string audioUrl }
+  Interview { string id string conversationId string status float durationSecs }
   Theme { string id string label int count }
   Quote { string id string text float startSec float endSec }
+  Source { string id string kind string title string content }
 ```
 
-- `Study.context` is the joined text of the knowledge sources.
-- `Interview.status` moves `started` → `processing` → `done` (or `failed`).
+- `Study.context` is the joined text of the study's `Source` rows, rebuilt on every source change.
+- `Interview.status` moves `processing` → `done` (or `failed`, with `error` set).
 - `Quote.startSec` is the offset into that interview's audio. A quote clip is the full audio played from that offset, so no audio is cut on the server.
-- The demo needs at least two studies, the judge's and the hall study, so the study leaves browser storage and gets an ID.
 - The schema is append-only: add fields and tables, never rename or reorder.
 
 ## Wasp pieces
 
 | Wasp feature | Used for | Status |
 | --- | --- | --- |
-| `main.wasp.ts` | Routes, operations, the job | Exists. **Verified**: 0.26 uses a TypeScript config file |
-| `schema.prisma` | The data model above | Exists, empty, SQLite. Switch to Postgres |
-| Queries | `getPublicStudy`, `getReport`, and whatever track 1 needs to load a study | Planned. No login on any of them |
-| Actions | `importWebsite`, `importMcp` exist; `createStudy`, `updateQuestions`, `finishInterview` planned | `finishInterview` is called from the phone |
-| Job | `processInterview` | Planned. **Verified**: jobs run on PgBoss and need Postgres |
-| API route | Serves quote audio by proxying "get conversation audio", so the ElevenLabs key stays on the server | Planned |
+| `main.wasp.ts` | Routes, operations, the job, the audio API | **Verified**: 0.26 uses a TypeScript config file |
+| `schema.prisma` | The data model above, on Postgres | Migrations in `migrations/` |
+| Queries | `getStudies`, `getStudy`, `getPublicStudy`, `getReport` | No login on any of them |
+| Actions | `createStudy`, `updateStudy`, `addSource`, `deleteSource`, `finishInterview`, `importWebsite`, `importMcp` | `finishInterview` is called from the phone |
+| Job | `processInterview` | **Verified**: jobs run on PgBoss and need Postgres |
+| API route | `GET /api/interviews/:interviewId/audio` | Keeps the ElevenLabs key on the server |
 | Auth | Not used | Sign-up is nice-to-have in IDEA.md |
 
-**Database**: the local Postgres on port 5432 works; set `DATABASE_URL` in `.env.server`. `wasp start db` also works but needs Docker.
+**Database**: the local Postgres on port 5432: `createdb fieldwork`, set `DATABASE_URL` in `.env.server`, then `wasp db migrate-dev`. `wasp start db` also works but needs Docker.
 
 **Run it**: Node 24.22.1 or newer (`nvm use 24.22.3`), Wasp CLI 0.26.1. Copy `.env.server.example` to `.env.server` and `.env.client.example` to `.env.client`, then `npm run dev` (client on 3002, server on 3003). `npm run check` runs `wasp compile`, which typechecks.
 
@@ -112,12 +112,11 @@ erDiagram
 
 | Route | Who | Shows | Status |
 | --- | --- | --- | --- |
-| `/`, `/knowledge` | Founder | Product context sources | Exists |
-| `/questionnaire` | Founder | Goal, audience, editable questions; later the link and QR code | Exists |
-| `/report` | Founder | Interviews completed, themes with counts, quotes with play buttons | Empty states only |
+| `/` | Founder | New study form (URL and goal), list of studies | Exists |
+| `/study/:studyId/knowledge` | Founder | The study's knowledge sources | Exists |
+| `/study/:studyId/questionnaire` | Founder | Goal, audience, editable questions, interview link and QR code | Exists |
+| `/study/:studyId/report` | Founder | Interviews completed, themes with counts, quotes with play buttons | Route exists; page is track 3's |
 | `/i/:studyId` | Participant | Start button, the character, the live interview | Planned, track 2 |
-
-How the founder routes carry a study ID is track 1's call.
 
 The character is one React component on `/i/:studyId` that takes `speaking` as a prop. Swapping or removing it must not touch the interview logic.
 
