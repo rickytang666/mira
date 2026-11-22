@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 import { ConversationProvider, useConversation } from '@elevenlabs/react';
-import { Mic, MicOff, PhoneOff, RotateCcw, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Mic, MicOff, PhoneOff, RotateCcw, AlertCircle, Check, Loader2 } from 'lucide-react';
 import { useQuery, getPublicStudy } from 'wasp/client/operations';
 import type { PublicStudy } from '../contract';
 import { reportFinished } from './finished';
@@ -106,13 +106,16 @@ function Interview({ study, muted, setMuted }: { study: PublicStudy; muted: bool
   const mouthOpen = useAgentMouth(speaking, conversation.getOutputVolume);
   const [gesture, setGesture] = useState(0);
   const shirtColor = useLogoBackground(study.logo ?? null);
+  // A small wave when the interview is submitted.
+  useEffect(() => { if (phase === 'done') setGesture(g => g + 1); }, [phase]);
   const productName = study.name || 'this product';
 
   return (
     <Shell>
       <div className="iv-stage" onPointerDown={() => setGesture(g => g + 1)}>
         <div className="iv-figure">
-          <CharacterCanvas mode={speaking ? 'speaking' : live ? 'listening' : 'idle'} mouthOpen={mouthOpen} mouthShape={mouthOpen > 0.15 ? 'aa' : 'rest'} gesture={gesture} shirtColor={shirtColor} />
+          {/* After the call she holds a wide smile ('ee' shape) as a thank-you. */}
+          <CharacterCanvas mode={speaking ? 'speaking' : live ? 'listening' : 'idle'} mouthOpen={phase === 'done' ? 0.45 : mouthOpen} mouthShape={phase === 'done' ? 'ee' : mouthOpen > 0.15 ? 'aa' : 'rest'} gesture={gesture} shirtColor={shirtColor} />
           {study.logo && <img className="iv-shirt-logo" src={study.logo} alt="" />}
         </div>
       </div>
@@ -133,10 +136,9 @@ function Interview({ study, muted, setMuted }: { study: PublicStudy; muted: bool
           </>
         )}
         {phase === 'done' && (
-          <div className="iv-done">
-            <CheckCircle2 size={22} />
-            <p>Thank you. Your answers are with the {productName} team.</p>
-            <button className="iv-link" onClick={() => setPhase('ready')}><RotateCcw size={14} />Start over</button>
+          <div className="iv-done" role="status" aria-label="Interview submitted">
+            <span className="iv-check"><Check size={34} strokeWidth={3} /></span>
+            <button className="iv-round" onClick={() => setPhase('ready')} aria-label="Start over"><RotateCcw size={22} /></button>
           </div>
         )}
       </div>

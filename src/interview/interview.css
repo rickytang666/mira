@@ -30,3 +30,5 @@
 .iv-mic:active:not(:disabled){transform:scale(.95)}
 .iv-mic:disabled{opacity:.85}
 .iv-mic:focus-visible,.iv-round:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.iv-done{flex-direction:row;gap:22px}
+.iv-check{width:78px;height:78px;border-radius:50%;background:#2f9e5b;color:#fff;display:grid;place-items:center;box-shadow:0 10px 28px #2f9e5b40}
