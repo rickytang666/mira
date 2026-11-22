@@ -380,6 +380,32 @@ nav{overflow-x:auto}
 .nav-study-name{font-weight:600;color:var(--ink)}
 .nav-study-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nav-sub{padding-left:22px;font-size:14px}
+
+/* Less chrome, more contrast: one large title per page, quiet everything else, hairline tiles. */
+.sidebar{background:var(--canvas);border-right:1px solid var(--line)}
+.nav-item{padding:9px 12px;gap:10px}
+.nav-item.selected{background:none;color:var(--ink);font-weight:600;box-shadow:inset 2px 0 0 var(--brand);border-radius:0 10px 10px 0}
+.nav-item:hover{background:var(--accent-soft)}
+.app h1,.page-heading h1{font-size:40px;line-height:1.1;letter-spacing:-.03em;font-weight:600}
+.page-heading{margin-bottom:56px}
+.page-heading p{margin-top:12px;font-size:16px}
+.section-heading{margin:64px 0 20px}
+.form-panel{margin-bottom:64px}
+.source-grid{gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.source-tile{border:0;border-right:1px solid var(--border);border-radius:0;background:none}
+.source-tile:last-child{border-right:0}
+.source-tile:hover{background:var(--surface-tint)}
+.source-icon{background:none;width:auto;height:auto;justify-content:start;color:var(--icon)}
+.next-step{background:none;border-top:1px solid var(--border);border-radius:0;padding:24px 0 0}
+@media(max-width:700px){
+.app h1,.page-heading h1{font-size:30px}
+.page-heading{margin-bottom:36px}
+.section-heading{margin:44px 0 16px}
+.form-panel{margin-bottom:44px}
+.source-tile:nth-child(2n){border-right:0}
+.source-tile:nth-child(-n+2){border-bottom:1px solid var(--border)}
+.nav-item.selected{box-shadow:inset 0 -2px 0 var(--brand);border-radius:0}
+}
 /* Wider sidebar so study names and nested pages fit without wrapping. */
 .sidebar{width:272px;padding-left:20px;padding-right:20px}
 .main-shell{margin-left:272px;width:calc(100% - 272px)}
