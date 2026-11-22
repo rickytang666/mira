@@ -20,6 +20,7 @@ model Study {
   questions  Question[]
   interviews Interview[]
   themes     Theme[]
+  sources    Source[]
 }
 
 model Question {
@@ -63,4 +64,15 @@ model Quote {
   text        String
   startSec    Float
   endSec      Float
+}
+
+model Source {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  studyId   String
+  study     Study    @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  kind      String
+  title     String
+  content   String
+  detail    String   @default("")
 }
