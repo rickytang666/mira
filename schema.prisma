@@ -1,5 +1,5 @@
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   // Wasp requires that the url is set to the DATABASE_URL environment variable.
   url      = env("DATABASE_URL")
 }
@@ -7,4 +7,60 @@ datasource db {
 // Wasp requires the `prisma-client-js` generator to be present.
 generator client {
   provider = "prisma-client-js"
+}
+
+model Study {
+  id         String      @id @default(cuid())
+  createdAt  DateTime    @default(now())
+  name       String
+  productUrl String      @default("")
+  goal       String
+  audience   String      @default("")
+  context    String      @default("")
+  questions  Question[]
+  interviews Interview[]
+  themes     Theme[]
+}
+
+model Question {
+  id       String  @id @default(cuid())
+  studyId  String
+  study    Study   @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  text     String
+  order    Int
+  followUp Boolean @default(true)
+}
+
+model Interview {
+  id             String   @id @default(cuid())
+  createdAt      DateTime @default(now())
+  studyId        String
+  study          Study    @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  conversationId String   @unique
+  status         String   @default("started")
+  durationSecs   Float?
+  error          String?
+  quotes         Quote[]
+}
+
+model Theme {
+  id      String  @id @default(cuid())
+  studyId String
+  study   Study   @relation(fields: [studyId], references: [id], onDelete: Cascade)
+  label   String
+  count   Int     @default(0)
+  quotes  Quote[]
+
+  @@unique([studyId, label])
+}
+
+model Quote {
+  id          String    @id @default(cuid())
+  interviewId String
+  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  themeId     String
+  theme       Theme     @relation(fields: [themeId], references: [id], onDelete: Cascade)
+  text        String
+  startSec    Float
+  endSec      Float
 }
