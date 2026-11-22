@@ -1,22 +1,22 @@
 // Data contract for Idea 49.
 // Only what crosses a boundary between tracks. Changing it is a team announcement.
 
-// ---- Track C: src/agent/suggestQuestions.ts (plain TypeScript, no Wasp imports) ----
+// ---- Track 3: src/agent/suggestQuestions.ts (plain TypeScript, no Wasp imports) ----
 
 export type SuggestQuestionsInput = {
   productName: string;
   goal: string;
   audience: string;
-  context: string; // joined Source.content from the knowledge base (importWebsite already scrapes the URL)
+  context: string; // joined Source.content from the knowledge base (importWebsite in src/sources.ts already scrapes the URL)
 };
 
 export type SuggestQuestionsOutput = {
   questions: string[]; // 3 to 5, each one spoken sentence
 };
 
-// ---- Track C: src/agent/elevenlabsClient.ts ----
+// ---- Track 3: src/agent/elevenlabsClient.ts ----
 
-// Mirrors GET /v1/convai/conversations/{id}: transcript[].role, .message, .time_in_call_secs (verified 11:50).
+// Mirrors GET /v1/convai/conversations/{id}: transcript[].role, .message, .time_in_call_secs.
 export type TranscriptTurn = {
   role: "agent" | "user";
   text: string;
@@ -30,7 +30,7 @@ export type FetchedConversation = {
   turns: TranscriptTurn[];
 };
 
-// ---- Track C: src/agent/synthesizeInterview.ts ----
+// ---- Track 3: src/agent/synthesizeInterview.ts ----
 
 export type SynthesizeInterviewInput = {
   goal: string;
@@ -49,7 +49,7 @@ export type SynthesizeInterviewOutput = {
   themes: { label: string; quotes: SynthesizedQuote[] }[]; // each theme counts once per interview
 };
 
-// ---- Track B <-> ElevenLabs agent prompt: dynamic variables passed to startSession ----
+// ---- Track 2 <-> ElevenLabs agent prompt: dynamic variables passed to startSession ----
 
 export type InterviewDynamicVariables = {
   product_url: string;
@@ -57,7 +57,7 @@ export type InterviewDynamicVariables = {
   questions: string; // numbered, newline-separated
 };
 
-// ---- Track A operations (Wasp), consumed by B and D ----
+// ---- Track 1 operations (Wasp), consumed by tracks 2 and 4 ----
 
 export type PublicStudy = {
   // getPublicStudy({ studyId }), no login
