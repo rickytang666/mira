@@ -301,3 +301,71 @@ h1,.app h1{font-family:inherit;font-size:28px;line-height:1.2;letter-spacing:-.0
 /* Report styles live in src/report/report.css. */
 .brand-name{display:flex;flex-direction:column;line-height:1.1}
 .brand-name small{font-size:12px;font-weight:500;letter-spacing:0;color:var(--muted);margin-top:2px}
+
+/* Calm pass: readable sizes, one radius (12px surfaces, 999px buttons), no shadows or lifts. */
+.app h1{font-size:30px}
+.page-heading{margin-bottom:40px;align-items:flex-start}
+.page-heading p{font-size:15px;margin-top:8px}
+.nav-item{font-size:14px;border-radius:10px;padding:11px 14px}
+.nav-count{background:none;color:var(--subtle);font-size:13px;font-variant-numeric:tabular-nums}
+.button{font-size:14px;font-weight:500;border-radius:999px;padding:10px 18px;min-height:40px}
+.secondary{border-color:var(--border-strong)}
+.text-link{font-size:14px;gap:6px}
+.field{font-size:14px;margin-bottom:24px}
+.field input,.field textarea{font-size:15px;line-height:1.6;border-radius:12px;border-color:var(--border-strong);background:var(--surface)}
+.field small{font-size:13px}
+.form-panel{border:0;border-radius:0;background:none;overflow:visible;margin-bottom:48px}
+.form-content{padding:0}
+.panel-heading{padding:0 0 16px;border-bottom:0}
+.panel-heading h2,.section-heading h2,.app h2{font-size:18px;font-weight:600;color:var(--ink)}
+.saved{font-size:13px;margin-bottom:16px}
+.modal{border-radius:12px;box-shadow:none}
+.modal h2{font-size:22px;letter-spacing:-.01em}
+.modal-description{font-size:14px;line-height:1.6}
+.error{font-size:14px;border-radius:12px}
+.channel-row{display:flex;align-items:center;gap:20px;padding:16px 0;border-top:1px solid var(--line)}
+.channel-row>div{flex:1;min-width:0}
+.channel-row strong{display:block;font-size:15px;font-weight:600;color:var(--ink)}
+.channel-row small{display:block;font-size:14px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Questionnaire */
+.question-row{padding:16px 0;border-bottom:1px solid var(--line);gap:16px}
+.question-index{font-size:15px;color:var(--subtle);min-width:20px;padding-top:10px}
+.question-body textarea{font-size:15px;line-height:1.6;border-radius:12px}
+.checkbox-label{font-size:13px}
+.add-question{font-size:14px;border-radius:12px}
+.empty-questions{padding:32px 0;text-align:left}
+.empty-questions h3{font-size:15px}
+.empty-questions p{font-size:14px;color:var(--muted)}
+/* Knowledge */
+.product-card{border:0;padding:0;background:none}
+.product-details label{font-size:14px;letter-spacing:0;color:var(--muted);margin-bottom:4px}
+.product-details input{font-size:22px;font-weight:600;color:var(--ink);max-width:520px}
+.section-heading{margin:48px 0 16px}
+.source-tile{border-radius:12px;padding:20px}
+.source-tile:hover{transform:none}
+.source-tile h3{font-size:15px;margin-top:16px}
+.source-tile p{font-size:14px;line-height:1.5;min-height:0}
+.tile-link{font-size:14px;border-top:0;padding-top:0;margin-top:12px}
+.sources-panel{border:0;border-radius:0;background:none;margin-top:48px;overflow:visible}
+.sources-panel .panel-heading{border-bottom:1px solid var(--border)}
+.source-row{align-items:flex-start;padding:20px 0;gap:16px}
+.source-name strong{font-size:16px;font-weight:600;color:var(--ink);white-space:normal}
+.source-name small{font-size:13px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.source-snippet{font-size:15px;line-height:1.6;color:var(--text);margin-top:8px;max-width:72ch;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.source-more{margin-top:8px}
+.source-detail{font-size:13px;color:var(--muted);margin:-4px 0 8px;overflow-wrap:anywhere}
+.source-preview{font-size:15px;line-height:1.7;color:var(--text);padding-top:12px;overflow-wrap:anywhere}
+.empty-sources{text-align:left;padding:24px 0}
+.empty-sources h3{font-size:15px}
+.empty-sources p{font-size:14px;line-height:1.6}
+.next-step{border:0;border-radius:12px;padding:20px 24px;margin-top:48px}
+.next-step h3{font-size:15px;font-weight:600}
+.next-step p{font-size:14px}
+.page-bottom{display:flex;align-items:center;justify-content:space-between;gap:16px}
+@media(max-width:700px){
+.source-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.source-row{padding:16px 0}
+.next-step{flex-wrap:wrap}
+.channel-row{flex-wrap:wrap;gap:8px 16px}
+.channel-row>div{flex-basis:100%}
+}

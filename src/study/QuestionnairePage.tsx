@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { ArrowDown, ArrowRight, ArrowUp, Check, Loader2, MessageSquare, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, Loader2, Plus, Trash2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useQuery, getStudy, updateStudy, generateStudyQuestions } from 'wasp/client/operations';
 import { Layout, PageHeader, ErrorNote } from '../Layout';
@@ -69,36 +69,36 @@ export function QuestionnairePage() {
         description="Mira asks these in order and follows up on her own."
         action={dirty
           ? <button className="button primary" disabled={saving || generating} onClick={save}>{saving ? <Loader2 size={15} className="spin" /> : <Check size={15} />}Save changes</button>
-          : <span className="saved"><Check size={14} />Saved</span>}
+          : undefined}
       />
       <ErrorNote message={error} />
-      {dirty && <p className="saved">Save your changes before sharing—the interviewer uses the saved questions.</p>}
+      {dirty && <p className="saved">Save your changes before sharing. Interviews use the saved questions.</p>}
       <section className="form-panel">
-        <div className="panel-heading"><h2>Share the interview</h2><span className="quiet-pill"><span className="live-dot" />Live</span></div>
+        <div className="panel-heading"><h2>Share the interview</h2></div>
         <div className="form-content" style={{ display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
           <QRCodeSVG value={interviewUrl} size={168} />
           <div>
-            <p>Scan to start a one-minute voice interview. No sign-up.</p>
+            <p>Participants scan this to start a one-minute voice interview. No sign-up.</p>
             <a className="text-link" href={interviewUrl} target="_blank" rel="noreferrer">{interviewUrl}</a>
           </div>
           <LogoUploader studyId={studyId} logo={study.logo ?? null} />
         </div>
       </section>
       <section className="form-panel">
-        <div className="panel-heading"><h2>Give the conversation a direction</h2><span className="number-tag">01</span></div>
+        <div className="panel-heading"><h2>Goal and audience</h2></div>
         <div className="form-content">
           <label className="field">Research goal<textarea readOnly={generating || saving} rows={3} value={goal} onChange={(e) => { setGoal(e.target.value); setDirty(true); }} /></label>
           <label className="field">Who are you talking to?<input readOnly={generating || saving} value={audience} onChange={(e) => { setAudience(e.target.value); setDirty(true); }} placeholder="e.g. First-time users who signed up this week" /></label>
         </div>
       </section>
       <section className="form-panel questions-panel">
-        <div className="panel-heading"><h2>Interview questions <span className="number-tag">{questions.length}</span></h2><button className="button secondary" disabled={generating || saving || !goal.trim()} onClick={generate}>{generating ? <><Loader2 size={15} className="spin" />Writing questions…</> : "Generate new questions"}</button></div>
+        <div className="panel-heading"><h2>Questions</h2><button className="button secondary" disabled={generating || saving || !goal.trim()} onClick={generate}>{generating ? <><Loader2 size={15} className="spin" />Writing questions…</> : "Generate new questions"}</button></div>
         <div className="questions-list">
           {questions.length === 0 ? (
-            <div className="empty-questions"><MessageSquare size={25} /><h3>No questions yet</h3><p>Add one below.</p></div>
+            <div className="empty-questions"><h3>No questions yet</h3><p>Add one below.</p></div>
           ) : questions.map((question, index) => (
             <div className="question-row" key={question.key}>
-              <span className="question-index">{String(index + 1).padStart(2, '0')}</span>
+              <span className="question-index">{index + 1}</span>
               <div className="question-body">
                 <textarea readOnly={generating || saving} aria-label={`Question ${index + 1}`} rows={2} value={question.text} onChange={(e) => edit(questions.map((q) => q.key === question.key ? { ...q, text: e.target.value } : q))} placeholder="Ask an open-ended question…" />
                 <label className="checkbox-label"><input disabled={generating || saving} type="checkbox" checked={question.followUp} onChange={(e) => edit(questions.map((q) => q.key === question.key ? { ...q, followUp: e.target.checked } : q))} />Allow natural follow-ups</label>
@@ -115,7 +115,7 @@ export function QuestionnairePage() {
       </section>
       <div className="page-bottom">
         <Link to="/" className="text-link">All studies</Link>
-        <Link className="button primary" to={`/study/${studyId}/report`}>View the report<ArrowRight size={16} /></Link>
+        <Link className="button primary" to={`/study/${studyId}/report`}>View the report</Link>
       </div>
     </Layout>
   );

@@ -1,12 +1,8 @@
 import { useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import {
-  ArrowRight,
-  BookOpen,
-  CheckCircle2,
   FileText,
   Globe,
-  ListChecks,
   Loader2,
   Pencil,
   Plug,
@@ -49,6 +45,19 @@ const kinds = {
     hint: 'Connect a source',
   },
 };
+
+// Scraped pages carry SEO titles like "Acme: Free AI thing for teams | Acme"; show just the name.
+function cleanSourceTitle(title: string) {
+  const parts = title.split(/\s+[|–—·•]\s+|\s+-\s+/).map((part) => part.trim()).filter(Boolean);
+  if (parts.length === 0) return title;
+  const last = parts[parts.length - 1];
+  const name = parts.length > 1 && last.length <= 32 ? last : parts[0].split(/:\s/)[0];
+  return name.length > 60 ? `${name.slice(0, 57).trimEnd()}…` : name;
+}
+function sourcePreview(content: string, max = 260) {
+  const text = content.replace(/[#*_`>]+/g, ' ').replace(/\s+/g, ' ').trim();
+  return text.length > max ? `${text.slice(0, max).replace(/\s+\S*$/, '')}…` : text;
+}
 
 export function KnowledgePage() {
   const { studyId = '' } = useParams();
@@ -146,11 +155,8 @@ export function KnowledgePage() {
       />
       <ErrorNote message={saveError} />
       <section className="product-card">
-        <div className="product-icon">
-          <BookOpen size={21} />
-        </div>
         <div className="product-details">
-          <label htmlFor="product-name">YOUR PRODUCT</label>
+          <label htmlFor="product-name">Product</label>
           <input
             id="product-name"
             aria-label="Product name"
@@ -162,14 +168,9 @@ export function KnowledgePage() {
             placeholder="Give your product a name"
           />
         </div>
-        <span className="quiet-pill">
-          <span className="live-dot" />
-          Ready
-        </span>
       </section>
       <div className="section-heading">
-        <h2>Add your product knowledge</h2>
-        <span></span>
+        <h2>Add a source</h2>
       </div>
       <div className="source-grid">
         {Object.entries(kinds).map(([id, item]) => (
@@ -181,7 +182,6 @@ export function KnowledgePage() {
             <p>{item.description}</p>
             <span className="tile-link">
               {item.hint}
-              <Plus size={15} />
             </span>
           </button>
         ))}
@@ -189,22 +189,15 @@ export function KnowledgePage() {
       <section className="sources-panel">
         <div className="panel-heading">
           <h2>
-            Your sources <span className="number-tag">{sources.length}</span>
+            Sources
           </h2>
           <span className="subtle"></span>
         </div>
         {sources.length === 0 ? (
           <div className="empty-sources">
-            <div className="document-stack">
-              <FileText size={25} />
-              <span>
-                <Plus size={12} />
-              </span>
-            </div>
             <h3>No sources yet</h3>
             <p>
-              Add a source above to help your interviewer understand
-              <br className="desktop-break" /> what you’re building and who it’s for.
+              Add your site or a short description so Mira knows the product.
             </p>
           </div>
         ) : (
@@ -216,8 +209,8 @@ export function KnowledgePage() {
                   <span className={`source-icon ${source.kind}`}>
                     <Icon size={19} />
                   </span>
-                  <button className="source-name" onClick={() => setView(source)}>
-                    <strong>{source.title}</strong>
+                  <div className="source-name">
+                    <strong title={source.title}>{cleanSourceTitle(source.title)}</strong>
                     <small>
                       {source.detail} ·{' '}
                       {new Date(source.createdAt).toLocaleDateString(undefined, {
@@ -225,11 +218,9 @@ export function KnowledgePage() {
                         day: 'numeric',
                       })}
                     </small>
-                  </button>
-                  <span className="ready">
-                    <CheckCircle2 size={13} />
-                    Ready
-                  </span>
+                    {source.content && <p className="source-snippet">{sourcePreview(source.content)}</p>}
+                    <button className="text-link source-more" onClick={() => setView(source)}>Read full text</button>
+                  </div>
                   <button
                     className="icon-button delete"
                     aria-label={`Remove ${source.title}`}
@@ -244,16 +235,12 @@ export function KnowledgePage() {
         )}
       </section>
       <div className="next-step">
-        <div className="next-icon">
-          <ListChecks size={22} />
-        </div>
         <div>
           <h3>Interview questions</h3>
           <p>Review what Mira will ask.</p>
         </div>
         <Link className="text-link" to={`/study/${studyId}/questionnaire`}>
-          Set up your questions
-          <ArrowRight size={16} />
+          Review questions
         </Link>
       </div>
       {(kind || view) && (
@@ -286,13 +273,12 @@ export function KnowledgePage() {
             </button>
             {view ? (
               <>
-                <div className="eyebrow">SOURCE CONTENT</div>
-                <h2 id="modal-title">{view.title}</h2>
-                <div className="source-preview">{view.content}</div>
+                <h2 id="modal-title">{cleanSourceTitle(view.title)}</h2>
+                <p className="source-detail">{view.detail}</p>
+                <div className="source-preview">{view.content.replace(/\n{3,}/g, '\n\n').trim()}</div>
               </>
             ) : (
               <>
-                <div className="eyebrow">PRODUCT KNOWLEDGE</div>
                 <h2 id="modal-title">
                   {kind === 'pdf'
                     ? 'Bring your documents.'

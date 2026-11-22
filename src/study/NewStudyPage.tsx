@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { ArrowRight, ListChecks, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useQuery, createStudy, getStudies } from 'wasp/client/operations';
 import { Layout, PageHeader, ErrorNote } from '../Layout';
 
@@ -33,7 +33,7 @@ export function NewStudyPage() {
     <Layout page="studies" sourceCount={0} questionCount={0}>
       <PageHeader
         title="New study"
-        description="Mira is your user researcher. She reads your site, writes the interview, talks to your users for a minute each, and reports back in their own words."
+        description="Mira reads your site, writes the interview, talks to each user for a minute, and reports back in their words."
       />
       <form className="form-panel" onSubmit={submit}>
         <div className="form-content">
@@ -58,24 +58,23 @@ export function NewStudyPage() {
           )}
           <div className="modal-actions">
             <button className="button primary" disabled={busy || !goal.trim() || (!productUrl.trim() && !description.trim())}>
-              {busy ? <><Loader2 size={16} className="spin" />Writing your questions…</> : <>Create study<ArrowRight size={16} /></>}
+              {busy ? <><Loader2 size={16} className="spin" />Writing your questions…</> : <>Create study</>}
             </button>
           </div>
         </div>
       </form>
       {studies && studies.length > 0 && (
         <section className="form-panel">
-          <div className="panel-heading"><h2>Your studies <span className="number-tag">{studies.length}</span></h2></div>
+          <div className="panel-heading"><h2>Your studies</h2></div>
           <div className="form-content">
             {studies.map((study) => (
               <div className="channel-row" key={study.id}>
-                <ListChecks size={19} />
                 <div>
                   <strong>{study.name}</strong>
                   <small>{study.goal}</small>
                 </div>
-                <Link className="text-link" to={`/study/${study.id}/report`}>Report<ArrowRight size={15} /></Link>
-                <Link className="text-link" to={`/study/${study.id}/questionnaire`}>Questions<ArrowRight size={15} /></Link>
+                <Link className="text-link" to={`/study/${study.id}/report`}>Report</Link>
+                <Link className="text-link" to={`/study/${study.id}/questionnaire`}>Questions</Link>
               </div>
             ))}
           </div>
