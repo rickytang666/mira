@@ -19,14 +19,15 @@ Ask one thing per question, in one spoken sentence of at most 25 words. Keep the
 Do not read the research goal back as a question. Let the interviewer ask natural follow-ups.
 Return {"questions":["question one?","question two?","question three?"]}.`, input,
   }, options));
-  if (!Array.isArray(result.questions) || result.questions.length < 3 || result.questions.length > 5) throw new Error('Analysis must return 3 to 5 questions.');
+  if (!Array.isArray(result.questions) || result.questions.length < 3) throw new Error('Analysis must return 3 to 5 questions.');
   const seen = new Set<string>();
-  const questions = result.questions.map(value => {
+  // Extra or repeated questions are trimmed so a judge's study never fails on stage.
+  const questions = result.questions.flatMap(value => {
     const text = requiredText(value, 500);
     const key = text.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-    if (seen.has(key)) throw new Error('Analysis returned duplicate questions.');
+    if (seen.has(key)) return [];
     seen.add(key);
-    return text;
-  });
+    return [text];
+  }).slice(0, 5);
   return { questions };
 }

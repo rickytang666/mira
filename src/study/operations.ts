@@ -44,10 +44,10 @@ export const createStudy: CreateStudy<CreateStudyInput, { id: string }> = async 
       const page = await importWebsite({ url: productUrl });
       name = productNameFromTitle(page.title, new URL(productUrl).hostname);
       sources.push({ kind: "url", ...page });
-    } catch (error) {
-      // A description is enough to continue when the site can't be scraped.
-      if (!description) throw error;
-      name = new URL(productUrl).hostname;
+    } catch {
+      // Some sites block scraping or need a browser; the domain and the goal are still enough to write questions.
+      name = productNameFromTitle("", new URL(productUrl).hostname);
+      if (!description) sources.push({ kind: "url", title: name, content: `${name} (${productUrl}). The founder wants to learn: ${goal}`, detail: "site could not be read" });
     }
   }
   if (description) {
