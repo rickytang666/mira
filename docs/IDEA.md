@@ -1,6 +1,6 @@
 # Idea: user-interview agent
 
-Locked 2026-11-22 11:25. Working name: TBD.
+Locked 2026-11-22 11:25. Working name: Fieldwork (from the skeleton, not confirmed).
 
 **One line**: Give it your product's URL and it interviews real people out loud, then hands you the research report.
 
@@ -10,7 +10,7 @@ Locked 2026-11-22 11:25. Working name: TBD.
 
 ### Founder side (the platform)
 
-- **Create a study**: sign up, enter the product URL and what you want to learn.
+- **Create a study**: add product context (website URL, description, PDF, or MCP connection) and what you want to learn. No sign-up for the demo.
 - **Questions page**: the agent suggests 3 to 5 questions based on the product. The founder edits, adds, or removes them.
 - **Share**: one link and one QR code per study.
 - **Report**: interviews completed, themes with counts, and verbatim quotes that each play as an audio clip. It updates as interviews finish.
@@ -55,7 +55,7 @@ If time runs short, things leave from the right.
 
 - **ElevenLabs**: the hosted voice agent runs the whole interview; its transcript and audio feed the report.
 - **Wasp**: auth, the study, interview, and quote records, and the background job that turns a finished interview into report entries.
-- **Wasp check at 30 minutes**: a new user can sign up and create a study, and a phone loads the interview page over HTTPS with the mic working. If either fails, we move to a stack we know. Question generation and report synthesis are written as plain TypeScript modules so they move over unchanged.
+- **Wasp check**: the skeleton compiles and typechecks (passed 11:58). Still owed: a phone loads the interview page over HTTPS with the mic working. If that fails, we move to a stack we know. Question generation and report synthesis are written as plain TypeScript modules so they move over unchanged.
 
 ## First risk to retire
 
@@ -72,6 +72,6 @@ Grand Prize or Best Use of ElevenLabs (they can't be combined), plus Best projec
 
 ## Open decisions
 
-- The on-screen character: what it is and who owns it.
-- The product name.
+- The on-screen character: what it looks like (owned by track 4).
+- The product name: confirm Fieldwork.
 - Which question we ask the hall.
