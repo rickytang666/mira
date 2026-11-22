@@ -10,8 +10,8 @@ describe('report rendering from the team contract', () => {
     expect(html).toContain('3 of 3');
     expect(html).toContain('I got stuck connecting my API key.');
     expect(html).toContain('Participant 01');
-    expect(html).toContain('What we heard.');
-    expect(html).toContain('What to explore next');
+    expect(html).toContain('Summary');
+    expect(html).toContain('Next steps');
     expect(html).toMatch(/button[^>]+disabled=""[^>]+aria-label="Play quote/);
   });
   it('shows pending analysis instead of sample findings for a real empty report', () => {

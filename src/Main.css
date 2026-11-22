@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;450;500;550;600;650;700&family=Manrope:wght@400;500;600;650;700;750;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400&display=swap');
 /* Mira: nearly white lavender surfaces with quiet, muted purple accents. */
 :root{
   font-family:'DM Sans',sans-serif;
@@ -276,3 +276,33 @@ main{padding:30px 22px}
 .panel-heading .text-link{font-size:9px}
 .product-details input{font-size:14px}
 }
+
+/* Mira system: one grotesk for all interface text, a serif only for participants' own words.
+   Colors follow the logo: navy mark on periwinkle. */
+:root{
+  font-family:'Schibsted Grotesk',system-ui,sans-serif;
+  --canvas:#f7f8fd;--surface:#ffffff;--surface-tint:#f9faff;--sidebar:#f0f2fb;
+  --ink:#171a33;--text:#3b3f5c;--muted:#656a87;--subtle:#8a8fa8;
+  --brand:#262c6e;--icon:#5b62a3;--accent:#e6eafb;--accent-soft:#eff2fc;--accent-hover:#dde3fa;--accent-ink:#262c6e;
+  --border:#e3e6f3;--border-strong:#cfd5ec;--line:#eceef7;--indicator:#5b62a3;--focus:#4a52a8;--logo-background:#d4dcf9;
+}
+body,button,input,textarea,select{font-family:inherit}
+h1,.app h1{font-family:inherit;font-size:28px;line-height:1.2;letter-spacing:-.02em;font-weight:600;color:var(--ink)}
+.page-heading p{font-size:15px;line-height:1.55;color:var(--muted);max-width:60ch}
+.brand{font-family:inherit;font-size:20px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+.panel-heading h2,.app h2{font-family:inherit;letter-spacing:-.01em}
+.panel-heading h2{font-size:15px;font-weight:600;color:var(--ink)}
+.metrics strong,.report-empty h2,.modal h2{font-family:inherit}
+.question-index{font-family:inherit;font-variant-numeric:tabular-nums}
+.eyebrow{display:none}
+.field{font-size:13px;font-weight:500;color:var(--text)}
+.button.primary,.button-primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+.button.primary:hover:not(:disabled){background:#1c2157}
+/* Report */
+.app .fw-workspace,.app .fw-report,.app .fw-report h1,.app .fw-report h2,.app .fw-report h3,.app .fw-metrics strong,.app .fw-summary-card h2,.app .fw-empty h2,.app .fw-dialog h2{font-family:inherit;font-style:normal}
+.app .fw-report h1{font-size:28px;line-height:1.2;letter-spacing:-.02em;font-weight:600}
+.app .fw-report h2{letter-spacing:-.01em;font-weight:600}
+.app .fw-summary-card h2,.app .fw-empty h2{font-size:20px}
+.app .fw-metrics strong{font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.app .fw-eyebrow,.app .fw-summary-label,.app .fw-metrics small{display:none}
+.app .fw-quote blockquote{font-family:'Newsreader',Georgia,serif;font-style:italic;font-size:17px;line-height:1.55;color:var(--ink)}
