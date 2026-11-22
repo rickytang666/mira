@@ -1,16 +1,22 @@
 {
   "name": "fieldwork",
   "type": "module",
-  "scripts": { "dev": "wasp start --client-port 3002 --server-port 3003", "check": "wasp compile" },
+  "scripts": {
+    "dev": "wasp start --client-port 3002 --server-port 3003",
+    "check": "wasp compile"
+  },
   "workspaces": [
     ".wasp/out/*",
     ".wasp/out/sdk/wasp"
   ],
   "dependencies": {
-    "lucide-react": "^0.468.0",
-    "cheerio": "^1.0.0",
+    "@elevenlabs/elevenlabs-js": "2.78.0",
+    "@elevenlabs/react": "1.22.1",
     "@modelcontextprotocol/sdk": "^1.0.0",
+    "cheerio": "^1.0.0",
+    "lucide-react": "^0.468.0",
     "pdfjs-dist": "^5.0.0",
+    "qrcode.react": "4.2.0",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-router": "^8.0.1"
@@ -19,10 +25,10 @@
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@wasp.sh/spec": "file:.wasp/spec/",
     "prisma": "5.19.1",
     "typescript": "6.0.3",
     "vite": "^8.1.0",
-    "vitest": "^4.1.9",
-    "@wasp.sh/spec": "file:.wasp/spec/"
+    "vitest": "^4.1.9"
   }
 }
