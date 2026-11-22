@@ -395,7 +395,7 @@ nav{overflow-x:auto}
 .source-tile{border:0;border-right:1px solid var(--border);border-radius:0;background:none}
 .source-tile:last-child{border-right:0}
 .source-tile:hover{background:var(--surface-tint)}
-.source-icon{background:none;width:auto;height:auto;justify-content:start;color:var(--icon)}
+.source-tile .source-icon{background:none;width:24px;height:24px;display:block;color:var(--icon)}
 .next-step{background:none;border-top:1px solid var(--border);border-radius:0;padding:24px 0 0}
 @media(max-width:700px){
 .app h1,.page-heading h1{font-size:30px}
