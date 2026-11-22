@@ -26,7 +26,7 @@ export class ArticulatedMotion {
     const tapped=input.gesture!==this.lastGesture;
     if(tapped){this.sequence=(this.sequence+1)%poses.length;this.started=t;this.nextGesture=t+7;this.lastGesture=input.gesture;this.nextBlink=t+.35;}
     if(input.mode!==this.lastMode){this.lastMode=input.mode;this.nextGesture=Math.min(this.nextGesture,t+.6);this.nextBlink=Math.min(this.nextBlink,t+.25);}
-    if(t>=this.nextGesture){this.sequence=(this.sequence+1)%poses.length;this.started=t;this.nextGesture=t+(input.mode==='speaking'?5.6:8.5)+this.random()*1.4;}
+    if(t>=this.nextGesture){this.sequence=(this.sequence+1)%poses.length;this.started=t;this.nextGesture=t+(input.mode==='speaking'?3.2:8.5)+this.random()*1.4;}
     if(t>=this.nextBlink){this.blinkStart=t;this.nextBlink=t+3.1+this.random()*3.2;}
     const amount=poseEnvelope(t-this.started);
     const target={...neutral};
