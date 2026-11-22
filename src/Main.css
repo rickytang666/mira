@@ -376,3 +376,7 @@ nav{overflow-x:auto}
 .panel-heading{padding:0 0 12px}
 .app h1,.page-heading h1{font-size:26px}
 }
+.nav-label{font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0;text-transform:none;margin:18px 10px 6px}
+.nav-study-name{font-weight:600;color:var(--ink)}
+.nav-study-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav-sub{padding-left:22px;font-size:14px}

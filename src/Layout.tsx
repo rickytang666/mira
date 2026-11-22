@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { NavLink, Link, useParams } from 'react-router';
 import { AlertCircle, BarChart3, BookOpen, ListChecks, Plus } from 'lucide-react';
+import { useQuery, getStudies } from 'wasp/client/operations';
 import './Main.css';
 
 export type Page = 'studies' | 'knowledge' | 'questionnaire' | 'report';
@@ -19,6 +20,7 @@ export function Layout({
   questionCount: number;
 }) {
   const { studyId } = useParams();
+  const { data: studies } = useQuery(getStudies);
   return (
     <div className="app">
       <aside className="sidebar">
@@ -26,45 +28,30 @@ export function Layout({
           <Mark />
           <span className="brand-name">Mira<small>User researcher</small></span>
         </Link>
-        <nav aria-label="Study">
-          {[
-            { id: 'studies', path: '/', icon: Plus, label: 'New study', count: 0 },
-            ...(studyId
-              ? [
-                  {
-                    id: 'knowledge',
-                    path: `/study/${studyId}/knowledge`,
-                    icon: BookOpen,
-                    label: 'Knowledge base',
-                    count: sourceCount,
-                  },
-                  {
-                    id: 'questionnaire',
-                    path: `/study/${studyId}/questionnaire`,
-                    icon: ListChecks,
-                    label: 'Questionnaire',
-                    count: questionCount,
-                  },
-                  {
-                    id: 'report',
-                    path: `/study/${studyId}/report`,
-                    icon: BarChart3,
-                    label: 'Report',
-                    count: 0,
-                  },
-                ]
-              : []),
-          ].map((item) => (
-            <NavLink
-              end={item.path === '/'}
-              key={item.id}
-              to={item.path}
-              className={`nav-item ${page === item.id ? 'selected' : ''}`}
-            >
-              <item.icon size={18} />
-              <span>{item.label}</span>
-              {item.count > 0 && <span className="nav-count">{item.count}</span>}
-            </NavLink>
+        <nav aria-label="Studies">
+          <NavLink end to="/" className={`nav-item ${page === 'studies' ? 'selected' : ''}`}>
+            <Plus size={18} />
+            <span>New study</span>
+          </NavLink>
+          {!!studies?.length && <div className="nav-label">Studies</div>}
+          {studies?.map((study) => (
+            <div key={study.id} className="nav-study">
+              <Link to={`/study/${study.id}/report`} className={`nav-item nav-study-name ${study.id === studyId ? 'open' : ''}`}>
+                <span>{study.name}</span>
+              </Link>
+              {study.id === studyId &&
+                [
+                  { id: 'report', path: `/study/${studyId}/report`, icon: BarChart3, label: 'Report', count: 0 },
+                  { id: 'questionnaire', path: `/study/${studyId}/questionnaire`, icon: ListChecks, label: 'Questions and QR', count: questionCount },
+                  { id: 'knowledge', path: `/study/${studyId}/knowledge`, icon: BookOpen, label: 'Knowledge', count: sourceCount },
+                ].map((item) => (
+                  <NavLink key={item.id} to={item.path} className={`nav-item nav-sub ${page === item.id ? 'selected' : ''}`}>
+                    <item.icon size={16} />
+                    <span>{item.label}</span>
+                    {item.count > 0 && <span className="nav-count">{item.count}</span>}
+                  </NavLink>
+                ))}
+            </div>
           ))}
         </nav>
       </aside>
