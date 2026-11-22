@@ -30,6 +30,8 @@
 
 .fw-overview-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:56px;margin:0 0 56px}
 .fw-report h2{font-size:18px;line-height:1.3;font-weight:600;letter-spacing:-.01em;color:var(--ink);margin:0 0 12px}
+.fw-summary-card{margin:0 0 48px}
+.fw-next-card{margin:24px 0 0;padding-top:40px;border-top:1px solid var(--border)}
 .fw-summary-card>p{font-size:16px;line-height:1.7;color:var(--text);margin:0;max-width:62ch}
 .fw-summary-card>p.fw-summary-foot{font-size:13px;color:var(--muted);margin-top:16px}
 .fw-next-card ul{padding:0;margin:0;list-style:none;display:grid;gap:16px}
