@@ -4,6 +4,8 @@ import { ArrowDown, ArrowRight, ArrowUp, Check, Loader2, MessageSquare, Plus, Tr
 import { QRCodeSVG } from 'qrcode.react';
 import { useQuery, getStudy, updateStudy, generateStudyQuestions } from 'wasp/client/operations';
 import { Layout, PageHeader, ErrorNote } from '../Layout';
+import { LogoUploader } from './LogoUploader';
+import './LogoUploader.css';
 
 type DraftQuestion = { key: string; text: string; followUp: boolean };
 const newKey = () => crypto.randomUUID();
@@ -79,6 +81,7 @@ export function QuestionnairePage() {
             <p>Scan with a phone to start a one-minute voice interview. No sign-up.</p>
             <a className="text-link" href={interviewUrl} target="_blank" rel="noreferrer">{interviewUrl}</a>
           </div>
+          <LogoUploader studyId={studyId} logo={study.logo ?? null} />
         </div>
       </section>
       <section className="form-panel">
