@@ -8,6 +8,7 @@ import { createStudy, getStudies, getStudy, updateStudy, addSource, deleteSource
 import { processInterview } from "./src/jobs/processInterview" with { type: "ref" };
 import { interviewAudio } from "./src/jobs/interviewAudio" with { type: "ref" };
 import { generateInterviewReport, regenerateStudyReport } from "./src/report/operations" with { type: "ref" };
+import { InterviewPage } from "./src/interview/InterviewPage" with { type: "ref" };
 
 export default app({
   name: "fieldwork",
@@ -35,5 +36,6 @@ export default app({
     action(generateInterviewReport),
     action(generateStudyQuestions, { entities: ["Study"] }),
     action(regenerateStudyReport, { entities: ["Study", "Question", "Interview", "Theme", "Quote"] }),
+    route("InterviewRoute", "/i/:studyId", page(InterviewPage)),
   ],
 });

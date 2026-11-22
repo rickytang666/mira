@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
+.iv-page{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;gap:48px;padding:24px 16px;background:#fbfcfa;color:#252d29;font-family:'DM Sans',sans-serif}
+.iv-card{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;text-align:center;padding:0}
+.iv-brand{display:flex;align-items:center;gap:9px;font-family:'Manrope',sans-serif;font-weight:800;font-size:18px;letter-spacing:-.6px;align-self:flex-start}
+.iv-mark{width:28px;height:28px;border-radius:8px;background:#314e3e;color:#d9e9c8;display:grid;place-items:center;font-size:14px}
+.iv-head{margin-top:36px}
+.iv-eyebrow{font-size:10px;font-weight:600;letter-spacing:1.7px;color:#81916e;margin-bottom:12px}
+.iv-head h1{font-family:'Manrope',sans-serif;font-size:27px;line-height:1.3;letter-spacing:-1px;font-weight:700;margin:0}
+.iv-stage{display:flex;flex-direction:column;align-items:center;margin:40px 0 8px;min-height:300px;width:100%}
+.iv-status{font-size:14px;color:#7d8a72;margin:28px 0 0;min-height:20px}
+.iv-caption{font-size:15px;line-height:1.6;margin:14px 0 0;color:#4f5d47;max-width:360px;animation:iv-fade .25s ease}
+.iv-caption.user{color:#8e9a83;font-style:italic}
+.iv-actions{display:flex;justify-content:center;gap:18px;margin-top:12px;width:100%}
+.iv-start{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;max-width:320px;padding:18px 24px;border:0;border-radius:14px;background:#314e3e;color:#fff;font-size:17px;font-weight:600;box-shadow:0 8px 24px #314e3e33;transition:transform .15s,background .15s}
+.iv-start:hover:not(:disabled){background:#263e2e}
+.iv-start:active:not(:disabled){transform:scale(.98)}
+.iv-round{width:64px;height:64px;border-radius:50%;border:1px solid #dfe6d6;background:#fff;color:#4b6440;display:grid;place-items:center;transition:transform .15s,background .15s}
+.iv-round:active{transform:scale(.94)}
+.iv-round.off{background:#f3f0e6;color:#9a8a5c}
+.iv-round.end{background:#c4574a;border-color:#c4574a;color:#fff}
+.iv-done{display:flex;flex-direction:column;align-items:center;gap:10px;color:#5f7a4c}
+.iv-done p{margin:0;font-size:15px;color:#4f5d47}
+.iv-link{display:inline-flex;align-items:center;gap:6px;border:0;background:none;color:#7d9169;font-size:13px;margin-top:6px}
+.iv-error{display:flex;gap:8px;align-items:flex-start;text-align:left;font-size:13px;line-height:1.5;padding:12px 14px;background:#fff3ee;border:1px solid #f1ddd3;color:#a66a58;border-radius:10px;margin:8px 0 16px;width:100%}
+.iv-fine{font-size:11px;line-height:1.7;color:#a6ae9b;margin:36px 0 0;max-width:320px}
+.iv-notice{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:80px;color:#8e9a83}
+.iv-notice h1{font-family:'Manrope',sans-serif;font-size:21px;color:#38463a;margin:4px 0 0}
+.iv-notice p{font-size:14px;line-height:1.7;margin:0}
+.iv-share{display:none;flex-direction:column;align-items:center;gap:16px;padding:28px;border:1px solid #e7eae3;border-radius:16px;background:#fff;text-align:center}
+.iv-share p{margin:0;font-size:12px;color:#8e9a83;line-height:1.6}
+.iv-share strong{display:block;font-size:14px;color:#38463a;font-weight:600}
+.study-qr{display:block;line-height:0}
+@media(min-width:900px){.iv-share{display:flex}}
+.iv-spin{animation:iv-rotate 1s linear infinite}
+@keyframes iv-rotate{to{transform:rotate(360deg)}}
+
+/* Placeholder character */
+.orb{position:relative;width:200px;height:200px;display:grid;place-items:center}
+.orb-core{width:112px;height:112px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#a9c493,#4f7a52 60%,#314e3e);box-shadow:0 12px 40px #314e3e40;transition:transform .2s ease}
+.orb-ring{position:absolute;inset:44px;border-radius:50%;border:2px solid #b8cba6;opacity:0}
+.orb.live .orb-core{animation:iv-breathe 3.2s ease-in-out infinite}
+.orb.speaking .orb-core{animation:iv-talk .5s ease-in-out infinite alternate}
+.orb.speaking .orb-ring{animation:iv-ripple 1.6s ease-out infinite}
+.orb.speaking .orb-ring.delay{animation-delay:.8s}
+@keyframes iv-breathe{50%{transform:scale(1.04)}}
+@keyframes iv-talk{from{transform:scale(1.02)}to{transform:scale(1.12)}}
+@keyframes iv-ripple{from{inset:44px;opacity:.9}to{inset:0;opacity:0}}
+@keyframes iv-fade{from{opacity:0;transform:translateY(4px)}}
+@media(prefers-reduced-motion:reduce){.orb *{animation:none!important}}
