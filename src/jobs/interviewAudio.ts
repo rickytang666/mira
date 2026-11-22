@@ -16,6 +16,8 @@ export const interviewAudio: InterviewAudio = async (req, res, context) => {
     audioCache.set(interview.id, audio);
   }
   const { bytes, contentType } = audio;
+  // The client runs on a different origin, and the default same-origin policy would block it from playing the file.
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
   res.setHeader("Content-Type", contentType);
   res.setHeader("Accept-Ranges", "bytes");
   // Range support lets the browser seek straight to a quote's start.
