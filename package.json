@@ -3,7 +3,9 @@
   "type": "module",
   "scripts": {
     "dev": "wasp start --client-port 3002 --server-port 3003",
-    "check": "wasp compile"
+    "check": "wasp compile",
+    "tunnels": "scripts/tunnels.sh",
+    "dev:tunnel": "scripts/dev-tunnel.sh"
   },
   "workspaces": [
     ".wasp/out/*",
