@@ -368,4 +368,11 @@ h1,.app h1{font-family:inherit;font-size:28px;line-height:1.2;letter-spacing:-.0
 .next-step{flex-wrap:wrap}
 .channel-row{flex-wrap:wrap;gap:8px 16px}
 .channel-row>div{flex-basis:100%}
+nav{overflow-x:auto}
+.nav-item{font-size:13px;padding:10px 6px;gap:4px;white-space:nowrap}
+.nav-item svg{display:none}
+.page-heading p{font-size:15px}
+.product-card,.form-content{padding:0}
+.panel-heading{padding:0 0 12px}
+.app h1,.page-heading h1{font-size:26px}
 }
