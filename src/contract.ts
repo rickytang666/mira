@@ -25,7 +25,7 @@ export type TranscriptTurn = {
 
 export type FetchedConversation = {
   conversationId: string;
-  status: "in-progress" | "processing" | "done" | "failed"; // job retries until "done"
+  status: "initiated" | "in-progress" | "processing" | "done" | "failed"; // job retries until "done"
   durationSecs: number;
   turns: TranscriptTurn[];
 };
@@ -65,6 +65,7 @@ export type PublicStudy = {
   productUrl: string;
   goal: string;
   questions: string[];
+  name: string;
 };
 
 export type FinishInterviewInput = {
