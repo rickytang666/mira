@@ -24,7 +24,7 @@ export function Layout({
       <aside className="sidebar">
         <Link className="brand" to="/" aria-label="Mira home">
           <Mark />
-          <span>Mira</span>
+          <span className="brand-name">Mira<small>User researcher</small></span>
         </Link>
         <nav aria-label="Demo sections">
           {[

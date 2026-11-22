@@ -24,8 +24,8 @@ export function ReportPage() {
       actions={<button className="fw-button fw-button-primary" disabled={busy || !report.interviewsDone} onClick={regenerate}>{busy ? 'Updating report…' : 'Update report'}</button>}
       beforeContent={<>
         {(error || report.synthesisError) && <div className="fw-notice" role="alert">{error || report.synthesisError} Your saved conversations are safe; retry with Update report.</div>}
-        {(busy || report.synthesisStatus === 'processing') && <p className="fw-notice" role="status">Bringing your interviews together. This page updates automatically.</p>}
-        {!busy && report.synthesisStatus === 'waiting' && report.interviewsDone > 0 && <p className="fw-notice">New conversations or study changes are ready to synthesize. Select Update report to include them now.</p>}
+        {(busy || report.synthesisStatus === 'processing') && <p className="fw-notice" role="status">Mira is analyzing the latest interviews. This page updates on its own.</p>}
+        {!busy && report.synthesisStatus === 'waiting' && report.interviewsDone > 0 && <p className="fw-notice" role="status">Mira is analyzing the latest interviews. This page updates on its own.</p>}
       </>}
       emptyAction={<Link className="fw-button" to={`/study/${studyId}/questionnaire`}>Review interview questions ↗</Link>}
     />}

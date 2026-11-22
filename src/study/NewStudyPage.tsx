@@ -33,7 +33,7 @@ export function NewStudyPage() {
     <Layout page="studies" sourceCount={0} questionCount={0}>
       <PageHeader
         title="New study"
-        description="Mira reads your product's site and writes the interview questions. Each participant then gets a one-minute voice interview."
+        description="Mira is your user researcher. She reads your site, writes the interview, talks to your users for a minute each, and reports back in their own words."
       />
       <form className="form-panel" onSubmit={submit}>
         <div className="form-content">
