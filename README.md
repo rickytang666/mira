@@ -6,8 +6,9 @@ Give it your product's context and it interviews real people out loud, then hand
 
 1. Node 24.22.1 or newer (`nvm use 24.22.3`) and the Wasp CLI 0.26.1.
 2. Copy `.env.server.example` to `.env.server` and `.env.client.example` to `.env.client`.
-3. `npm run dev` starts the client on port 3002 and the server on 3003.
-4. `npm run check` compiles and typechecks.
+3. Database: `createdb fieldwork`, put your Mac username in `DATABASE_URL`, then `wasp db migrate-dev`.
+4. `npm run dev` starts the client on port 3002 and the server on 3003.
+5. `npm run check` compiles and typechecks.
 
 ## Docs
 
