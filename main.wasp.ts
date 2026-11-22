@@ -1,5 +1,7 @@
 import { app, page, route, action } from "@wasp.sh/spec";
-import { KnowledgePage, QuestionnairePage, ReportPage } from "./src/MainPage" with { type: "ref" };
+import { KnowledgePage } from "./src/study/KnowledgePage" with { type: "ref" };
+import { QuestionnairePage } from "./src/study/QuestionnairePage" with { type: "ref" };
+import { ReportPage } from "./src/report/ReportPage" with { type: "ref" };
 import { importWebsite, importMcp } from "./src/sources" with { type: "ref" };
 
 export default app({
