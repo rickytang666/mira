@@ -121,9 +121,9 @@ function Interview({ study, muted, setMuted }: { study: PublicStudy; muted: bool
 
       <div className="iv-actions">
         {(phase === 'ready' || phase === 'error') && (
-          <button className="iv-start" onClick={start}><Mic size={20} />{phase === 'error' ? 'Try again' : 'Start interview'}</button>
+          <button className="iv-mic" onClick={start} aria-label={phase === 'error' ? 'Try again' : 'Start interview'}>{phase === 'error' ? <RotateCcw size={28} /> : <Mic size={30} />}</button>
         )}
-        {phase === 'connecting' && <button className="iv-start" disabled><Loader2 className="iv-spin" size={18} />Connecting</button>}
+        {phase === 'connecting' && <button className="iv-mic" disabled aria-label="Connecting"><Loader2 className="iv-spin" size={28} /></button>}
         {live && (
           <>
             <button className={`iv-round ${muted ? 'off' : ''}`} onClick={() => setMuted(!muted)} aria-label={muted ? 'Unmute microphone' : 'Mute microphone'}>
@@ -187,7 +187,6 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="iv-page">
       <main className="iv-card">
-        <img className="iv-logo" src="/mira-logo.png" alt="Mira" />
         {children}
       </main>
     </div>
