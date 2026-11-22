@@ -5,11 +5,13 @@ import type {
   GetStudies,
   GetStudy,
   UpdateStudy,
+  AddSource,
+  DeleteSource,
   GetPublicStudy,
   FinishInterview,
   GetReport,
 } from "wasp/server/operations";
-import type { Question, Study } from "wasp/entities";
+import type { Question, Source, Study } from "wasp/entities";
 import type { FinishInterviewInput, PublicStudy, ReportView, SuggestQuestionsInput } from "../contract";
 import { importWebsite } from "../sources";
 import { starterQuestions } from "../store";
@@ -30,19 +32,22 @@ export const createStudy: CreateStudy<CreateStudyInput, { id: string }> = async 
   if (productUrl && !/^https?:\/\//.test(productUrl)) productUrl = `https://${productUrl}`;
 
   let name = "My product";
-  const contextParts: string[] = [];
+  const sources: { kind: string; title: string; content: string; detail: string }[] = [];
   if (productUrl) {
     try {
       const page = await importWebsite({ url: productUrl });
       name = page.title || new URL(productUrl).hostname;
-      contextParts.push(page.content);
+      sources.push({ kind: "url", ...page });
     } catch (error) {
       // A description is enough to continue when the site can't be scraped.
       if (!description) throw error;
       name = new URL(productUrl).hostname;
     }
   }
-  if (description) contextParts.push(description);
+  if (description) {
+    sources.push({ kind: "description", title: "Product description", content: description, detail: `${description.split(/\s+/).length} words` });
+  }
+  const contextParts = sources.map((source) => source.content);
   const audience = args.audience?.trim() ?? "";
   const studyContext = contextParts.join("\n\n").slice(0, 60000);
 
@@ -55,6 +60,7 @@ export const createStudy: CreateStudy<CreateStudyInput, { id: string }> = async 
       audience,
       context: studyContext,
       questions: { create: questions.map((text, order) => ({ text, order })) },
+      sources: { create: sources },
     },
   });
   return { id: study.id };
@@ -71,13 +77,13 @@ export const getStudies: GetStudies<void, Pick<Study, "id" | "name" | "goal" | "
   });
 };
 
-export const getStudy: GetStudy<{ studyId: string }, Study & { questions: Question[] }> = async (
+export const getStudy: GetStudy<{ studyId: string }, Study & { questions: Question[]; sources: Source[] }> = async (
   { studyId },
   context,
 ) => {
   const study = await context.entities.Study.findUnique({
     where: { id: studyId },
-    include: { questions: { orderBy: { order: "asc" } } },
+    include: { questions: { orderBy: { order: "asc" } }, sources: { orderBy: { createdAt: "asc" } } },
   });
   if (!study) throw new HttpError(404, "Study not found.");
   return study;
@@ -102,6 +108,25 @@ export const updateStudy: UpdateStudy<UpdateStudyInput, void> = async (args, con
         .map((q, order) => ({ studyId, text: q.text.trim(), followUp: q.followUp, order })),
     });
   }
+};
+
+type AddSourceInput = { studyId: string; kind: string; title: string; content: string; detail: string };
+
+// Study.context is the joined text of its sources, so it is rebuilt on every source change.
+async function rebuildStudyContext(studyId: string, entities: { Study: any; Source: any }) {
+  const sources: Source[] = await entities.Source.findMany({ where: { studyId }, orderBy: { createdAt: "asc" } });
+  const studyContext = sources.map((source) => source.content).join("\n\n").slice(0, 60000);
+  await entities.Study.update({ where: { id: studyId }, data: { context: studyContext } });
+}
+
+export const addSource: AddSource<AddSourceInput, void> = async (args, context) => {
+  await context.entities.Source.create({ data: args });
+  await rebuildStudyContext(args.studyId, context.entities);
+};
+
+export const deleteSource: DeleteSource<{ sourceId: string }, void> = async ({ sourceId }, context) => {
+  const source = await context.entities.Source.delete({ where: { id: sourceId } });
+  await rebuildStudyContext(source.studyId, context.entities);
 };
 
 export const getPublicStudy: GetPublicStudy<{ studyId: string }, PublicStudy> = async ({ studyId }, context) => {
