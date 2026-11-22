@@ -5,8 +5,9 @@ Give it your product's context and it interviews real people out loud, then hand
 ## Run it
 
 1. Node 24.22.1 or newer (`nvm use 24.22.3`) and the Wasp CLI 0.26.1.
-2. `npm run dev` starts the client on port 3002 and the server on 3003.
-3. `npm run check` compiles and typechecks.
+2. Copy `.env.server.example` to `.env.server` and `.env.client.example` to `.env.client`.
+3. `npm run dev` starts the client on port 3002 and the server on 3003.
+4. `npm run check` compiles and typechecks.
 
 ## Docs
 

@@ -96,7 +96,9 @@ erDiagram
 
 **Database**: the local Postgres on port 5432 works; set `DATABASE_URL` in `.env.server`. `wasp start db` also works but needs Docker.
 
-**Run it**: Node 24.22.1 or newer (`nvm use 24.22.3`), Wasp CLI 0.26.1, then `npm run dev` (client on 3002, server on 3003). `npm run check` runs `wasp compile`, which typechecks.
+**Run it**: Node 24.22.1 or newer (`nvm use 24.22.3`), Wasp CLI 0.26.1. Copy `.env.server.example` to `.env.server` and `.env.client.example` to `.env.client`, then `npm run dev` (client on 3002, server on 3003). `npm run check` runs `wasp compile`, which typechecks.
+
+**Installed for the tracks**, pinned exactly: `@elevenlabs/react` 1.22.1 (track 2), `@elevenlabs/elevenlabs-js` 2.78.0 (track 1), `qrcode.react` 4.2.0 (track 2). `.npmrc` blocks package versions under 7 days old, so the newest release may not install.
 
 ## ElevenLabs pieces (track 2; transcript and audio fetch, track 1)
 

@@ -17,7 +17,7 @@ The number is the owning track. `(new)` means the folder doesn't exist yet; its 
 main.wasp.ts               1    routes, operations, job; others ask, append at the end
 schema.prisma              1    data model, append-only
 package.json + lock file   1    installs every dependency; regenerate the lock, never merge it
-.gitignore, .env.example   1
+.gitignore, .env.*.example 1    new env variables: ask track 1 to append a line
 docs/                      all  IDEA.md, TECH.md, this file
 src/
   contract.ts              3    types that cross tracks; a change is a team announcement
