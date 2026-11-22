@@ -41,10 +41,15 @@ Locked 2026-11-22 11:25. Working name: TBD.
 | --- | --- | --- |
 | Create study from URL | Edit questions by hand | Payments |
 | Voice interview on a phone | On-screen character | Recruiting participants |
-| Report with themes and counts | Quote audio clips | Multiple languages |
-| Runs on a judge's own input | Sign-up and accounts | Exports and integrations |
+| Report with themes and counts | Sign-up and accounts | Multiple languages |
+| Runs on a judge's own input | | Exports and integrations |
+| Quote audio clips, cheapest form | | |
 
-If time runs short, things leave from the right. Quote audio clips are the feature that sets the report apart, so they are the first nice-to-have to build.
+If time runs short, things leave from the right.
+
+**Quote audio clips** are must-work because the demo ends on the judge hearing their own voice. The cheapest form only: the full interview recording played from the quote's start, one play button, no audio cutting.
+
+**Build order**: voice interview, text report, public URL, hall-strangers study, then clips. If time forces a choice, the strangers study comes first and the report shows quote text only.
 
 ## Stack
 
