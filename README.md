@@ -9,6 +9,7 @@ Give it your product's context and it interviews real people out loud, then hand
 3. Database: `createdb fieldwork`, put your Mac username in `DATABASE_URL`, then `wasp db migrate-dev`.
 4. `npm run dev` starts the client on port 3002 and the server on 3003.
 5. `npm run check` compiles and typechecks.
+6. Phones need HTTPS: `npm run tunnels` in one terminal (keep it running), then `npm run dev:tunnel` instead of `npm run dev`, and open the client URL it prints.
 
 ## Docs
 

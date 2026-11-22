@@ -140,9 +140,9 @@ The phone needs HTTPS for the microphone, and Wasp dev runs the client and serve
 
 **Decision: no deploy.** The app runs on the presenting laptop with the local Postgres, and two HTTPS tunnels expose it to phones.
 
-- **Tunnels**: one for the client (3002) and one for the server (3003), for example two `cloudflared tunnel --url` quick tunnels. Put the URLs in `REACT_APP_API_URL` (`.env.client`) and `WASP_WEB_CLIENT_URL` / `WASP_SERVER_URL` (`.env.server`); **verified** these variables exist.
+- **Tunnels**: `npm run tunnels` opens two cloudflared quick tunnels (3002 and 3003) and saves their URLs; then `npm run dev:tunnel` runs `wasp start --client-url ... --server-url ...` with them. **Verified**: Wasp 0.26 rejects `REACT_APP_API_URL`, `WASP_WEB_CLIENT_URL` and `WASP_SERVER_URL` in env files and takes these flags instead.
 - **Keep them stable**: free tunnel URLs change on restart, which breaks the QR code. Start them once before the hall study and leave them running.
-- **Order and host check**: start the tunnels before `wasp start`, since the client reads `REACT_APP_API_URL` at startup. Vite blocks unknown hosts, so `vite.config.ts` needs `server.allowedHosts` set to the tunnel domain (**check** on our Vite 8).
+- **Order and host check**: start the tunnels first, since `dev:tunnel` reads their URLs. `vite.config.ts` allows `.trycloudflare.com` hosts (**verified** through a tunnel).
 - **Keep the laptop up**: `caffeinate -is`, on power, with our phone hotspot as the network fallback.
 - **Deploy** (`wasp deploy` to Railway or Fly) only if tunnels fail. Railway would provision its own Postgres.
 
