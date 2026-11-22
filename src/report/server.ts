@@ -3,6 +3,14 @@ import type { FetchedConversation, ReportView } from '../contract';
 import { fetchConversation } from '../jobs/elevenlabsClient';
 import { refreshStudyReport, type ReportRepository } from './pipeline';
 
+// Joke runs and dropped calls stay saved but are kept out of themes and the summary.
+const MIN_CALL_SECS = 15;
+const MIN_PARTICIPANT_WORDS = 10;
+function isSubstantive(conversation: FetchedConversation): boolean {
+  const words = (conversation.turns ?? []).filter(turn => turn.role === 'user').reduce((sum, turn) => sum + turn.text.trim().split(/\s+/).filter(Boolean).length, 0);
+  return (conversation.durationSecs ?? 0) >= MIN_CALL_SECS && words >= MIN_PARTICIPANT_WORDS;
+}
+
 export const reportRepository: ReportRepository = {
   async load(studyId) {
     const study = await prisma.study.findUniqueOrThrow({ where: { id: studyId }, include: {
@@ -11,7 +19,7 @@ export const reportRepository: ReportRepository = {
     return {
       revision: study.reportRevision,
       study: { id: study.id, productName: study.name, productUrl: study.productUrl, goal: study.goal, audience: study.audience, context: study.context, questions: study.questions },
-      calls: study.interviews.filter(call => call.transcript).map((call, index) => ({
+      calls: study.interviews.filter(call => call.transcript && isSubstantive(call.transcript as unknown as FetchedConversation)).map((call, index) => ({
         interviewId: call.id, title: `Participant ${String(index + 1).padStart(2, '0')}`,
         conversation: call.transcript as unknown as FetchedConversation,
         // Older calls lack a snapshot; do not claim they used today's revised questions.
