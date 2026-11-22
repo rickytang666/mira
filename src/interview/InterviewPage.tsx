@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 import { ConversationProvider, useConversation } from '@elevenlabs/react';
-import { QRCodeSVG } from 'qrcode.react';
 import { Mic, MicOff, PhoneOff, RotateCcw, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { useQuery, getPublicStudy } from 'wasp/client/operations';
 import type { PublicStudy } from '../contract';
 import { reportFinished } from './finished';
-import { VoiceOrb } from './VoiceOrb';
+import { CharacterCanvas } from '../character/CharacterCanvas';
+import '../Main.css';
 import './interview.css';
 
 const AGENT_ID = (import.meta.env.REACT_APP_ELEVENLABS_AGENT_ID as string | undefined) ?? '';
@@ -102,21 +102,15 @@ function Interview({ study, muted, setMuted }: { study: PublicStudy; muted: bool
   }
 
   const live = phase === 'live';
-  const caption = lines[lines.length - 1];
+  const speaking = live && conversation.isSpeaking;
+  const mouthOpen = useAgentMouth(speaking, conversation.getOutputVolume);
+  const [gesture, setGesture] = useState(0);
   const productName = study.name || 'this product';
 
   return (
-    <Shell productName={productName}>
-      <div className="iv-stage">
-        <VoiceOrb speaking={live && conversation.isSpeaking} live={live} />
-        <p className="iv-status" role="status">
-          {phase === 'ready' && 'About a minute. Just talk normally.'}
-          {phase === 'connecting' && 'Connecting…'}
-          {live && (muted ? 'Muted. Tap the mic when you want to talk.' : conversation.isSpeaking ? 'Speaking…' : 'Listening…')}
-          {phase === 'done' && 'Thanks for your time!'}
-          {phase === 'error' && 'Something went wrong.'}
-        </p>
-        {live && caption && <p className={`iv-caption ${caption.role}`}>{caption.text}</p>}
+    <Shell>
+      <div className="iv-stage" onPointerDown={() => setGesture(g => g + 1)}>
+        <CharacterCanvas mode={speaking ? 'speaking' : live ? 'listening' : 'idle'} mouthOpen={mouthOpen} mouthShape={mouthOpen > 0.15 ? 'aa' : 'rest'} gesture={gesture} />
       </div>
 
       {error && <div className="iv-error"><AlertCircle size={16} />{error}</div>}
@@ -125,7 +119,7 @@ function Interview({ study, muted, setMuted }: { study: PublicStudy; muted: bool
         {(phase === 'ready' || phase === 'error') && (
           <button className="iv-start" onClick={start}><Mic size={20} />{phase === 'error' ? 'Try again' : 'Start interview'}</button>
         )}
-        {phase === 'connecting' && <button className="iv-start" disabled>Connecting…</button>}
+        {phase === 'connecting' && <button className="iv-start" disabled><Loader2 className="iv-spin" size={18} />Connecting</button>}
         {live && (
           <>
             <button className={`iv-round ${muted ? 'off' : ''}`} onClick={() => setMuted(!muted)} aria-label={muted ? 'Unmute microphone' : 'Mute microphone'}>
@@ -137,38 +131,42 @@ function Interview({ study, muted, setMuted }: { study: PublicStudy; muted: bool
         {phase === 'done' && (
           <div className="iv-done">
             <CheckCircle2 size={22} />
-            <p>Your answers are with the {productName} team.</p>
+            <p>Thank you. Your answers are with the {productName} team.</p>
             <button className="iv-link" onClick={() => setPhase('ready')}><RotateCcw size={14} />Start over</button>
           </div>
         )}
       </div>
-
-      <p className="iv-fine">Your voice is recorded and shared with the team that made this study. No sign-up, no other personal data.</p>
     </Shell>
   );
 }
 
-function Shell({ productName, children }: { productName?: string; children: React.ReactNode }) {
+/** Opens the character's mouth with the agent's output volume while it speaks. */
+function useAgentMouth(speaking: boolean, getOutputVolume: () => number): number {
+  const [open, setOpen] = useState(0);
+  const read = useRef(getOutputVolume);
+  read.current = getOutputVolume;
+  useEffect(() => {
+    if (!speaking) { setOpen(0); return; }
+    let raf = 0;
+    const tick = () => {
+      let volume = 0;
+      try { volume = read.current(); } catch { volume = 0; }
+      setOpen(Math.min(1, volume * 2.5));
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [speaking]);
+  return open;
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="iv-page">
       <main className="iv-card">
-        <div className="iv-brand"><span className="iv-mark">F</span>Fieldwork</div>
-        {productName && (
-          <header className="iv-head">
-            <div className="iv-eyebrow">A SHORT VOICE INTERVIEW</div>
-            <h1>Help shape {productName}</h1>
-          </header>
-        )}
+        <img className="iv-logo" src="/mira-logo.png" alt="Mira" />
         {children}
       </main>
-      {productName && (
-        <aside className="iv-share">
-          <a className="study-qr" href={window.location.href} aria-label="Interview link QR code">
-            <QRCodeSVG value={window.location.href} size={196} level="M" marginSize={2} fgColor="#263e2e" bgColor="#ffffff" />
-          </a>
-          <p><strong>Scan to start on your phone</strong>About a minute, no sign-up.</p>
-        </aside>
-      )}
     </div>
   );
 }
