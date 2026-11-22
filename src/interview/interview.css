@@ -1,7 +1,12 @@
-.iv-page{min-height:100vh;min-height:100dvh;display:flex;justify-content:center;padding:20px 16px 28px;background:var(--canvas);color:var(--ink);font-family:'DM Sans',sans-serif}
+.iv-page{--paper:#d5ddf9;min-height:100vh;min-height:100dvh;display:flex;justify-content:center;padding:20px 16px 28px;color:var(--ink);font-family:'DM Sans',sans-serif;
+  /* Mild paper in the logo's periwinkle: a soft vignette plus fine grain. */
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .37 0 0 0 0 .5 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),radial-gradient(120% 80% at 50% 35%,#dfe5fb 0%,var(--paper) 55%,#d1d9f7 100%);background-color:var(--paper)}
 .iv-card{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;text-align:center}
-.iv-logo{width:44px;height:44px;border-radius:12px;align-self:center}
-.iv-stage{flex:1;width:100%;min-height:360px;max-height:62vh;margin:12px 0 16px;touch-action:manipulation}
+.iv-logo{width:44px;height:44px;border-radius:12px;align-self:flex-start}
+.iv-stage{flex:1;width:100%;min-height:360px;max-height:62vh;margin:4px 0 16px;display:flex;justify-content:center;touch-action:manipulation}
+/* Same aspect ratio as the character rig, so percentage positions land on the drawing. */
+.iv-figure{position:relative;height:100%;max-width:100%;aspect-ratio:1180/1580}
+.iv-shirt-logo{position:absolute;left:var(--shirt-x,56%);top:var(--shirt-y,61%);width:var(--shirt-w,13%);aspect-ratio:1;object-fit:contain;transform:translate(-50%,-50%) rotate(-2deg);mix-blend-mode:multiply;opacity:.88;filter:saturate(.9) contrast(1.05);pointer-events:none}
 .iv-actions{display:flex;justify-content:center;gap:18px;width:100%}
 .iv-start{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;max-width:320px;padding:18px 24px;border:0;border-radius:14px;background:var(--brand);color:#fff;font:inherit;font-size:17px;font-weight:600;box-shadow:0 8px 24px var(--shadow);transition:transform .15s,background .15s}
 .iv-start:hover:not(:disabled){background:var(--accent-ink)}

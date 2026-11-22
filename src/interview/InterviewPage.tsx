@@ -110,7 +110,10 @@ function Interview({ study, muted, setMuted }: { study: PublicStudy; muted: bool
   return (
     <Shell>
       <div className="iv-stage" onPointerDown={() => setGesture(g => g + 1)}>
-        <CharacterCanvas mode={speaking ? 'speaking' : live ? 'listening' : 'idle'} mouthOpen={mouthOpen} mouthShape={mouthOpen > 0.15 ? 'aa' : 'rest'} gesture={gesture} />
+        <div className="iv-figure">
+          <CharacterCanvas mode={speaking ? 'speaking' : live ? 'listening' : 'idle'} mouthOpen={mouthOpen} mouthShape={mouthOpen > 0.15 ? 'aa' : 'rest'} gesture={gesture} />
+          {study.logo && <img className="iv-shirt-logo" src={study.logo} alt="" />}
+        </div>
       </div>
 
       {error && <div className="iv-error"><AlertCircle size={16} />{error}</div>}
