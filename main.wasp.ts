@@ -4,7 +4,7 @@ import { KnowledgePage } from "./src/study/KnowledgePage" with { type: "ref" };
 import { QuestionnairePage } from "./src/study/QuestionnairePage" with { type: "ref" };
 import { ReportPage } from "./src/report/ReportPage" with { type: "ref" };
 import { importWebsite, importMcp } from "./src/sources" with { type: "ref" };
-import { createStudy, getStudies, getStudy, updateStudy, addSource, deleteSource, getPublicStudy, finishInterview, getReport, generateStudyQuestions } from "./src/study/operations" with { type: "ref" };
+import { createStudy, getStudies, getStudy, updateStudy, setStudyLogo, addSource, deleteSource, getPublicStudy, finishInterview, getReport, generateStudyQuestions } from "./src/study/operations" with { type: "ref" };
 import { processInterview } from "./src/jobs/processInterview" with { type: "ref" };
 import { interviewAudio } from "./src/jobs/interviewAudio" with { type: "ref" };
 import { generateInterviewReport, regenerateStudyReport } from "./src/report/operations" with { type: "ref" };
@@ -31,6 +31,7 @@ export default app({
     query(getStudies, { entities: ["Study"] }),
     query(getStudy, { entities: ["Study", "Question", "Source"] }),
     action(updateStudy, { entities: ["Study", "Question"] }),
+    action(setStudyLogo, { entities: ["Study"] }),
     action(addSource, { entities: ["Study", "Source"] }),
     action(deleteSource, { entities: ["Study", "Source"] }),
     query(getPublicStudy, { entities: ["Study", "Question"] }),

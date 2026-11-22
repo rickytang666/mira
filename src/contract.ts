@@ -70,6 +70,7 @@ export type PublicStudy = {
   questions: string[];
   dynamicVariables?: InterviewDynamicVariables;
   name: string;
+  logo?: string | null; // founder's logo as a data URL, drawn on the character's shirt
 };
 
 export type FinishInterviewInput = {

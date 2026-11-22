@@ -21,6 +21,7 @@ model Study {
   interviews Interview[]
   themes     Theme[]
   sources    Source[]
+  logo       String?
   report     Json?
   reportRevision Int @default(0)
   reportError String?

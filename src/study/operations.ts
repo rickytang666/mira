@@ -5,6 +5,7 @@ import type {
   GetStudies,
   GetStudy,
   UpdateStudy,
+  SetStudyLogo,
   AddSource,
   DeleteSource,
   GetPublicStudy,
@@ -107,6 +108,16 @@ export const updateStudy: UpdateStudy<UpdateStudyInput, void> = async (args, con
   });
 };
 
+// Logos are stored inline as small data URLs; the uploader downsizes them to 256 px first.
+const MAX_LOGO_LENGTH = 400_000;
+
+export const setStudyLogo: SetStudyLogo<{ studyId: string; logo: string | null }, void> = async ({ studyId, logo }, context) => {
+  if (logo !== null && (typeof logo !== "string" || !/^data:image\/(png|jpeg|webp);base64,/.test(logo) || logo.length > MAX_LOGO_LENGTH)) {
+    throw new HttpError(400, "Use a PNG, JPEG or WebP logo under 300 KB.");
+  }
+  await context.entities.Study.update({ where: { id: studyId }, data: { logo } });
+};
+
 type AddSourceInput = { studyId: string; kind: string; title: string; content: string; detail: string };
 
 // Study.context is the joined text of its sources, so it is rebuilt on every source change.
@@ -138,6 +149,7 @@ export const getPublicStudy: GetPublicStudy<{ studyId: string }, PublicStudy> = 
     productUrl: study.productUrl,
     goal: study.goal,
     questions: study.questions.map((q) => q.text),
+    logo: study.logo,
     dynamicVariables: interviewVariables({ id: study.id, productName: study.name, productUrl: study.productUrl, goal: study.goal, audience: study.audience, context: study.context, questions: study.questions }),
   };
 };
