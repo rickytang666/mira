@@ -380,3 +380,9 @@ nav{overflow-x:auto}
 .nav-study-name{font-weight:600;color:var(--ink)}
 .nav-study-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nav-sub{padding-left:22px;font-size:14px}
+/* Wider sidebar so study names and nested pages fit without wrapping. */
+.sidebar{width:272px;padding-left:20px;padding-right:20px}
+.main-shell{margin-left:272px;width:calc(100% - 272px)}
+@media(max-width:1150px){.sidebar{width:252px}.main-shell{margin-left:252px;width:calc(100% - 252px)}}
+@media(max-width:850px){.sidebar{width:228px;padding-left:14px;padding-right:14px}.main-shell{margin-left:228px;width:calc(100% - 228px)}.nav-item{font-size:13px}}
+@media(max-width:600px){.sidebar{width:100%}.main-shell{margin-left:0;width:100%}}
