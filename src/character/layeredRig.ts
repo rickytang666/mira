@@ -124,9 +124,10 @@ export function createLayeredRig(image:HTMLImageElement,shirtColor?:Rgb){
     ctx.save();hinge(ctx,joints.left.shoulder,pose.leftUpper);draw(ctx,leftUpper);
     ctx.fillStyle=color(195,1280);ctx.beginPath();ctx.ellipse(193,1301,46,50,0,0,Math.PI*2);ctx.fill();
     hinge(ctx,joints.left.elbow,pose.leftFore);draw(ctx,leftFore);ctx.fillStyle=color(218,1154);ctx.beginPath();ctx.ellipse(216,1136,38,17,0,0,Math.PI*2);ctx.fill();hinge(ctx,joints.left.wrist,pose.leftHand);draw(ctx,leftHand);ctx.restore();
-    ctx.save();hinge(ctx,joints.right.shoulder,pose.rightUpper);draw(ctx,rightUpper);
+    // The right hand rests on the belt and its cut-out carries belt pixels, so that arm stays still.
+    ctx.save();hinge(ctx,joints.right.shoulder,0);draw(ctx,rightUpper);
     ctx.fillStyle=color(842,1350);ctx.beginPath();ctx.ellipse(853,1363,29,34,0,0,Math.PI*2);ctx.fill();
-    hinge(ctx,joints.right.elbow,pose.rightFore);draw(ctx,rightFore);ctx.beginPath();ctx.ellipse(643,1389,22,38,0,0,Math.PI*2);ctx.fill();hinge(ctx,joints.right.wrist,pose.rightHand);draw(ctx,rightHand);ctx.restore();
+    hinge(ctx,joints.right.elbow,0);draw(ctx,rightFore);ctx.beginPath();ctx.ellipse(643,1389,22,38,0,0,Math.PI*2);ctx.fill();hinge(ctx,joints.right.wrist,0);draw(ctx,rightHand);ctx.restore();
     ctx.save();ctx.translate(0,pose.nod);hinge(ctx,[552,730],pose.head);draw(ctx,head);
     eye(ctx,454,421,54,39,-.19,pose.blink,skinLeft);eye(ctx,614,377,52,40,-.17,pose.blink,skinRight);
     if(pose.blink>.002)ctx.drawImage(glasses,355,320);
