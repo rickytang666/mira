@@ -26,7 +26,7 @@ export function Layout({
           <Mark />
           <span className="brand-name">Mira<small>User researcher</small></span>
         </Link>
-        <nav aria-label="Demo sections">
+        <nav aria-label="Study">
           {[
             { id: 'studies', path: '/', icon: Plus, label: 'New study', count: 0 },
             ...(studyId
