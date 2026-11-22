@@ -16,8 +16,8 @@ async function generateReport(input: GenerateReportInput): Promise<ReportView> {
 function Preview() {
   const [testTools, setTestTools] = useState(false);
   return <>
-    <header style={{ maxWidth: 1080, padding: '24px 20px 18px', margin: 'auto', font: '12px system-ui', borderBottom: '1px solid #e0e4db', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><strong style={{ color: '#345b45', fontSize: 22, letterSpacing: -1 }}>fieldwork.</strong><button className="fw-text-button" onClick={() => setTestTools(value => !value)}>{testTools ? 'Back to report preview' : 'Developer test tools'}</button></header>
-    {testTools ? <ReportWorkspace studyId="preview-report" productName="Fieldwork" goal="Understand what gets in the way of a successful first experience." generateReport={generateReport}/>
+    <header style={{ maxWidth: 1080, padding: '24px 20px 18px', margin: 'auto', font: '12px system-ui', borderBottom: '1px solid #eae5ef', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><strong style={{ color: '#605372', fontSize: 22, letterSpacing: -1 }}>Mira</strong><button className="fw-text-button" onClick={() => setTestTools(value => !value)}>{testTools ? 'Back to report preview' : 'Developer test tools'}</button></header>
+    {testTools ? <ReportWorkspace studyId="preview-report" productName="Mira" goal="Understand what gets in the way of a successful first experience." generateReport={generateReport}/>
       : <ReportContent report={fromReportView(sampleReportView)} sample/>}
   </>;
 }

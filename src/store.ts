@@ -4,6 +4,7 @@ export type SourceKind = 'url' | 'description' | 'pdf' | 'mcp';
 export type Source = { id: string; kind: SourceKind; title: string; content: string; detail: string; addedAt: string };
 export type Question = { id: string; text: string; followUp: boolean };
 export type Workspace = { name: string; sources: Source[]; goal: string; audience: string; questions: Question[] };
+// Preserve the original storage key so the Mira rebrand keeps existing workspace data.
 const key = 'fieldwork.workspace.v1';
 const empty: Workspace = { name: 'My product', sources: [], goal: '', audience: '', questions: [] };
 

@@ -32,7 +32,6 @@ export function NewStudyPage() {
   return (
     <Layout page="studies" sourceCount={0} questionCount={0}>
       <PageHeader
-        eyebrow="NEW STUDY"
         title="What are you building, and what do you want to learn?"
         description="Paste your product's URL. The interviewer reads it and writes the questions."
       />

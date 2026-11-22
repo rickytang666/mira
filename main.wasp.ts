@@ -11,10 +11,15 @@ import { generateInterviewReport, regenerateStudyReport } from "./src/report/ope
 import { InterviewPage } from "./src/interview/InterviewPage" with { type: "ref" };
 
 export default app({
-  name: "fieldwork",
+  name: "mira",
   wasp: { version: "^0.26.1" },
-  title: "Fieldwork — Listen. Learn. Build.",
-  head: ["<link rel='icon' type='image/svg+xml' href='/favicon.svg' />", "<meta name='theme-color' content='#f8f9f6' />"],
+  title: "Mira — Listen. Learn. Build.",
+  head: [
+    "<link rel='icon' type='image/png' sizes='32x32' href='/favicon.png' />",
+    "<link rel='apple-touch-icon' sizes='180x180' href='/apple-touch-icon.png' />",
+    "<meta name='application-name' content='Mira' />",
+    "<meta name='theme-color' content='#F7F5FA' />",
+  ],
   spec: [
     route("RootRoute", "/", page(NewStudyPage)),
     route("KnowledgeRoute", "/study/:studyId/knowledge", page(KnowledgePage)),

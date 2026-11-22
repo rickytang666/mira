@@ -63,7 +63,6 @@ export function QuestionnairePage() {
   return (
     <Layout page="questionnaire" sourceCount={study.sources.length} questionCount={questions.length}>
       <PageHeader
-        eyebrow={`02 / ${study.name.toUpperCase()}`}
         title="What would you like to learn?"
         description="The interviewer asks these questions and follows up on its own."
         action={dirty

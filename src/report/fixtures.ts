@@ -26,7 +26,7 @@ export const sampleInterviews: InterviewResult[] = [
   ] } },
 ];
 
-export const sampleStudy = { id: 'sample-study', name: 'Fieldwork', goal: 'Understand what gets in the way of a successful first experience.' };
+export const sampleStudy = { id: 'sample-study', name: 'Mira', goal: 'Understand what gets in the way of a successful first experience.' };
 export const sampleReport = buildReport(sampleStudy, sampleInterviews, '2026-11-22T17:00:00.000Z');
 
 /** Fixture in the exact getReport contract, suitable for wiring before the query lands. */
@@ -35,7 +35,7 @@ export const sampleReportView: ReportView = {
   goal: sampleReport.goal,
   interviewsDone: sampleReport.completedCount,
   interviewsProcessing: sampleReport.processingCount,
-  productName: 'Fieldwork',
+  productName: 'Mira',
   updatedAt: sampleReport.updatedAt,
   questionFindings: [
     { question: 'What gets in the way of completing setup?', status: 'answered', finding: 'All three sample participants described friction with the first integration. Finding the right settings and understanding permissions are concrete places to improve.', themeIds: [sampleReport.themes[0].id] },

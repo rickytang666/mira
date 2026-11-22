@@ -50,7 +50,7 @@ export function ReportContent({ studyId = '', report: provided, loadReport, poll
     </article>;
   }
   return <section className="fw-report" aria-label="Interview research report">
-    <header className="fw-report-heading"><div><p className="fw-eyebrow">03 / THE LEARNING</p><h1>Their words.<br/>Your next move.</h1><p className="fw-description">{report?.goal || 'A home for the patterns, surprises, and stories from your users.'}</p></div>
+    <header className="fw-report-heading"><div><h1>Their words.<br/>Your next move.</h1><p className="fw-description">{report?.goal || 'A home for the patterns, surprises, and stories from your users.'}</p></div>
       <div className="fw-heading-aside">{actions}<div className="fw-study-badge"><span className="fw-status-dot"/>{sample ? 'Sample report' : report?.productName || 'Research report'}<small>{sample ? 'Illustrative data · not real interviews' : loadReport ? 'Updates automatically' : 'Interview evidence'}</small></div></div>
     </header>
     {beforeContent}
@@ -74,7 +74,7 @@ export function ReportContent({ studyId = '', report: provided, loadReport, poll
         <div className="fw-theme-quotes">{(expanded[theme.id] ? theme.quotes : theme.quotes.slice(0, 2)).map(renderQuote)}</div>
         {theme.quotes.length > 2 && <button className="fw-more" aria-expanded={!!expanded[theme.id]} onClick={() => setExpanded(v => ({ ...v, [theme.id]: !v[theme.id] }))}>{expanded[theme.id] ? 'Show fewer quotes' : `Show all ${theme.quotes.length} quotes`} <span aria-hidden="true">↗</span></button>}
       </section>)}</div>}
-      <footer className="fw-report-footer">Counts show distinct interviews, not repeated mentions.<span>{sample ? 'Sample evidence for layout testing.' : 'Listen closely. Build thoughtfully.'}</span></footer>
+      <footer className="fw-report-footer">Counts show distinct interviews, not repeated mentions.{sample && <span>Sample evidence for layout testing.</span>}</footer>
     </>}
   </section>;
 }

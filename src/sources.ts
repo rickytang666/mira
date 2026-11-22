@@ -24,7 +24,7 @@ export async function importWebsite({ url: input }: { url: string }) {
   try {
     let url = await publicUrl(input);
     for (let redirect = 0; redirect < 5; redirect++) {
-      const response = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(15000), headers: { 'User-Agent': 'FieldworkResearch/1.0', Accept: 'text/html' } });
+      const response = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(15000), headers: { 'User-Agent': 'MiraResearch/1.0', Accept: 'text/html' } });
       if (response.status >= 300 && response.status < 400 && response.headers.get('location')) {
         url = await publicUrl(new URL(response.headers.get('location')!, url).href); continue;
       }
@@ -46,7 +46,7 @@ export async function importWebsite({ url: input }: { url: string }) {
 }
 
 export async function importMcp({ endpoint, token }: { endpoint: string; token?: string }) {
-  const client = new Client({ name: 'fieldwork', version: '1.0.0' });
+  const client = new Client({ name: 'mira', version: '1.0.0' });
   try {
     const url = await publicUrl(endpoint);
     const transport = new StreamableHTTPClientTransport(url, {

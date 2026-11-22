@@ -9,3 +9,5 @@ node_modules/
 dist/
 !.env.*.example
 .tunnel-urls
+.avatar-preview/
+public/avatar-preview/

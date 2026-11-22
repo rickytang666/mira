@@ -1,11 +1,13 @@
 {
-  "name": "fieldwork",
+  "name": "mira",
   "type": "module",
   "scripts": {
     "dev": "wasp start --client-port 3002 --server-port 3003",
     "check": "wasp compile",
     "tunnels": "scripts/tunnels.sh",
-    "dev:tunnel": "scripts/dev-tunnel.sh"
+    "dev:tunnel": "scripts/dev-tunnel.sh",
+    "avatar:dev": "vite --config prototype/vite.config.ts",
+    "avatar:build": "vite build --config prototype/vite.config.ts"
   },
   "workspaces": [
     ".wasp/out/*",

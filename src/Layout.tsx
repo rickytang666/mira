@@ -1,22 +1,11 @@
 import type { ReactNode } from 'react';
 import { NavLink, Link, useParams } from 'react-router';
-import { AlertCircle, AudioLines, BarChart3, BookOpen, ChevronDown, ListChecks, Plus } from 'lucide-react';
+import { AlertCircle, BarChart3, BookOpen, ListChecks, Plus } from 'lucide-react';
 import './Main.css';
 
 export type Page = 'studies' | 'knowledge' | 'questionnaire' | 'report';
-const titles = {
-  studies: 'Studies',
-  knowledge: 'Knowledge base',
-  questionnaire: 'Questionnaire',
-  report: 'Report',
-};
-
-function Mark({ small = false }: { small?: boolean }) {
-  return (
-    <span className={`brand-mark ${small ? 'small' : ''}`}>
-      <AudioLines size={small ? 17 : 23} />
-    </span>
-  );
+function Mark() {
+  return <img className="brand-mark" src="/mira-logo.png" alt="" width={36} height={36} />;
 }
 export function Layout({
   page,
@@ -33,21 +22,11 @@ export function Layout({
   return (
     <div className="app">
       <aside className="sidebar">
-        <Link className="brand" to="/">
+        <Link className="brand" to="/" aria-label="Mira home">
           <Mark />
-          <span>
-            fieldwork<span className="brand-dot">.</span>
-          </span>
+          <span>Mira</span>
         </Link>
-        <div className="workspace-switch">
-          <span className="workspace-icon">M</span>
-          <span>
-            My workspace<small>Personal workspace</small>
-          </span>
-          <ChevronDown size={14} />
-        </div>
-        <div className="nav-label">WORKSPACE</div>
-        <nav>
+        <nav aria-label="Demo sections">
           {[
             { id: 'studies', path: '/', icon: Plus, label: 'New study', count: 0 },
             ...(studyId
@@ -88,50 +67,18 @@ export function Layout({
             </NavLink>
           ))}
         </nav>
-        <div className="sidebar-bottom">
-          <div className="little-note">
-            <span className="live-dot" />
-            Good research starts
-            <br />
-            with a little listening.
-          </div>
-          <div className="profile">
-            <span className="avatar">Y</span>
-            <div>
-              Your workspace
-              <small>
-                Built with Wasp <span>↗</span>
-              </small>
-            </div>
-            <span className="profile-dot" />
-          </div>
-        </div>
       </aside>
       <div className="main-shell">
-        <header className="topbar">
-          <span>Workspace</span>
-          <span className="slash">/</span>
-          <span className="breadcrumb">{titles[page]}</span>
-          <div className="topbar-right">
-            <span className="draft-dot" /> Study draft <span className="top-avatar">Y</span>
-          </div>
-        </header>
         <main>{children}</main>
-        <footer>
-          <span>Less guessing. More listening.</span>
-          <span>Made for the conversations that matter.</span>
-        </footer>
       </div>
     </div>
   );
 }
 export function PageHeader({
-  eyebrow,
   title,
   description,
   action,
 }: {
-  eyebrow: string;
   title: string;
   description: string;
   action?: ReactNode;
@@ -139,7 +86,6 @@ export function PageHeader({
   return (
     <div className="page-heading">
       <div>
-        <div className="eyebrow">{eyebrow}</div>
         <h1>{title}</h1>
         <p>{description}</p>
       </div>

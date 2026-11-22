@@ -1,6 +1,6 @@
-# Idea: user-interview agent
+# Mira: user-interview agent
 
-Locked 2026-11-22 11:25. Working name: Fieldwork (from the skeleton, not confirmed).
+Locked 2026-11-22 11:25. Product name: Mira.
 
 **One line**: Give it your product's URL and it interviews real people out loud, then hands you the research report.
 
@@ -73,5 +73,4 @@ Grand Prize or Best Use of ElevenLabs (they can't be combined), plus Best projec
 ## Open decisions
 
 - The on-screen character: what it looks like (owned by track 4).
-- The product name: confirm Fieldwork.
 - Which question we ask the hall.

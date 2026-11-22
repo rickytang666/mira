@@ -141,7 +141,6 @@ export function KnowledgePage() {
   return (
     <Layout page="knowledge" sourceCount={sources.length} questionCount={study?.questions.length ?? 0}>
       <PageHeader
-        eyebrow="01 / THE CONTEXT"
         title="A little context goes a long way."
         description="Give your interviewer a home base for understanding your product."
       />

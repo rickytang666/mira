@@ -1,6 +1,6 @@
-# Fieldwork
+# Mira
 
-Give it your product's context and it interviews real people out loud, then hands you the research report. Built on Wasp and ElevenLabs.
+Give Mira your product's context and it interviews real people out loud, then hands you the research report. Built on Wasp and ElevenLabs.
 
 ## Run it
 
