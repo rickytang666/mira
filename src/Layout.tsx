@@ -54,6 +54,10 @@ export function Layout({
             </div>
           ))}
         </nav>
+        <div className="sidebar-credits">
+          <a href="https://wasp.sh" target="_blank" rel="noreferrer">Built with Wasp</a>
+          <a href="https://elevenlabs.io" target="_blank" rel="noreferrer">Voice by ElevenLabs</a>
+        </div>
       </aside>
       <div className="main-shell">
         <main>{children}</main>
