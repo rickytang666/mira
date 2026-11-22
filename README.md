@@ -1,19 +1,29 @@
 # Mira
 
-Give Mira your product's context and it interviews real people out loud, then hands you the research report. Built on Wasp and ElevenLabs.
+Mira is a user researcher you can hire in a minute. Give her your product's URL and what you want to learn. She writes the interview, talks to your users by voice on their phones, and hands you a report of themes and quotes you can play back in their own voices.
 
-## Run it
+## How it works
 
-1. Node 24.22.1 or newer (`nvm use 24.22.3`) and the Wasp CLI 0.26.1.
-2. Copy `.env.server.example` to `.env.server` and `.env.client.example` to `.env.client`.
-3. Database: `createdb fieldwork`, put your Mac username in `DATABASE_URL`, then `wasp db migrate-dev`.
-4. `npm run dev` starts the client on port 3002 and the server on 3003.
-5. `npm run check` compiles and typechecks.
-6. Phones need HTTPS: `npm run tunnels` in one terminal (keep it running), then `npm run dev:tunnel` instead of `npm run dev`, and open the client URL it prints.
+1. **Brief.** Mira reads your site and writes 3 to 5 interview questions about it.
+2. **Interviews.** Participants scan a QR code and talk to Mira for about a minute. No app, no sign-up.
+3. **Report.** After each call, Mira pulls the transcript and recording, groups answers into themes, and links every quote to the moment it was said.
 
-## Docs
+## Built with
 
-- [docs/IDEA.md](docs/IDEA.md): what we're building and what's in scope.
-- [docs/TECH.md](docs/TECH.md): architecture, data model, what exists and what's planned.
-- [docs/OWNERSHIP.md](docs/OWNERSHIP.md): tracks, owners, and the file tree.
-- [src/contract.ts](src/contract.ts): types that cross tracks. Changing it is a team announcement.
+- **ElevenLabs** Conversational AI runs the spoken interview; its transcripts and recordings feed the report.
+- **Wasp** (React, Node.js, Prisma, PostgreSQL) for the app, the data and the background job that builds each report.
+- **OpenRouter** (Gemini 2.5 Flash) writes the questions and synthesizes the report.
+
+## Run it locally
+
+You need Node.js 24.22.1 or newer, the Wasp CLI 0.26.1, PostgreSQL, an ElevenLabs API key and agent, and an OpenRouter API key.
+
+```bash
+cp .env.server.example .env.server   # add your keys and DATABASE_URL
+cp .env.client.example .env.client   # add your ElevenLabs agent ID
+createdb fieldwork
+wasp db migrate-dev
+npm run dev                          # client on :3002, server on :3003
+```
+
+Phones need HTTPS for the microphone. Run `npm run tunnels` in one terminal and leave it running, then `npm run dev:tunnel` instead of `npm run dev`, and open the client URL it prints.
