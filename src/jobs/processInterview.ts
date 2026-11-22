@@ -1,68 +1,38 @@
-import type { ProcessInterview } from "wasp/server/jobs";
-import type { SynthesizeInterviewInput, SynthesizeInterviewOutput } from "../contract";
-import { fetchConversation } from "./elevenlabsClient";
+import { prisma } from 'wasp/server';
+import type { ProcessInterview } from 'wasp/server/jobs';
+import { fetchConversation } from './elevenlabsClient';
+import { rebuildReport } from '../report/server';
 
-const POLL_INTERVAL_MS = 1500;
-const POLL_ATTEMPTS = 20; // about 30 s for ElevenLabs to finish post-call processing
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Placeholder until the LLM synthesizeInterview in src/agent lands: every substantial answer becomes a quote.
-async function synthesizeInterview(input: SynthesizeInterviewInput): Promise<SynthesizeInterviewOutput> {
-  const userTurns = input.turns.filter((turn) => turn.role === "user");
-  const quotes = userTurns
-    .map((turn) => {
-      const next = input.turns.find((t) => t.timeInCallSecs > turn.timeInCallSecs);
-      return { text: turn.text, startSec: turn.timeInCallSecs, endSec: next?.timeInCallSecs ?? turn.timeInCallSecs + 10 };
-    })
-    .filter((quote) => quote.text.split(/\s+/).length >= 6)
-    .slice(0, 3);
-  return { themes: quotes.length ? [{ label: "First impressions", quotes }] : [] };
-}
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-export const processInterview: ProcessInterview<{ interviewId: string }, { themes: number }> = async (
-  { interviewId },
-  context,
-) => {
-  const interview = await context.entities.Interview.findUniqueOrThrow({
-    where: { id: interviewId },
-    include: { study: { include: { questions: { orderBy: { order: "asc" } }, themes: true } } },
-  });
+export const processInterview: ProcessInterview<{ interviewId: string }, { themes: number }> = async ({ interviewId }) => {
+  const interview = await prisma.interview.findUniqueOrThrow({ where: { id: interviewId } });
+  let transcriptSaved = Boolean(interview.transcript);
   try {
-    let conversation = await fetchConversation(interview.conversationId);
-    for (let attempt = 1; attempt < POLL_ATTEMPTS && !["done", "failed"].includes(conversation.status); attempt++) {
-      await sleep(POLL_INTERVAL_MS);
-      conversation = await fetchConversation(interview.conversationId);
-    }
-    if (conversation.status !== "done") throw new Error(`conversation status is ${conversation.status}`);
-
-    const { themes } = await synthesizeInterview({
-      goal: interview.study.goal,
-      questions: interview.study.questions.map((q) => q.text),
-      turns: conversation.turns,
-      existingThemeLabels: interview.study.themes.map((t) => t.label),
-    });
-
-    for (const theme of themes) {
-      const saved = await context.entities.Theme.upsert({
-        where: { studyId_label: { studyId: interview.studyId, label: theme.label } },
-        create: { studyId: interview.studyId, label: theme.label, count: 1 },
-        update: { count: { increment: 1 } },
+    if (!transcriptSaved) {
+      await prisma.interview.update({ where: { id: interviewId }, data: { status: 'processing', error: null } });
+      let conversation = await fetchConversation(interview.conversationId);
+      for (let attempt = 1; attempt < 20 && !['done', 'failed'].includes(conversation.status); attempt++) {
+        await sleep(1500);
+        conversation = await fetchConversation(interview.conversationId);
+      }
+      if (conversation.status !== 'done') throw new Error(`Conversation is ${conversation.status}; transcript is not ready.`);
+      await prisma.$transaction(async tx => {
+        // Lock the study first, matching report commits. Retries replace, never append evidence.
+        await tx.study.update({ where: { id: interview.studyId }, data: { reportRevision: { increment: 1 }, reportError: null } });
+        await tx.interview.update({ where: { id: interviewId }, data: {
+          status: 'done', error: null, durationSecs: conversation.durationSecs,
+          transcript: JSON.parse(JSON.stringify(conversation)),
+        } });
       });
-      await context.entities.Quote.createMany({
-        data: theme.quotes.map((quote) => ({ ...quote, interviewId, themeId: saved.id })),
-      });
+      transcriptSaved = true;
     }
-    await context.entities.Interview.update({
-      where: { id: interviewId },
-      data: { status: "done", durationSecs: conversation.durationSecs },
-    });
-    console.log(`processed interview ${interviewId}: ${themes.length} themes`);
-    return { themes: themes.length };
+    const report = await rebuildReport(interview.studyId);
+    return { themes: report.themes.length };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    await context.entities.Interview.update({ where: { id: interviewId }, data: { status: "failed", error: message } });
-    console.error(`interview ${interviewId} failed: ${message}`);
-    return { themes: 0 };
+    const message = error instanceof Error ? error.message : 'Interview processing failed.';
+    // A model outage must not erase a successfully fetched call or last-good report.
+    if (!transcriptSaved) await prisma.interview.update({ where: { id: interviewId }, data: { status: 'failed', error: message } });
+    throw error; // PgBoss retries transient fetching/model failures.
   }
 };

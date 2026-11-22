@@ -1,17 +1,33 @@
 import { useState } from 'react';
-import { Link } from 'react-router';
-import { ArrowRight, AudioLines, CheckCircle2, Circle, Download, Globe, MessageSquare } from 'lucide-react';
-import { useWorkspace } from '../store';
-import { Layout, PageHeader } from '../Layout';
+import { Link, useParams } from 'react-router';
+import { useQuery, getReport, getStudy, regenerateStudyReport } from 'wasp/client/operations';
+import { Layout } from '../Layout';
+import { ReportContent } from './ReportContent';
+import { fromReportView } from './fromReportView';
 
 export function ReportPage() {
-  const { workspace } = useWorkspace(); const [tab, setTab] = useState('Overview');
-  const hasQuestions = workspace.questions.some(q => q.text.trim());
-  function download() { const blob = new Blob([JSON.stringify({ product: workspace.name, goal: workspace.goal, audience: workspace.audience, questions: workspace.questions.map(({ text, followUp }) => ({ text, followUp })) }, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'fieldwork-research-plan.json'; a.click(); URL.revokeObjectURL(url); }
-  return <Layout page="report" sourceCount={workspace.sources.length} questionCount={workspace.questions.length}><PageHeader eyebrow="03 / THE LEARNING" title="Their words. Your next move." description="A home for the patterns, surprises, and stories from your users." action={<button className="button secondary" onClick={download}><Download size={15}/>Research plan</button>}/>
-    <div className="report-tabs">{['Overview', 'Interviews', 'Outreach'].map(t => <button key={t} onClick={() => setTab(t)} className={tab === t ? 'active' : ''}>{t}{t === 'Interviews' && <span className="number-tag">0</span>}</button>)}<span className="subtle"><span className="draft-dot"/>Awaiting your first interview</span></div>
-    <div className="metrics"><div><span>Completed interviews</span><strong>0</strong><small>Every conversation counts</small></div><div><span>Emerging themes</span><strong>—</strong><small>Patterns across real experiences</small></div><div><span>People reached</span><strong>0</strong><small>Start with the people who use your product</small></div></div>
-    {tab === 'Outreach' ? <section className="outreach-panel"><div className="panel-heading"><h2>Invite people into the conversation</h2><span className="quiet-pill">Not connected</span></div><div className="form-content"><p>Your interview link and QR code will appear here once the voice interviewer is connected.</p><div className="channel-row"><Globe size={19}/><div><strong>Shareable interview link</strong><small>For email, communities, or a quick message</small></div><span className="subtle">Awaiting voice setup</span></div><div className="channel-row"><MessageSquare size={19}/><div><strong>Reach out personally</strong><small>Start with 5 people who have actually used your product</small></div></div><p className="fine-print">No invitations have been sent. This dashboard does not send outreach automatically.</p></div></section> : <section className="report-empty"><div className="report-illustration"><span className="bubble bubble-one"><i/><i/><i/></span><span className="illustration-line"/><span className="bubble bubble-two"><AudioLines size={27}/></span><span className="spark">✳</span></div><div className="eyebrow">THE BEST INSIGHTS ARE STILL AHEAD</div><h2>{tab === 'Interviews' ? 'Your first conversation belongs here.' : 'Listen first. The insights will follow.'}</h2><p>{tab === 'Interviews' ? 'Completed interviews, transcripts, and recordings will live here once the voice interviewer is connected.' : 'Once interviews come in, this is where you’ll discover what people love, where they get stuck, and what to build next.'}</p><Link to={hasQuestions ? '/questionnaire' : '/'} className="button secondary">{hasQuestions ? 'Review your questions' : 'Set up your study'}<ArrowRight size={16}/></Link><div className="evidence-note"><CheckCircle2 size={14}/>Real conversations. Real quotes. No made-up metrics.</div></section>}
-    <div className="study-checklist"><div><h3>Your study, at a glance</h3><p>A little setup before the first conversation.</p></div><Link to="/" className={workspace.sources.length ? 'complete' : ''}>{workspace.sources.length ? <CheckCircle2 size={17}/> : <Circle size={17}/>}Product context</Link><Link to="/questionnaire" className={hasQuestions ? 'complete' : ''}>{hasQuestions ? <CheckCircle2 size={17}/> : <Circle size={17}/>}Interview questions</Link><span><Circle size={17}/>Voice connection</span></div>
+  const { studyId = '' } = useParams();
+  const { data: report, error: loadError, refetch } = useQuery(getReport, { studyId }, { refetchInterval: 5000 });
+  const { data: study } = useQuery(getStudy, { studyId });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  async function regenerate() {
+    setBusy(true); setError('');
+    try { await regenerateStudyReport({ studyId }); await refetch(); }
+    catch (error) { setError(error instanceof Error ? error.message : 'Could not update the report.'); }
+    finally { setBusy(false); }
+  }
+  return <Layout page="report" sourceCount={study?.sources.length ?? 0} questionCount={study?.questions.length ?? 0}>
+    {loadError && <div className="fw-notice" role="alert">Could not load the report. <button onClick={() => void refetch()}>Retry</button></div>}
+    {!report ? <div className="fw-empty" role="status">Loading interview evidence…</div> : <ReportContent
+      report={fromReportView(report)}
+      actions={<button className="fw-button fw-button-primary" disabled={busy || !report.interviewsDone} onClick={regenerate}>{busy ? 'Updating report…' : 'Update report'}</button>}
+      beforeContent={<>
+        {(error || report.synthesisError) && <div className="fw-notice" role="alert">{error || report.synthesisError} Your saved conversations are safe; retry with Update report.</div>}
+        {(busy || report.synthesisStatus === 'processing') && <p className="fw-notice" role="status">Bringing your interviews together. This page updates automatically.</p>}
+        {!busy && report.synthesisStatus === 'waiting' && report.interviewsDone > 0 && <p className="fw-notice">New conversations or study changes are ready to synthesize. Select Update report to include them now.</p>}
+      </>}
+      emptyAction={<Link className="fw-button" to={`/study/${studyId}/questionnaire`}>Review interview questions ↗</Link>}
+    />}
   </Layout>;
 }

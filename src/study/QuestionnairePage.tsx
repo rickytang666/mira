@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { ArrowDown, ArrowRight, ArrowUp, Check, Loader2, MessageSquare, Plus, Trash2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { useQuery, getStudy, updateStudy } from 'wasp/client/operations';
+import { useQuery, getStudy, updateStudy, generateStudyQuestions } from 'wasp/client/operations';
 import { Layout, PageHeader, ErrorNote } from '../Layout';
 
 type DraftQuestion = { key: string; text: string; followUp: boolean };
@@ -16,6 +16,7 @@ export function QuestionnairePage() {
   const [questions, setQuestions] = useState<DraftQuestion[]>([]);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -44,21 +45,33 @@ export function QuestionnairePage() {
     }
   }
 
+  async function generate() {
+    setGenerating(true);
+    setError('');
+    try {
+      const result = await generateStudyQuestions({ studyId, goal, audience });
+      edit(result.questions.map(text => ({ key: newKey(), text, followUp: true })));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not generate questions. Your existing questions are unchanged.');
+    } finally { setGenerating(false); }
+  }
+
   const interviewUrl = `${window.location.origin}/i/${studyId}`;
   if (isLoading) return <Layout page="questionnaire" sourceCount={0} questionCount={0}><Loader2 className="spin" /></Layout>;
   if (loadError || !study) return <Layout page="questionnaire" sourceCount={0} questionCount={0}><ErrorNote message="Study not found." /></Layout>;
 
   return (
-    <Layout page="questionnaire" sourceCount={0} questionCount={questions.length}>
+    <Layout page="questionnaire" sourceCount={study.sources.length} questionCount={questions.length}>
       <PageHeader
         eyebrow={`02 / ${study.name.toUpperCase()}`}
         title="What would you like to learn?"
         description="The interviewer asks these questions and follows up on its own."
         action={dirty
-          ? <button className="button primary" disabled={saving} onClick={save}>{saving ? <Loader2 size={15} className="spin" /> : <Check size={15} />}Save changes</button>
+          ? <button className="button primary" disabled={saving || generating} onClick={save}>{saving ? <Loader2 size={15} className="spin" /> : <Check size={15} />}Save changes</button>
           : <span className="saved"><Check size={14} />Saved</span>}
       />
       <ErrorNote message={error} />
+      {dirty && <p className="saved">Save your changes before sharing—the interviewer uses the saved questions.</p>}
       <section className="form-panel">
         <div className="panel-heading"><h2>Share the interview</h2><span className="quiet-pill"><span className="live-dot" />Live</span></div>
         <div className="form-content" style={{ display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -72,12 +85,12 @@ export function QuestionnairePage() {
       <section className="form-panel">
         <div className="panel-heading"><h2>Give the conversation a direction</h2><span className="number-tag">01</span></div>
         <div className="form-content">
-          <label className="field">Research goal<textarea rows={3} value={goal} onChange={(e) => { setGoal(e.target.value); setDirty(true); }} /></label>
-          <label className="field">Who are you talking to?<input value={audience} onChange={(e) => { setAudience(e.target.value); setDirty(true); }} placeholder="e.g. First-time users who signed up this week" /></label>
+          <label className="field">Research goal<textarea readOnly={generating || saving} rows={3} value={goal} onChange={(e) => { setGoal(e.target.value); setDirty(true); }} /></label>
+          <label className="field">Who are you talking to?<input readOnly={generating || saving} value={audience} onChange={(e) => { setAudience(e.target.value); setDirty(true); }} placeholder="e.g. First-time users who signed up this week" /></label>
         </div>
       </section>
       <section className="form-panel questions-panel">
-        <div className="panel-heading"><h2>Interview questions <span className="number-tag">{questions.length}</span></h2></div>
+        <div className="panel-heading"><h2>Interview questions <span className="number-tag">{questions.length}</span></h2><button className="button secondary" disabled={generating || saving || !goal.trim()} onClick={generate}>{generating ? <><Loader2 size={15} className="spin" />Writing questions…</> : "Generate new questions"}</button></div>
         <div className="questions-list">
           {questions.length === 0 ? (
             <div className="empty-questions"><MessageSquare size={25} /><h3>Every insight starts with a question.</h3><p>Add one below.</p></div>
@@ -85,18 +98,18 @@ export function QuestionnairePage() {
             <div className="question-row" key={question.key}>
               <span className="question-index">{String(index + 1).padStart(2, '0')}</span>
               <div className="question-body">
-                <textarea aria-label={`Question ${index + 1}`} rows={2} value={question.text} onChange={(e) => edit(questions.map((q) => q.key === question.key ? { ...q, text: e.target.value } : q))} placeholder="Ask an open-ended question…" />
-                <label className="checkbox-label"><input type="checkbox" checked={question.followUp} onChange={(e) => edit(questions.map((q) => q.key === question.key ? { ...q, followUp: e.target.checked } : q))} />Allow natural follow-ups</label>
+                <textarea readOnly={generating || saving} aria-label={`Question ${index + 1}`} rows={2} value={question.text} onChange={(e) => edit(questions.map((q) => q.key === question.key ? { ...q, text: e.target.value } : q))} placeholder="Ask an open-ended question…" />
+                <label className="checkbox-label"><input disabled={generating || saving} type="checkbox" checked={question.followUp} onChange={(e) => edit(questions.map((q) => q.key === question.key ? { ...q, followUp: e.target.checked } : q))} />Allow natural follow-ups</label>
               </div>
               <div className="question-controls">
-                <button className="icon-button" disabled={index === 0} aria-label="Move question up" onClick={() => move(index, -1)}><ArrowUp size={15} /></button>
-                <button className="icon-button" disabled={index === questions.length - 1} aria-label="Move question down" onClick={() => move(index, 1)}><ArrowDown size={15} /></button>
-                <button className="icon-button delete" aria-label={`Delete question ${index + 1}`} onClick={() => edit(questions.filter((q) => q.key !== question.key))}><Trash2 size={15} /></button>
+                <button className="icon-button" disabled={generating || saving || index === 0} aria-label="Move question up" onClick={() => move(index, -1)}><ArrowUp size={15} /></button>
+                <button className="icon-button" disabled={generating || saving || index === questions.length - 1} aria-label="Move question down" onClick={() => move(index, 1)}><ArrowDown size={15} /></button>
+                <button className="icon-button delete" disabled={generating || saving} aria-label={`Delete question ${index + 1}`} onClick={() => edit(questions.filter((q) => q.key !== question.key))}><Trash2 size={15} /></button>
               </div>
             </div>
           ))}
         </div>
-        <button className="add-question" onClick={() => edit([...questions, { key: newKey(), text: '', followUp: true }])}><Plus size={16} />Add a question</button>
+        <button className="add-question" disabled={generating || saving} onClick={() => edit([...questions, { key: newKey(), text: '', followUp: true }])}><Plus size={16} />Add a question</button>
       </section>
       <div className="page-bottom">
         <Link to="/" className="text-link">All studies</Link>

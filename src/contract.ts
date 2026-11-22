@@ -55,6 +55,9 @@ export type InterviewDynamicVariables = {
   product_url: string;
   goal: string;
   questions: string; // numbered, newline-separated
+  product_context?: string;
+  audience?: string;
+  study_id?: string;
 };
 
 // ---- Track 1 operations (Wasp), consumed by tracks 2 and 3 ----
@@ -65,6 +68,7 @@ export type PublicStudy = {
   productUrl: string;
   goal: string;
   questions: string[];
+  dynamicVariables?: InterviewDynamicVariables;
   name: string;
 };
 
@@ -72,6 +76,7 @@ export type FinishInterviewInput = {
   // finishInterview action, no login; enqueues processInterview
   studyId: string;
   conversationId: string;
+  questionSnapshot?: string[]; // capture getPublicStudy.questions when the call starts
 };
 
 export type ReportView = {
@@ -80,15 +85,41 @@ export type ReportView = {
   goal: string;
   interviewsDone: number;
   interviewsProcessing: number;
+  interviewsFailed?: number;
+  synthesisStatus?: 'waiting' | 'processing' | 'ready' | 'failed';
+  synthesisError?: string;
+  synthesizedInterviews?: number;
+  // Optional report enrichment; existing getReport consumers remain compatible.
+  productName?: string;
+  summary?: string;
+  updatedAt?: string;
+  recommendations?: { text: string; themeIds: string[] }[];
+  questionFindings?: { question: string; status: 'answered' | 'partial' | 'unanswered'; finding: string; themeIds: string[] }[];
   themes: {
     id: string;
     label: string;
+    summary?: string;
     count: number;
     quotes: {
       id: string;
       text: string;
       startSec: number;
+      endSec?: number;
+      interviewId?: string;
+      participantLabel?: string;
+      // Untimed pasted text keeps its quote but cannot enable playback.
+      untimed?: boolean;
       audioUrl: string; // server-proxied, the ElevenLabs key never reaches the browser
     }[];
   }[];
+};
+
+export type GenerateReportInput = {
+  studyId: string;
+  productName: string;
+  goal: string;
+  context?: string; // imported knowledge; background, never participant evidence
+  audience?: string;
+  questions?: string[]; // founder's final edited question list
+  calls: { id: string; title: string; transcript: string; questions?: string[] }[];
 };

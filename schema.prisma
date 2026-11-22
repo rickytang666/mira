@@ -21,6 +21,9 @@ model Study {
   interviews Interview[]
   themes     Theme[]
   sources    Source[]
+  report     Json?
+  reportRevision Int @default(0)
+  reportError String?
 }
 
 model Question {
@@ -42,6 +45,8 @@ model Interview {
   durationSecs   Float?
   error          String?
   quotes         Quote[]
+  transcript     Json?
+  questionSnapshot Json?
 }
 
 model Theme {

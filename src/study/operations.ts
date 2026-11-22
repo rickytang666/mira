@@ -1,4 +1,4 @@
-import { HttpError, config } from "wasp/server";
+import { HttpError, config, prisma } from "wasp/server";
 import { processInterview } from "wasp/server/jobs";
 import type {
   CreateStudy,
@@ -12,14 +12,11 @@ import type {
   GetReport,
 } from "wasp/server/operations";
 import type { Question, Source, Study } from "wasp/entities";
-import type { FinishInterviewInput, PublicStudy, ReportView, SuggestQuestionsInput } from "../contract";
+import type { FinishInterviewInput, PublicStudy, ReportView } from "../contract";
 import { importWebsite } from "../sources";
-import { starterQuestions } from "../store";
-
-// Template questions until the LLM suggestQuestions in src/agent lands.
-async function suggestQuestions(input: SuggestQuestionsInput): Promise<string[]> {
-  return starterQuestions(input.productName, input.goal, input.audience).map((q) => q.text);
-}
+import { suggestQuestions } from "../agent/suggestQuestions";
+import { interviewVariables } from "../agent/studyContext";
+import { readSavedReport } from "../report/server";
 
 type CreateStudyInput = { productUrl?: string; description?: string; goal: string; audience?: string };
 
@@ -51,7 +48,7 @@ export const createStudy: CreateStudy<CreateStudyInput, { id: string }> = async 
   const audience = args.audience?.trim() ?? "";
   const studyContext = contextParts.join("\n\n").slice(0, 60000);
 
-  const questions = await suggestQuestions({ productName: name, goal, audience, context: studyContext });
+  const { questions } = await suggestQuestions({ productName: name, goal, audience, context: studyContext });
   const study = await context.entities.Study.create({
     data: {
       name,
@@ -99,15 +96,15 @@ type UpdateStudyInput = {
 
 export const updateStudy: UpdateStudy<UpdateStudyInput, void> = async (args, context) => {
   const { studyId, questions, ...fields } = args;
-  await context.entities.Study.update({ where: { id: studyId }, data: fields });
-  if (questions) {
-    await context.entities.Question.deleteMany({ where: { studyId } });
-    await context.entities.Question.createMany({
-      data: questions
-        .filter((q) => q.text.trim())
-        .map((q, order) => ({ studyId, text: q.text.trim(), followUp: q.followUp, order })),
-    });
-  }
+  await prisma.$transaction(async tx => {
+    await tx.study.update({ where: { id: studyId }, data: { ...fields, reportRevision: { increment: 1 }, reportError: null } });
+    if (questions) {
+      await tx.question.deleteMany({ where: { studyId } });
+      await tx.question.createMany({
+        data: questions.filter(q => q.text.trim()).map((q, order) => ({ studyId, text: q.text.trim(), followUp: q.followUp, order })),
+      });
+    }
+  });
 };
 
 type AddSourceInput = { studyId: string; kind: string; title: string; content: string; detail: string };
@@ -116,7 +113,7 @@ type AddSourceInput = { studyId: string; kind: string; title: string; content: s
 async function rebuildStudyContext(studyId: string, entities: { Study: any; Source: any }) {
   const sources: Source[] = await entities.Source.findMany({ where: { studyId }, orderBy: { createdAt: "asc" } });
   const studyContext = sources.map((source) => source.content).join("\n\n").slice(0, 60000);
-  await entities.Study.update({ where: { id: studyId }, data: { context: studyContext } });
+  await entities.Study.update({ where: { id: studyId }, data: { context: studyContext, reportRevision: { increment: 1 }, reportError: null } });
 }
 
 export const addSource: AddSource<AddSourceInput, void> = async (args, context) => {
@@ -141,21 +138,25 @@ export const getPublicStudy: GetPublicStudy<{ studyId: string }, PublicStudy> = 
     productUrl: study.productUrl,
     goal: study.goal,
     questions: study.questions.map((q) => q.text),
+    dynamicVariables: interviewVariables({ id: study.id, productName: study.name, productUrl: study.productUrl, goal: study.goal, audience: study.audience, context: study.context, questions: study.questions }),
   };
 };
 
 export const finishInterview: FinishInterview<FinishInterviewInput, { interviewId: string }> = async (
-  { studyId, conversationId },
+  { studyId, conversationId, questionSnapshot },
   context,
 ) => {
   if (!conversationId) throw new HttpError(400, "Missing conversationId.");
-  const study = await context.entities.Study.findUnique({ where: { id: studyId }, select: { id: true } });
+  const study = await context.entities.Study.findUnique({ where: { id: studyId }, include: { questions: { orderBy: { order: "asc" } } } });
   if (!study) throw new HttpError(404, "Study not found.");
-  // A repeated call for the same conversation returns the first interview, so a double tap can't double-count themes.
-  const existing = await context.entities.Interview.findUnique({ where: { conversationId } });
-  if (existing) return { interviewId: existing.id };
-  const interview = await context.entities.Interview.create({ data: { studyId, conversationId, status: "processing" } });
-  await processInterview.submit({ interviewId: interview.id });
+  if (questionSnapshot && (!Array.isArray(questionSnapshot) || questionSnapshot.length > 50 || questionSnapshot.some(q => typeof q !== 'string' || q.length > 2000))) throw new HttpError(400, 'Invalid question snapshot.');
+  const interview = await context.entities.Interview.upsert({
+    where: { conversationId }, update: {},
+    create: { studyId, conversationId, status: 'processing', questionSnapshot: questionSnapshot ?? study.questions.map(q => q.text) },
+  });
+  if (interview.studyId !== studyId) throw new HttpError(409, 'Conversation already belongs to another study.');
+  // Resubmission is safe, and recovers if enqueueing failed after the row was created.
+  if (interview.status !== 'done') await processInterview.submit({ interviewId: interview.id });
   return { interviewId: interview.id };
 };
 
@@ -168,11 +169,23 @@ export const getReport: GetReport<{ studyId: string }, ReportView> = async ({ st
     },
   });
   if (!study) throw new HttpError(404, "Study not found.");
+  const saved = readSavedReport(study.report);
+  const done = study.interviews.filter(i => i.status === 'done').length;
+  const processing = study.interviews.filter(i => i.status === 'processing' || i.status === 'started').length;
+  const metadata = {
+    productName: study.name,
+    interviewsDone: done,
+    interviewsProcessing: processing,
+    interviewsFailed: study.interviews.filter(i => i.status === 'failed').length,
+    synthesizedInterviews: saved?.value.interviewsDone ?? 0,
+    synthesisStatus: study.reportError ? 'failed' as const : saved?.revision === study.reportRevision ? 'ready' as const : done ? 'waiting' as const : processing ? 'processing' as const : 'waiting' as const,
+    synthesisError: study.reportError ?? undefined,
+  };
+  if (saved) return { ...saved.value, ...metadata, goal: study.goal, themes: saved.value.themes.map(theme => ({ ...theme, quotes: theme.quotes.map(quote => ({ ...quote, audioUrl: quote.interviewId ? `${config.serverUrl}/api/interviews/${quote.interviewId}/audio` : quote.audioUrl })) })) };
   return {
+    ...metadata,
     studyId: study.id,
     goal: study.goal,
-    interviewsDone: study.interviews.filter((i) => i.status === "done").length,
-    interviewsProcessing: study.interviews.filter((i) => i.status === "processing" || i.status === "started").length,
     themes: study.themes.map((theme) => ({
       id: theme.id,
       label: theme.label,
@@ -181,8 +194,21 @@ export const getReport: GetReport<{ studyId: string }, ReportView> = async ({ st
         id: quote.id,
         text: quote.text,
         startSec: quote.startSec,
+        endSec: quote.endSec,
+        interviewId: quote.interviewId,
         audioUrl: `${config.serverUrl}/api/interviews/${quote.interviewId}/audio`,
       })),
     })),
   };
 };
+
+/** Generate a draft using persisted knowledge; the founder reviews and saves it explicitly. */
+export async function generateStudyQuestions({ studyId, goal, audience }: { studyId: string; goal?: string; audience?: string }) {
+  const study = await prisma.study.findUnique({ where: { id: studyId } });
+  if (!study) throw new HttpError(404, 'Study not found.');
+  try {
+    return await suggestQuestions({ productName: study.name, goal: goal ?? study.goal, audience: audience ?? study.audience, context: study.context });
+  } catch (error) {
+    throw new HttpError(400, error instanceof Error ? error.message : 'Could not generate questions.');
+  }
+}
