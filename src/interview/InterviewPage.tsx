@@ -35,6 +35,8 @@ export function InterviewPage() {
   const { studyId = '' } = useParams();
   const { data: study, error, isLoading } = useQuery(getPublicStudy, { studyId });
   const [muted, setMuted] = useState(false);
+  // Mic is closed while Mira talks: phone speakers echo her voice back and hall noise cut her off mid-question.
+  const [agentTalking, setAgentTalking] = useState(false);
 
   if (isLoading) return <Shell><div className="iv-notice"><Loader2 className="iv-spin" size={22} /><p>Loading your interview…</p></div></Shell>;
   if (error || !study) return <Shell><Notice title="This interview link isn't valid." body="Ask whoever shared it for a fresh link or QR code." /></Shell>;
@@ -42,13 +44,13 @@ export function InterviewPage() {
   if (!AGENT_ID) return <Shell><Notice title="Voice interviewer not configured." body="Set REACT_APP_ELEVENLABS_AGENT_ID in .env.client and restart the app." /></Shell>;
 
   return (
-    <ConversationProvider agentId={AGENT_ID} isMuted={muted} onMutedChange={setMuted}>
-      <Interview study={study} muted={muted} setMuted={setMuted} />
+    <ConversationProvider agentId={AGENT_ID} isMuted={muted || agentTalking}>
+      <Interview study={study} muted={muted} setMuted={setMuted} onAgentTalking={setAgentTalking} />
     </ConversationProvider>
   );
 }
 
-function Interview({ study, muted, setMuted }: { study: PublicStudy; muted: boolean; setMuted: (m: boolean) => void }) {
+function Interview({ study, muted, setMuted, onAgentTalking }: { study: PublicStudy; muted: boolean; setMuted: (m: boolean) => void; onAgentTalking: (talking: boolean) => void }) {
   const [phase, setPhase] = useState<Phase>('ready');
   const [error, setError] = useState('');
   const [lines, setLines] = useState<Line[]>([]);
@@ -103,6 +105,12 @@ function Interview({ study, muted, setMuted }: { study: PublicStudy; muted: bool
 
   const live = phase === 'live';
   const speaking = live && conversation.isSpeaking;
+  // Reopen the mic a beat after she stops, so the tail of her own audio is not heard as an answer.
+  useEffect(() => {
+    if (speaking) { onAgentTalking(true); return; }
+    const timer = setTimeout(() => onAgentTalking(false), 350);
+    return () => clearTimeout(timer);
+  }, [speaking, onAgentTalking]);
   const mouthOpen = useAgentMouth(speaking, conversation.getOutputVolume);
   const [gesture, setGesture] = useState(0);
   const shirtColor = useLogoBackground(study.logo ?? null);
