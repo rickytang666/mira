@@ -129,7 +129,7 @@ See the file tree in [OWNERSHIP.md](OWNERSHIP.md). `src/agent/` and `src/jobs/el
 
 | Track | Work | Depends on |
 | --- | --- | --- |
-| **1. Data and wiring** | Postgres, tables, study in the database, operations, the job with `elevenlabsClient` (transcript and audio fetch), audio route, deploy | Nothing |
+| **1. Data and wiring** | Postgres, tables, study in the database, operations, the job with `elevenlabsClient` (transcript and audio fetch), audio route, HTTPS tunnels | Nothing |
 | **2. Voice interview** | ElevenLabs agent, `/i/:studyId` on a phone, conversation ID captured, QR code, mounting the character | Track 1's `getPublicStudy` and `finishInterview`; hardcoded questions until then |
 | **3. Brains and report** | `suggestQuestions`, `synthesizeInterview` tested on a pasted transcript, then the report page from fixture data shaped like `ReportView`, with quote playback | Track 1's `getReport`; fixtures until then |
 | **4. Character** | The on-screen character: one component with a `speaking` prop | Nothing; track 2 mounts it |
@@ -138,13 +138,18 @@ See the file tree in [OWNERSHIP.md](OWNERSHIP.md). `src/agent/` and `src/jobs/el
 
 The phone needs HTTPS for the microphone, and Wasp dev runs the client and server on two ports.
 
-- **First**: two tunnels (client and server) with `REACT_APP_API_URL` in `.env.client` and `WASP_WEB_CLIENT_URL` / `WASP_SERVER_URL` in `.env.server` (**verified** these variables exist).
-- **Before strangers use it**: deploy once (`wasp deploy` supports Fly.io and Railway) so the QR code keeps working when a laptop sleeps.
+**Decision: no deploy.** The app runs on the presenting laptop with the local Postgres, and two HTTPS tunnels expose it to phones.
+
+- **Tunnels**: one for the client (3002) and one for the server (3003), for example two `cloudflared tunnel --url` quick tunnels. Put the URLs in `REACT_APP_API_URL` (`.env.client`) and `WASP_WEB_CLIENT_URL` / `WASP_SERVER_URL` (`.env.server`); **verified** these variables exist.
+- **Keep them stable**: free tunnel URLs change on restart, which breaks the QR code. Start them once before the hall study and leave them running.
+- **Order and host check**: start the tunnels before `wasp start`, since the client reads `REACT_APP_API_URL` at startup. Vite blocks unknown hosts, so `vite.config.ts` needs `server.allowedHosts` set to the tunnel domain (**check** on our Vite 8).
+- **Keep the laptop up**: `caffeinate -is`, on power, with our phone hotspot as the network fallback.
+- **Deploy** (`wasp deploy` to Railway or Fly) only if tunnels fail. Railway would provision its own Postgres.
 
 ## Risks, in order
 
 1. **Interview in a loud hall.** Test one real phone interview before building anything else. Fallback: push-to-talk.
-2. **Two-port tunnels.** The most likely place to lose time. Fallback: deploy early.
+2. **Two-port tunnels.** The most likely place to lose time. Fallback: deploy to Railway.
 3. **Transcript not ready when the job runs.** The job retries a few times before marking the interview `failed`.
 4. **No LLM provider or key yet.** Blocks track 3.
 5. **The character eats time.** It is last, and optional.

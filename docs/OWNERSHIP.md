@@ -4,9 +4,9 @@ Who edits what. To change a file you don't own, ask its owner.
 
 | Track | Owner | Work |
 | --- | --- | --- |
-| 1. Data and wiring | Ricky | Postgres, tables, operations, the `processInterview` job, transcript and audio fetch, audio route, deploy |
-| 2. Voice interview | TBD | ElevenLabs agent, the phone interview page, QR code |
-| 3. Brains and report | TBD | Question generation, transcript to themes and quotes, the report page |
+| 1. Data and wiring | Ricky | Postgres, tables, operations, the `processInterview` job, transcript and audio fetch, audio route, HTTPS tunnels |
+| 2. Voice interview | Tian | ElevenLabs agent, the phone interview page, QR code |
+| 3. Brains and report | Alex | Question generation, transcript to themes and quotes, the report page |
 | 4. Character | Skeleton author | The on-screen character on the phone interview page |
 
 ## File tree
