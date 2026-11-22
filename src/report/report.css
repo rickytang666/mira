@@ -90,7 +90,7 @@
 .fw-theme-heading>div{flex:1;min-width:0}
 .fw-report .fw-theme h2{font-size:20px;letter-spacing:-.015em;margin:0 0 6px}
 .fw-theme-heading p{font-size:15px;line-height:1.6;color:var(--muted);margin:0;max-width:60ch}
-.fw-theme-heading p.fw-theme-summary{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fw-theme-heading p.fw-theme-summary{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:none}
 .fw-count{font-size:13px;white-space:nowrap;color:var(--muted);font-variant-numeric:tabular-nums}
 .fw-count strong{color:var(--ink);font-weight:600}
 

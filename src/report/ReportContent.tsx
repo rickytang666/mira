@@ -92,7 +92,8 @@ export function ReportContent({ studyId = '', report: provided, loadReport, poll
           {enabled && <span className="fw-play-icon" aria-hidden="true">{active ? <Square size={9} fill="currentColor"/> : <Play size={11} fill="currentColor" style={{ marginLeft: 1 }}/>}</span>}{active ? (playerState.status === 'loading' ? 'Loading…' : 'Stop') : enabled ? 'Play' : !quote.audioUrl ? 'No recording' : 'No timestamp'}
         </button>
         <span className="fw-quote-sep" aria-hidden="true">·</span>
-        <span>{quote.participantLabel}{time && <span className="fw-quote-time">, {time}</span>}</span>
+        <span>{quote.participantLabel}</span>
+        {time && <><span className="fw-quote-sep" aria-hidden="true">·</span><span className="fw-quote-time">{time}</span></>}
       </div>
       {selected && playerState.error && <p className="fw-error" role="alert">{playerState.error}</p>}
     </article>;
