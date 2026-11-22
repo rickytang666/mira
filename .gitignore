@@ -4,3 +4,6 @@ AGENTS.md
 .vscode/
 .env*
 .DS_Store
+.wasp/
+node_modules/
+dist/
