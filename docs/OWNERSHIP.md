@@ -4,10 +4,10 @@ Who edits what. To change a file you don't own, ask its owner.
 
 | Track | Owner | Work |
 | --- | --- | --- |
-| 1. Data and wiring | Ricky | Postgres, tables, operations, the `processInterview` job, audio route, deploy |
+| 1. Data and wiring | Ricky | Postgres, tables, operations, the `processInterview` job, transcript and audio fetch, audio route, deploy |
 | 2. Voice interview | TBD | ElevenLabs agent, the phone interview page, QR code |
-| 3. Agent brains | TBD | Question generation, transcript to themes and quotes |
-| 4. Report and character | Skeleton author | Report page, quote playback, the on-screen character |
+| 3. Brains and report | TBD | Question generation, transcript to themes and quotes, the report page |
+| 4. Character | Skeleton author | The on-screen character on the phone interview page |
 
 ## File tree
 
@@ -26,9 +26,10 @@ src/
   sources.ts               1    website and MCP import (server actions)
   study/                   1    KnowledgePage, QuestionnairePage
   interview/  (new)        2    /i/:studyId, useConversation, finishInterview call
-  agent/      (new)        3    suggestQuestions, synthesizeInterview, elevenlabsClient
-  report/                  4    ReportPage
-  character/  (new)        4    the character, one component with a `speaking` prop
+  agent/      (new)        3    suggestQuestions, synthesizeInterview
+  report/                  3    ReportPage, quote playback
+  jobs/       (new)        1    processInterview, elevenlabsClient (transcript + audio fetch)
+  character/  (new)        4    the character, one component with a `speaking` prop; track 2 mounts it
 ElevenLabs dashboard agent 2    prompt, voice, dynamic variables
 ```
 

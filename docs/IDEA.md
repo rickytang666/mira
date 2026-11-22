@@ -54,7 +54,7 @@ If time runs short, things leave from the right.
 ## Stack
 
 - **ElevenLabs**: the hosted voice agent runs the whole interview; its transcript and audio feed the report.
-- **Wasp**: auth, the study, interview, and quote records, and the background job that turns a finished interview into report entries.
+- **Wasp**: the study, interview, and quote records, and the background job that turns a finished interview into report entries.
 - **Wasp check**: the skeleton compiles and typechecks (passed 11:58). Still owed: a phone loads the interview page over HTTPS with the mic working. If that fails, we move to a stack we know. Question generation and report synthesis are written as plain TypeScript modules so they move over unchanged.
 
 ## First risk to retire

@@ -14,7 +14,7 @@ export type SuggestQuestionsOutput = {
   questions: string[]; // 3 to 5, each one spoken sentence
 };
 
-// ---- Track 3: src/agent/elevenlabsClient.ts ----
+// ---- Track 1: src/jobs/elevenlabsClient.ts ----
 
 // Mirrors GET /v1/convai/conversations/{id}: transcript[].role, .message, .time_in_call_secs.
 export type TranscriptTurn = {
@@ -57,7 +57,7 @@ export type InterviewDynamicVariables = {
   questions: string; // numbered, newline-separated
 };
 
-// ---- Track 1 operations (Wasp), consumed by tracks 2 and 4 ----
+// ---- Track 1 operations (Wasp), consumed by tracks 2 and 3 ----
 
 export type PublicStudy = {
   // getPublicStudy({ studyId }), no login

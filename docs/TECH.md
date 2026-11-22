@@ -98,7 +98,7 @@ erDiagram
 
 **Run it**: Node 24.22.1 or newer (`nvm use 24.22.3`), Wasp CLI 0.26.1, then `npm run dev` (client on 3002, server on 3003). `npm run check` runs `wasp compile`, which typechecks.
 
-## ElevenLabs pieces (track 2, fetch helpers track 3)
+## ElevenLabs pieces (track 2; transcript and audio fetch, track 1)
 
 - **One agent, configured once** in the ElevenLabs dashboard. Its prompt uses the dynamic variables `product_url`, `goal`, and `questions` (types in `src/contract.ts`).
 - **Per-interview values**: the phone passes them to `startSession` as `dynamicVariables`. **Verified** in the SDK source; this needs no overrides enabled on the agent.
@@ -121,16 +121,16 @@ The character is one React component on `/i/:studyId` that takes `speaking` as a
 
 ## Code layout
 
-See the file tree in [OWNERSHIP.md](OWNERSHIP.md). The three files in `src/agent/` take plain inputs and return plain objects, with no Wasp imports, so they move to another stack unchanged.
+See the file tree in [OWNERSHIP.md](OWNERSHIP.md). `src/agent/` and `src/jobs/elevenlabsClient.ts` take plain inputs and return plain objects, with no Wasp imports, so they move to another stack unchanged.
 
 ## Tracks
 
 | Track | Work | Depends on |
 | --- | --- | --- |
-| **1. Data and wiring** | Postgres, tables, study in the database, operations, job, audio route, deploy | Nothing |
-| **2. Voice interview** | ElevenLabs agent, `/i/:studyId` on a phone, conversation ID captured, QR code | Track 1's `getPublicStudy` and `finishInterview`; hardcoded questions until then |
-| **3. Agent brains** | `suggestQuestions`, `synthesizeInterview`, `elevenlabsClient`, tested on a pasted transcript | Nothing |
-| **4. Report and character** | Report page from fixture data shaped like `ReportView`, quote playback, the character | Track 1's `getReport`; fixtures until then |
+| **1. Data and wiring** | Postgres, tables, study in the database, operations, the job with `elevenlabsClient` (transcript and audio fetch), audio route, deploy | Nothing |
+| **2. Voice interview** | ElevenLabs agent, `/i/:studyId` on a phone, conversation ID captured, QR code, mounting the character | Track 1's `getPublicStudy` and `finishInterview`; hardcoded questions until then |
+| **3. Brains and report** | `suggestQuestions`, `synthesizeInterview` tested on a pasted transcript, then the report page from fixture data shaped like `ReportView`, with quote playback | Track 1's `getReport`; fixtures until then |
+| **4. Character** | The on-screen character: one component with a `speaking` prop | Nothing; track 2 mounts it |
 
 ## Reaching the app from a phone
 
