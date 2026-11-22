@@ -298,13 +298,6 @@ h1,.app h1{font-family:inherit;font-size:28px;line-height:1.2;letter-spacing:-.0
 .field{font-size:13px;font-weight:500;color:var(--text)}
 .button.primary,.button-primary{background:var(--brand);color:#fff;border-color:var(--brand)}
 .button.primary:hover:not(:disabled){background:#1c2157}
-/* Report */
-.app .fw-workspace,.app .fw-report,.app .fw-report h1,.app .fw-report h2,.app .fw-report h3,.app .fw-metrics strong,.app .fw-summary-card h2,.app .fw-empty h2,.app .fw-dialog h2{font-family:inherit;font-style:normal}
-.app .fw-report h1{font-size:28px;line-height:1.2;letter-spacing:-.02em;font-weight:600}
-.app .fw-report h2{letter-spacing:-.01em;font-weight:600}
-.app .fw-summary-card h2,.app .fw-empty h2{font-size:20px}
-.app .fw-metrics strong{font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
-.app .fw-eyebrow,.app .fw-summary-label,.app .fw-metrics small{display:none}
-.app .fw-quote blockquote{font-family:'Newsreader',Georgia,serif;font-style:italic;font-size:17px;line-height:1.55;color:var(--ink)}
+/* Report styles live in src/report/report.css. */
 .brand-name{display:flex;flex-direction:column;line-height:1.1}
 .brand-name small{font-size:12px;font-weight:500;letter-spacing:0;color:var(--muted);margin-top:2px}
