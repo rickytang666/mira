@@ -32,8 +32,8 @@ export function NewStudyPage() {
   return (
     <Layout page="studies" sourceCount={0} questionCount={0}>
       <PageHeader
-        title="What are you building, and what do you want to learn?"
-        description="Paste your product's URL. The interviewer reads it and writes the questions."
+        title="New study"
+        description="Mira reads your product's site and writes the interview questions. Each participant then gets a one-minute voice interview."
       />
       <form className="form-panel" onSubmit={submit}>
         <div className="form-content">

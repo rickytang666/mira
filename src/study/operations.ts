@@ -19,6 +19,14 @@ import { suggestQuestions } from "../agent/suggestQuestions";
 import { interviewVariables } from "../agent/studyContext";
 import { readSavedReport } from "../report/server";
 
+// Page titles look like "Tagline | Brand" or "Brand - Tagline"; the brand is the short side.
+function productNameFromTitle(title: string, hostname: string): string {
+  const parts = title.split(/\s+[|\u2013\u2014\u00b7-]\s+|:\s+/).map((part) => part.trim()).filter(Boolean);
+  const short = parts.filter((part) => part.split(/\s+/).length <= 3);
+  const pick = short.length ? short.reduce((a, b) => (b.length < a.length ? b : a)) : parts[0];
+  return pick || hostname.replace(/^www\./, "");
+}
+
 type CreateStudyInput = { productUrl?: string; description?: string; goal: string; audience?: string };
 
 export const createStudy: CreateStudy<CreateStudyInput, { id: string }> = async (args, context) => {
@@ -34,7 +42,7 @@ export const createStudy: CreateStudy<CreateStudyInput, { id: string }> = async 
   if (productUrl) {
     try {
       const page = await importWebsite({ url: productUrl });
-      name = page.title || new URL(productUrl).hostname;
+      name = productNameFromTitle(page.title, new URL(productUrl).hostname);
       sources.push({ kind: "url", ...page });
     } catch (error) {
       // A description is enough to continue when the site can't be scraped.

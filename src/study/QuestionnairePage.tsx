@@ -65,8 +65,8 @@ export function QuestionnairePage() {
   return (
     <Layout page="questionnaire" sourceCount={study.sources.length} questionCount={questions.length}>
       <PageHeader
-        title="What would you like to learn?"
-        description="The interviewer asks these questions and follows up on its own."
+        title="Interview questions"
+        description="Mira asks these in order and follows up on her own."
         action={dirty
           ? <button className="button primary" disabled={saving || generating} onClick={save}>{saving ? <Loader2 size={15} className="spin" /> : <Check size={15} />}Save changes</button>
           : <span className="saved"><Check size={14} />Saved</span>}
@@ -78,7 +78,7 @@ export function QuestionnairePage() {
         <div className="form-content" style={{ display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
           <QRCodeSVG value={interviewUrl} size={168} />
           <div>
-            <p>Scan with a phone to start a one-minute voice interview. No sign-up.</p>
+            <p>Scan to start a one-minute voice interview. No sign-up.</p>
             <a className="text-link" href={interviewUrl} target="_blank" rel="noreferrer">{interviewUrl}</a>
           </div>
           <LogoUploader studyId={studyId} logo={study.logo ?? null} />
@@ -95,7 +95,7 @@ export function QuestionnairePage() {
         <div className="panel-heading"><h2>Interview questions <span className="number-tag">{questions.length}</span></h2><button className="button secondary" disabled={generating || saving || !goal.trim()} onClick={generate}>{generating ? <><Loader2 size={15} className="spin" />Writing questions…</> : "Generate new questions"}</button></div>
         <div className="questions-list">
           {questions.length === 0 ? (
-            <div className="empty-questions"><MessageSquare size={25} /><h3>Every insight starts with a question.</h3><p>Add one below.</p></div>
+            <div className="empty-questions"><MessageSquare size={25} /><h3>No questions yet</h3><p>Add one below.</p></div>
           ) : questions.map((question, index) => (
             <div className="question-row" key={question.key}>
               <span className="question-index">{String(index + 1).padStart(2, '0')}</span>

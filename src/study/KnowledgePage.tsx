@@ -141,8 +141,8 @@ export function KnowledgePage() {
   return (
     <Layout page="knowledge" sourceCount={sources.length} questionCount={study?.questions.length ?? 0}>
       <PageHeader
-        title="A little context goes a long way."
-        description="Give your interviewer a home base for understanding your product."
+        title="Knowledge"
+        description="What Mira knows about the product before each interview."
       />
       <ErrorNote message={saveError} />
       <section className="product-card">
@@ -164,12 +164,12 @@ export function KnowledgePage() {
         </div>
         <span className="quiet-pill">
           <span className="live-dot" />
-          Getting to know you
+          Ready
         </span>
       </section>
       <div className="section-heading">
         <h2>Add your product knowledge</h2>
-        <span>Start with one. Add more anytime.</span>
+        <span></span>
       </div>
       <div className="source-grid">
         {Object.entries(kinds).map(([id, item]) => (
@@ -191,7 +191,7 @@ export function KnowledgePage() {
           <h2>
             Your sources <span className="number-tag">{sources.length}</span>
           </h2>
-          <span className="subtle">Only the context you choose to add</span>
+          <span className="subtle"></span>
         </div>
         {sources.length === 0 ? (
           <div className="empty-sources">
@@ -201,7 +201,7 @@ export function KnowledgePage() {
                 <Plus size={12} />
               </span>
             </div>
-            <h3>A blank page. A good place to start.</h3>
+            <h3>No sources yet</h3>
             <p>
               Add a source above to help your interviewer understand
               <br className="desktop-break" /> what you’re building and who it’s for.
@@ -248,8 +248,8 @@ export function KnowledgePage() {
           <ListChecks size={22} />
         </div>
         <div>
-          <h3>Context, meet curiosity.</h3>
-          <p>Next, decide what you’d like to learn from your users.</p>
+          <h3>Interview questions</h3>
+          <p>Review what Mira will ask.</p>
         </div>
         <Link className="text-link" to={`/study/${studyId}/questionnaire`}>
           Set up your questions
