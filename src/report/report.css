@@ -47,7 +47,7 @@
 .fw-update{font-size:13px;color:var(--subtle);padding-bottom:12px}
 
 /* Themes: separated by space and a hairline, not cards. */
-.fw-themes{display:grid}
+.fw-themes{display:grid;grid-template-columns:minmax(0,1fr)}
 .fw-theme{padding:40px 0;border-bottom:1px solid var(--line);scroll-margin-top:24px}
 .fw-theme:last-child{border-bottom:0}
 .fw-theme-heading{display:flex;gap:24px;align-items:baseline;justify-content:space-between}
@@ -168,7 +168,7 @@
 .fw-metrics{gap:32px;margin-bottom:40px}
 .fw-metrics dd{font-size:32px}
 .fw-theme{padding:32px 0}
-.fw-theme-heading{flex-direction:column;gap:8px}
+.fw-theme-heading{flex-direction:column;gap:8px;align-items:stretch}
 .fw-evidence-bar{margin:12px 0 20px}
 .fw-quote{padding:20px}
 .fw-quote blockquote,.app .fw-quote blockquote{font-size:18px}
