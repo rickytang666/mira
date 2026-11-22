@@ -1,0 +1,6 @@
+CLAUDE.md
+AGENTS.md
+.workspace/
+.vscode/
+.env*
+.DS_Store
