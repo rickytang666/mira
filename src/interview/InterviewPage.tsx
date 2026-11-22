@@ -105,13 +105,14 @@ function Interview({ study, muted, setMuted }: { study: PublicStudy; muted: bool
   const speaking = live && conversation.isSpeaking;
   const mouthOpen = useAgentMouth(speaking, conversation.getOutputVolume);
   const [gesture, setGesture] = useState(0);
+  const shirtColor = useLogoBackground(study.logo ?? null);
   const productName = study.name || 'this product';
 
   return (
     <Shell>
       <div className="iv-stage" onPointerDown={() => setGesture(g => g + 1)}>
         <div className="iv-figure">
-          <CharacterCanvas mode={speaking ? 'speaking' : live ? 'listening' : 'idle'} mouthOpen={mouthOpen} mouthShape={mouthOpen > 0.15 ? 'aa' : 'rest'} gesture={gesture} />
+          <CharacterCanvas mode={speaking ? 'speaking' : live ? 'listening' : 'idle'} mouthOpen={mouthOpen} mouthShape={mouthOpen > 0.15 ? 'aa' : 'rest'} gesture={gesture} shirtColor={shirtColor} />
           {study.logo && <img className="iv-shirt-logo" src={study.logo} alt="" />}
         </div>
       </div>
@@ -141,6 +142,25 @@ function Interview({ study, muted, setMuted }: { study: PublicStudy; muted: bool
       </div>
     </Shell>
   );
+}
+
+/** The shirt takes the logo's background color, so the logo reads as printed on it; transparent logos get a white shirt. */
+function useLogoBackground(logo: string | null): [number, number, number] | undefined {
+  const [color, setColor] = useState<[number, number, number] | undefined>();
+  useEffect(() => {
+    if (!logo) { setColor(undefined); return; }
+    const image = new Image();
+    image.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 8; canvas.height = 8;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+      ctx.drawImage(image, 0, 0, 8, 8);
+      const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
+      setColor(a < 128 ? [255, 255, 255] : [r, g, b]);
+    };
+    image.src = logo;
+  }, [logo]);
+  return color;
 }
 
 /** Opens the character's mouth with the agent's output volume while it speaks. */

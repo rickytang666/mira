@@ -3,7 +3,7 @@ import { ArticulatedMotion } from './articulatedMotion';
 import { createLayeredRig, RIG_HEIGHT, RIG_WIDTH } from './layeredRig';
 export type CharacterMode='idle'|'listening'|'speaking';
 export type MouthShape='rest'|'aa'|'ee'|'oh'|'mm';
-export interface CharacterCanvasProps {mode:CharacterMode;mouthOpen:number;mouthShape:MouthShape;gesture:number;reducedMotion?:boolean}
+export interface CharacterCanvasProps {mode:CharacterMode;mouthOpen:number;mouthShape:MouthShape;gesture:number;reducedMotion?:boolean;shirtColor?:[number,number,number]}
 const ART='/character/mira-approved.png';
 export function CharacterCanvas(props:CharacterCanvasProps){
   const canvasRef=useRef<HTMLCanvasElement>(null),latest=useRef(props),pointer=useRef({x:0,y:0});latest.current=props;
@@ -15,7 +15,7 @@ export function CharacterCanvas(props:CharacterCanvasProps){
     const image=new Image();image.onload=()=>{
       if(disposed)return;
       try{
-        const rig=createLayeredRig(image),motion=new ArticulatedMotion();
+        const rig=createLayeredRig(image,latest.current.shirtColor),motion=new ArticulatedMotion();
         const resize=()=>{const box=canvas.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.max(1,Math.round(box.width*dpr));canvas.height=Math.max(1,Math.round(box.height*dpr));};
         observer=new ResizeObserver(resize);observer.observe(canvas);resize();
         let last=performance.now(),time=0,mouth=0;
@@ -35,7 +35,7 @@ export function CharacterCanvas(props:CharacterCanvasProps){
     };
     image.onerror=()=>{if(!disposed)setError(true);};image.src=ART;
     return()=>{disposed=true;cancelAnimationFrame(raf);observer?.disconnect();image.onload=null;image.onerror=null;};
-  },[]);
+  },[props.shirtColor?.join(',')]);
   return error?<img src={ART} alt="Mira, your interviewer" style={{width:'100%',height:'100%',objectFit:'contain'}}/>:<canvas ref={canvasRef} role="img" aria-label={`Mira, ${props.mode}`} style={{width:'100%',height:'100%',display:'block'}} onPointerMove={e=>{const b=e.currentTarget.getBoundingClientRect();pointer.current={x:Math.max(-1,Math.min(1,(e.clientX-b.left)/b.width*2-1)),y:Math.max(-1,Math.min(1,(e.clientY-b.top)/b.height*2-1))};}} onPointerLeave={()=>{pointer.current={x:0,y:0};}}/>;
 }
 export default CharacterCanvas;

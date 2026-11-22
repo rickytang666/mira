@@ -39,9 +39,30 @@ function solidUnderlay(source:Sprite,paint:(ctx:CanvasRenderingContext2D)=>void)
 function draw(ctx:CanvasRenderingContext2D,s:Sprite){ctx.drawImage(s.canvas,s.x,s.y);}
 function hinge(ctx:CanvasRenderingContext2D,p:Point,angle:number){ctx.translate(p[0],p[1]);ctx.rotate(angle);ctx.translate(-p[0],-p[1]);}
 
+type Rgb=[number,number,number];
+const SHIRT_BASE_LUMA=(.3*78+.59*114+.11*116)/255;
+/** Maps a teal shirt shade onto the target color, keeping the drawing's light and shadow. */
+function shirtShade(r:number,g:number,b:number,target:Rgb):Rgb{
+  const f=Math.min(1.35,((.3*r+.59*g+.11*b)/255)/SHIRT_BASE_LUMA);
+  return target.map(c=>Math.max(0,Math.min(255,Math.round(c*f)))) as Rgb;
+}
+// The shirt is the only teal in the drawing, so a hue test below the neckline finds it.
+function recolorShirt(c:HTMLCanvasElement,target:Rgb){
+  const ctx=c.getContext('2d',{willReadFrequently:true})!,x0=150,y0=640,w=800,h=1536-640;
+  const frame=ctx.getImageData(x0,y0,w,h),d=frame.data;
+  for(let p=0;p<d.length;p+=4){
+    if(!d[p+3])continue;const r=d[p],g=d[p+1],b=d[p+2];
+    if(g-r>16&&b-r>10&&Math.abs(g-b)<40){const [nr,ng,nb]=shirtShade(r,g,b,target);d[p]=nr;d[p+1]=ng;d[p+2]=nb;}
+  }
+  ctx.putImageData(frame,x0,y0);
+}
+const hexRgb=(hex:string):Rgb=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)) as Rgb;
+
 /** Split once into cached illustration layers. Frames only transform/draw sprites. */
-export function createLayeredRig(image:HTMLImageElement){
+export function createLayeredRig(image:HTMLImageElement,shirtColor?:Rgb){
   const source=paperRemoved(image);
+  if(shirtColor)recolorShirt(source,shirtColor);
+  const shirt=(hex:string)=>{if(!shirtColor)return hex;const [r,g,b]=shirtShade(...hexRgb(hex),shirtColor);return `rgb(${r} ${g} ${b})`;};
   const colorCache=new Map<string,string>();
   const colors=source.getContext('2d',{willReadFrequently:true})!;
   const color=(x:number,y:number)=>{const key=x+','+y;const cached=colorCache.get(key);if(cached)return cached;const d=colors.getImageData(x,y,1,1).data;const value=`rgb(${d[0]} ${d[1]} ${d[2]})`;colorCache.set(key,value);return value;};
@@ -54,8 +75,8 @@ export function createLayeredRig(image:HTMLImageElement){
     ctx.save();ctx.clip(new Path2D(bodyPath));
     ctx.fillStyle=color(562,704);ctx.fill(new Path2D('M494 615L643 640L655 777Q547 836 463 764Z'));
     ctx.fillStyle='#dcd1c2';ctx.fill(new Path2D('M282 738L377 782L298 1420L251 1440Z'));ctx.fill(new Path2D('M739 772L827 799L877 1426L731 1435Z'));
-    ctx.fillStyle='#4e7274';ctx.fill(new Path2D('M367 1224L779 1225L783 1428L370 1428Z'));
-    ctx.fillStyle='#3b5e61';ctx.fill(new Path2D('M370 1374L733 1278L698 1404H370Z'));
+    ctx.fillStyle=shirt('#4e7274');ctx.fill(new Path2D('M367 1224L779 1225L783 1428L370 1428Z'));
+    ctx.fillStyle=shirt('#3b5e61');ctx.fill(new Path2D('M370 1374L733 1278L698 1404H370Z'));
     ctx.fillStyle='#4c3931';ctx.fillRect(355,1381,420,155);
     ctx.fillStyle='#6f4d38';ctx.fillRect(360,1394,410,37);ctx.restore();
     ctx.fillStyle='#ded3c5';ctx.beginPath();ctx.ellipse(278,792,59,77,0,0,Math.PI*2);ctx.fill();
