@@ -1,6 +1,9 @@
 {
   "name": "mira",
   "type": "module",
+  "engines": {
+    "node": ">=24.22.1"
+  },
   "scripts": {
     "dev": "wasp start --client-port 3002 --server-port 3003",
     "check": "wasp compile",
