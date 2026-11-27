@@ -29,7 +29,7 @@ You need Node.js 24.22.1 or newer, the Wasp CLI 0.26.1, PostgreSQL, an ElevenLab
 ```bash
 cp .env.server.example .env.server   # add your keys and DATABASE_URL
 cp .env.client.example .env.client
-npm run setup:agent                  # creates the ElevenLabs agent; paste the ID it prints into .env.client
+npm run setup:agent                  # creates the ElevenLabs agent; add the two ID lines it prints
 createdb mira
 wasp db migrate-dev
 npm run dev                          # client on :3002, server on :3003

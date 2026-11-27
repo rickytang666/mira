@@ -4,16 +4,14 @@ import { ConversationProvider, useConversation } from '@elevenlabs/react';
 import { Mic, MicOff, PhoneOff, RotateCcw, AlertCircle, Check, Loader2 } from 'lucide-react';
 import { useQuery, getPublicStudy } from 'wasp/client/operations';
 import type { PublicStudy } from '../contract';
-import { reportFinished } from './finished';
+import { replayUnfinished, reportFinished, reportFinishedOnUnload } from './finished';
+import { mouthOpenFromVolume, nextSpeakingShape, type Phase, phaseAfterError, type SpeakingShape } from './session';
 import { CharacterCanvas } from '../character/CharacterCanvas';
 import '../Main.css';
 import './interview.css';
 
 const AGENT_ID = (import.meta.env.REACT_APP_ELEVENLABS_AGENT_ID as string | undefined) ?? '';
-// The knowledge base can be 40k characters; a voice turn re-reads the whole prompt, so keep it short for latency.
-const MAX_SPOKEN_CONTEXT = 8000;
 
-type Phase = 'ready' | 'connecting' | 'live' | 'done' | 'error';
 type Line = { role: 'user' | 'agent'; text: string };
 
 /** Contract variables from getPublicStudy, plus product_name so the agent can say the product's name. */
@@ -30,7 +28,6 @@ function sessionVariables(study: PublicStudy): Record<string, string> {
     product_context: '',
   };
   for (const [k, v] of Object.entries(base)) if (typeof v === 'string') vars[k] = v;
-  vars.product_context = vars.product_context.slice(0, MAX_SPOKEN_CONTEXT);
   if (!vars.audience) vars.audience = 'someone who has used this product';
   return vars;
 }
@@ -41,6 +38,10 @@ export function InterviewPage() {
   const [muted, setMuted] = useState(false);
   // Mic is closed while Mira talks: phone speakers echo her voice back and hall noise cut her off mid-question.
   const [agentTalking, setAgentTalking] = useState(false);
+  // Resends any interview a closed tab never got to the server.
+  useEffect(() => {
+    void replayUnfinished();
+  }, []);
 
   if (isLoading)
     return (
@@ -101,15 +102,15 @@ function Interview({
   const questionSnapshot = useRef<string[]>([]);
   const finished = useRef(false);
 
+  const entry = useCallback(
+    () => ({ studyId: study.id, conversationId: conversationId.current, questionSnapshot: questionSnapshot.current }),
+    [study.id],
+  );
   const finish = useCallback(() => {
     if (finished.current || !conversationId.current) return;
     finished.current = true;
-    void reportFinished({
-      studyId: study.id,
-      conversationId: conversationId.current,
-      questionSnapshot: questionSnapshot.current,
-    });
-  }, [study.id]);
+    void reportFinished(entry());
+  }, [entry]);
 
   const conversation = useConversation({
     onConnect: ({ conversationId: id }) => {
@@ -123,7 +124,10 @@ function Interview({
         setPhase(conversationId.current ? 'done' : 'error');
       } else setPhase('done');
     },
-    onError: (message) => setError(message),
+    onError: (message) => {
+      setError(message);
+      setPhase((p) => phaseAfterError(p, !!conversationId.current));
+    },
     // Expressive mode puts audio tags like "[Warmly]" in the text; they are for the voice, not the screen.
     onMessage: ({ role, message }) => {
       const text = message.replace(/\[[^\]]*\]\s*/g, '').trim();
@@ -133,9 +137,14 @@ function Interview({
 
   // If the participant closes the tab mid-interview, still hand the conversation to the server.
   useEffect(() => {
-    window.addEventListener('pagehide', finish);
-    return () => window.removeEventListener('pagehide', finish);
-  }, [finish]);
+    const onPageHide = () => {
+      if (!conversationId.current) return;
+      finished.current = true;
+      reportFinishedOnUnload(entry());
+    };
+    window.addEventListener('pagehide', onPageHide);
+    return () => window.removeEventListener('pagehide', onPageHide);
+  }, [entry]);
 
   async function start() {
     setError('');
@@ -166,7 +175,7 @@ function Interview({
     const timer = setTimeout(() => onAgentTalking(false), 350);
     return () => clearTimeout(timer);
   }, [speaking, onAgentTalking]);
-  const mouthOpen = useAgentMouth(speaking, conversation.getOutputVolume);
+  const mouth = useAgentMouth(speaking, conversation.getOutputVolume);
   const [gesture, setGesture] = useState(0);
   const shirtColor = useLogoBackground(study.logo ?? null);
   // A small wave when the interview is submitted.
@@ -182,8 +191,9 @@ function Interview({
           {/* After the call she holds a wide smile ('ee' shape) as a thank-you. */}
           <CharacterCanvas
             mode={speaking ? 'speaking' : live ? 'listening' : 'idle'}
-            mouthOpen={phase === 'done' ? 0.45 : mouthOpen}
-            mouthShape={phase === 'done' ? 'ee' : mouthOpen > 0.15 ? 'aa' : 'rest'}
+            mouthOpen={phase === 'done' ? 0.45 : 0}
+            readMouthOpen={phase === 'done' ? undefined : mouth.readOpen}
+            mouthShape={phase === 'done' ? 'ee' : mouth.shape}
             gesture={gesture}
             shirtColor={shirtColor}
           />
@@ -261,31 +271,48 @@ function useLogoBackground(logo: string | null): [number, number, number] | unde
   return color;
 }
 
-/** Opens the character's mouth with the agent's output volume while it speaks. */
-function useAgentMouth(speaking: boolean, getOutputVolume: () => number): number {
-  const [open, setOpen] = useState(0);
+// Volume is read every frame by the canvas through readOpen; only the coarse shape goes through React state.
+function useAgentMouth(
+  speaking: boolean,
+  getOutputVolume: () => number,
+): { shape: SpeakingShape; readOpen: () => number } {
+  const [shape, setShape] = useState<SpeakingShape>('rest');
+  const open = useRef(0);
   const read = useRef(getOutputVolume);
   read.current = getOutputVolume;
   useEffect(() => {
     if (!speaking) {
-      setOpen(0);
+      open.current = 0;
+      setShape('rest');
       return;
     }
     let raf = 0;
-    const tick = () => {
+    let current: SpeakingShape = 'rest';
+    let switchedAt = performance.now();
+    const tick = (now: number) => {
       let volume = 0;
       try {
         volume = read.current();
       } catch {
         volume = 0;
       }
-      setOpen(Math.min(1, volume * 2.5));
+      open.current = mouthOpenFromVolume(volume);
+      const next = nextSpeakingShape(current, open.current, now - switchedAt);
+      if (next !== current) {
+        current = next;
+        switchedAt = now;
+        setShape(next);
+      }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      open.current = 0;
+    };
   }, [speaking]);
-  return open;
+  const readOpen = useCallback(() => open.current, []);
+  return { shape, readOpen };
 }
 
 function Shell({ children }: { children: React.ReactNode }) {

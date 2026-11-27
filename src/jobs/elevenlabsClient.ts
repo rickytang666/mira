@@ -8,8 +8,15 @@ function apiKey(): string {
   return key;
 }
 
+export function miraAgentId(): string {
+  const id = process.env.ELEVENLABS_AGENT_ID;
+  if (!id) throw new Error('ELEVENLABS_AGENT_ID is not set in .env.server');
+  return id;
+}
+
 type RawConversation = {
   conversation_id: string;
+  agent_id?: string;
   status: FetchedConversation['status'];
   metadata?: { call_duration_secs?: number };
   transcript?: { role: 'user' | 'agent'; message?: string | null; time_in_call_secs: number }[];
@@ -26,6 +33,7 @@ export async function fetchConversation(conversationId: string): Promise<Fetched
     .map((turn) => ({ role: turn.role, text: turn.message!.trim(), timeInCallSecs: turn.time_in_call_secs }));
   return {
     conversationId: raw.conversation_id,
+    agentId: raw.agent_id,
     status: raw.status,
     durationSecs: raw.metadata?.call_duration_secs ?? turns.at(-1)?.timeInCallSecs ?? 0,
     turns,

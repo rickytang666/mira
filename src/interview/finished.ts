@@ -1,36 +1,47 @@
+import { config } from 'wasp/client';
 import { finishInterview } from 'wasp/client/operations';
+import {
+  deliver,
+  type FinishedInterview,
+  finishRequest,
+  isFinalRejection,
+  isStoredSaved,
+  type KeyValueStore,
+  markStored,
+  unsavedStored,
+} from './finishedStore';
 
-// Hands the finished conversation to track 1, which enqueues processInterview.
-// finishInterview upserts on conversationId, so retrying is safe.
-// A local copy of every ID is kept so nothing is lost if the server is unreachable mid-demo.
+// Hands the finished conversation to the server, which enqueues processInterview.
+// A local copy of every ID is kept until the server confirms it, and replayed on the next page load.
 
-export type FinishedInterview = { studyId: string; conversationId: string; questionSnapshot: string[] };
+export type { FinishedInterview };
 
-const key = 'fieldwork.finishedInterviews.v1';
-
-function keepLocalCopy(entry: FinishedInterview & { saved: boolean }) {
+function browserStore(): KeyValueStore | null {
   try {
-    const list = JSON.parse(localStorage.getItem(key) || '[]');
-    localStorage.setItem(
-      key,
-      JSON.stringify([...(Array.isArray(list) ? list : []), { ...entry, at: new Date().toISOString() }]),
-    );
+    return window.localStorage;
   } catch {
-    // Storage blocked (private mode): the server call is what matters.
+    return null;
   }
 }
 
-export async function reportFinished(entry: FinishedInterview): Promise<boolean> {
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      await finishInterview(entry);
-      keepLocalCopy({ ...entry, saved: true });
-      return true;
-    } catch (err) {
-      console.warn('[interview] finishInterview failed', attempt + 1, err);
-      await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
-    }
-  }
-  keepLocalCopy({ ...entry, saved: false });
-  return false;
+export function reportFinished(entry: FinishedInterview): Promise<boolean> {
+  return deliver(entry, finishInterview, browserStore());
+}
+
+/** For pagehide: the unsaved local copy stays behind in case the keepalive request is dropped too. */
+export function reportFinishedOnUnload(entry: FinishedInterview) {
+  const store = browserStore();
+  if (isStoredSaved(store, entry.conversationId)) return;
+  markStored(store, entry, false);
+  const [url, init] = finishRequest(config.apiUrl, entry);
+  fetch(url, init).then(
+    (res) => {
+      if (res.ok || isFinalRejection(res.status)) markStored(store, entry, true);
+    },
+    () => {},
+  );
+}
+
+export async function replayUnfinished() {
+  for (const entry of unsavedStored(browserStore())) await reportFinished(entry);
 }
