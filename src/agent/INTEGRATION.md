@@ -43,7 +43,7 @@ Recordings stream through the server audio proxy at `/api/interviews/:interviewI
 ## Checks
 
 ```sh
-REACT_APP_API_URL=http://localhost:3001 npx vitest run --config src/agent/vitest.config.ts
+npm test
 ```
 
 Coverage includes revision races, report failures preserving old data, more than ten calls, exact quote timing, question snapshots, and provider errors.
