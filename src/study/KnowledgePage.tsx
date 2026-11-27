@@ -12,6 +12,7 @@ import {
 } from 'wasp/client/operations';
 import type { Source } from 'wasp/entities';
 import { Layout, PageHeader, ErrorNote } from '../Layout';
+import { withScheme } from './url';
 
 type SourceKind = 'url' | 'description' | 'pdf' | 'mcp';
 
@@ -98,7 +99,7 @@ export function KnowledgePage() {
       else if (kind === 'url')
         await add(
           await importWebsite({
-            url: value.trim().startsWith('http') ? value.trim() : `https://${value.trim()}`,
+            url: withScheme(value.trim()),
           }),
           kind,
         );
