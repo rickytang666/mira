@@ -20,6 +20,7 @@ import { interviewVariables } from '../agent/studyContext';
 import { readSavedReport, rebuildQueued } from '../report/server';
 import { interviewAudioUrl } from '../jobs/audioUrl';
 import { isRebuilding, synthesisStatus } from '../report/pipeline';
+import { withScheme } from './url';
 
 // Page titles look like "Tagline | Brand" or "Brand - Tagline"; the brand is the short side.
 function productNameFromTitle(title: string, hostname: string): string {
@@ -49,7 +50,7 @@ export const createStudy: CreateStudy<CreateStudyInput, { id: string }> = async 
   const description = args.description?.trim() ?? '';
   let productUrl = args.productUrl?.trim() ?? '';
   if (!productUrl && !description) throw new HttpError(400, 'Add your product URL or describe it.');
-  if (productUrl && !/^https?:\/\//.test(productUrl)) productUrl = `https://${productUrl}`;
+  if (productUrl) productUrl = withScheme(productUrl);
   // The scrape fallback below parses the URL again, so an unparseable one would escape as a bare 500.
   if (productUrl && !URL.canParse(productUrl)) throw new HttpError(400, 'Enter a complete URL, including https://.');
 
