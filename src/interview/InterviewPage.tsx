@@ -10,8 +10,6 @@ import '../Main.css';
 import './interview.css';
 
 const AGENT_ID = (import.meta.env.REACT_APP_ELEVENLABS_AGENT_ID as string | undefined) ?? '';
-// The knowledge base can be 40k characters; a voice turn re-reads the whole prompt, so keep it short for latency.
-const MAX_SPOKEN_CONTEXT = 8000;
 
 type Phase = 'ready' | 'connecting' | 'live' | 'done' | 'error';
 type Line = { role: 'user' | 'agent'; text: string };
@@ -30,7 +28,6 @@ function sessionVariables(study: PublicStudy): Record<string, string> {
     product_context: '',
   };
   for (const [k, v] of Object.entries(base)) if (typeof v === 'string') vars[k] = v;
-  vars.product_context = vars.product_context.slice(0, MAX_SPOKEN_CONTEXT);
   if (!vars.audience) vars.audience = 'someone who has used this product';
   return vars;
 }

@@ -2,10 +2,11 @@
 
 One ElevenLabs Conversational AI agent, **Mira**, runs every study. The phone page passes each study's details in as dynamic variables when the call starts. The agent lives in the ElevenLabs dashboard, not in code, so this file is the record of how to recreate it.
 
-Put its ID in `.env.client`:
+Put its ID in `.env.client` for the phone, and in `.env.server` so the interview job only saves calls from this agent:
 
 ```
 REACT_APP_ELEVENLABS_AGENT_ID=<your-agent-id>
+ELEVENLABS_AGENT_ID=<your-agent-id>
 ```
 
 ## Dynamic variables
@@ -19,7 +20,7 @@ REACT_APP_ELEVENLABS_AGENT_ID=<your-agent-id>
 | `goal`            | contract     |                                                                                               |
 | `audience`        | contract     | Falls back to "someone who has used this product"                                             |
 | `questions`       | contract     | Numbered, one per line. A question may end with `[Do not ask a follow-up for this question.]` |
-| `product_context` | contract     | Trimmed to 8,000 characters on the phone to keep each voice turn fast                         |
+| `product_context` | contract     | Trimmed to 8,000 characters on the server to keep each voice turn fast                        |
 | `study_id`        | contract     | Not used in the prompt                                                                        |
 
 Every variable used in the prompt must always be sent, or ElevenLabs refuses to start the call. The page always sends `product_name`, `audience`, and `product_context`, even when empty.
