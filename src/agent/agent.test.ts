@@ -87,7 +87,7 @@ describe('question generation', () => {
     await expect(suggestQuestions(context, { generateJson: async () => ({ questions: [] }) })).rejects.toThrow('3 to 5');
   });
   it('drops duplicate questions and trims extras to 5', async () => {
-    expect(await suggestQuestions(context, { generateJson: async () => ({ questions: ['Same?', 'same', 'Other?'] }) })).toEqual({ questions: ['Same?', 'Other?'] });
+    expect(await suggestQuestions(context, { generateJson: async () => ({ questions: ['Same?', 'same', 'Other?', 'Third?'] }) })).toEqual({ questions: ['Same?', 'Other?', 'Third?'] });
     const many = ['One?', 'Two?', 'Three?', 'Four?', 'Five?', 'Six?'];
     expect(await suggestQuestions(context, { generateJson: async () => ({ questions: many }) })).toEqual({ questions: many.slice(0, 5) });
   });
