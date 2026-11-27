@@ -34,7 +34,7 @@ Every variable used in the prompt must always be sent, or ElevenLabs refuses to 
 
 ## First message and system prompt
 
-They live in [`agent/first-message.txt`](../agent/first-message.txt) and [`agent/system-prompt.md`](../agent/system-prompt.md). `npm run setup:agent` sends them as-is.
+They live in [`agent/first-message.txt`](../agent/first-message.txt) and [`agent/system-prompt.txt`](../agent/system-prompt.txt). `npm run setup:agent` sends them as-is.
 
 ## Settings
 

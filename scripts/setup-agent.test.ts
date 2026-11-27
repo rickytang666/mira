@@ -29,6 +29,12 @@ describe('agent texts', () => {
     expect(texts.systemPrompt).toMatch(/^You are a warm, sharp user researcher/);
     expect(texts.systemPrompt).toMatch(/\{\{product_context\}\}$/);
   });
+
+  it('keeps the prompt as written, not reflowed like markdown', () => {
+    expect(texts.systemPrompt).toMatch(/^How to run the interview:\n- Ask one question/m);
+    expect(texts.systemPrompt).toMatch(/^Ending:$/m);
+    expect(texts.systemPrompt).toMatch(/\nBackground on the product.*:\n\{\{product_context\}\}$/);
+  });
 });
 
 describe('setupAgent', () => {

@@ -10,7 +10,7 @@ export interface AgentTexts {
 
 export function readAgentTexts(dir = new URL('.', import.meta.url)): AgentTexts {
   const read = (name: string) => readFileSync(new URL(name, dir), 'utf8').trimEnd();
-  return { firstMessage: read('first-message.txt'), systemPrompt: read('system-prompt.md') };
+  return { firstMessage: read('first-message.txt'), systemPrompt: read('system-prompt.txt') };
 }
 
 export function buildAgentConfig(
