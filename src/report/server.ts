@@ -2,16 +2,7 @@ import { prisma, config } from 'wasp/server';
 import type { FetchedConversation, ReportView } from '../contract';
 import { fetchConversation } from '../jobs/elevenlabsClient';
 import { refreshStudyReport, type ReportRepository } from './pipeline';
-
-// Joke runs and dropped calls stay saved but are kept out of themes and the summary.
-const MIN_CALL_SECS = 15;
-const MIN_PARTICIPANT_WORDS = 10;
-function isSubstantive(conversation: FetchedConversation): boolean {
-  const words = (conversation.turns ?? [])
-    .filter((turn) => turn.role === 'user')
-    .reduce((sum, turn) => sum + turn.text.trim().split(/\s+/).filter(Boolean).length, 0);
-  return (conversation.durationSecs ?? 0) >= MIN_CALL_SECS && words >= MIN_PARTICIPANT_WORDS;
-}
+import { isSubstantive } from './substantive';
 
 export const reportRepository: ReportRepository = {
   async load(studyId) {
