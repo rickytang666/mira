@@ -30,7 +30,8 @@ export function parseTranscript(input: string | TranscriptTurn[], durationSec?: 
         /^(?:\[?(\d{1,3}:\d{2}(?::\d{2})?(?:\.\d+)?)\]?\s*)?(?:(user|participant|respondent|customer|interviewee|agent|assistant|interviewer)\s*:\s*)?(.*)$/i;
       for (const line of text.split(/\r?\n/).filter((line) => line.trim())) {
         const match = header.exec(line.trim());
-        if (!match) continue;
+        // the regex . never matches a lone \r or \u2028; fail loudly rather than drop speech
+        if (!match) throw new Error('Transcript line could not be read.');
         if (!match[1] && !match[2] && lines.length) {
           lines[lines.length - 1].text += '\n' + line.trim();
           continue;
