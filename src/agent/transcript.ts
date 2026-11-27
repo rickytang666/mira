@@ -36,7 +36,7 @@ export function parseTranscript(input: string | TranscriptTurn[], durationSec?: 
           continue;
         }
         const parts = match[1]?.split(':').map(Number);
-        if (parts && parts.slice(1).some((n) => n >= 60)) throw new Error('Invalid timestamp: ' + match[1]);
+        if (parts?.slice(1).some((n) => n >= 60)) throw new Error('Invalid timestamp: ' + match[1]);
         const startSec = parts ? parts.reduce((total, part) => total * 60 + part, 0) : null;
         lines.push({
           id: `turn-${lines.length}`,

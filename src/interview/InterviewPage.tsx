@@ -12,8 +12,6 @@ import './interview.css';
 
 const AGENT_ID = (import.meta.env.REACT_APP_ELEVENLABS_AGENT_ID as string | undefined) ?? '';
 
-type Line = { role: 'user' | 'agent'; text: string };
-
 /** Contract variables from getPublicStudy, plus product_name so the agent can say the product's name. */
 function sessionVariables(study: PublicStudy): Record<string, string> {
   const base = study.dynamicVariables ?? {
@@ -97,7 +95,6 @@ function Interview({
 }) {
   const [phase, setPhase] = useState<Phase>('ready');
   const [error, setError] = useState('');
-  const [lines, setLines] = useState<Line[]>([]);
   const conversationId = useRef('');
   const questionSnapshot = useRef<string[]>([]);
   const finished = useRef(false);
@@ -128,11 +125,6 @@ function Interview({
       setError(message);
       setPhase((p) => phaseAfterError(p, !!conversationId.current));
     },
-    // Expressive mode puts audio tags like "[Warmly]" in the text; they are for the voice, not the screen.
-    onMessage: ({ role, message }) => {
-      const text = message.replace(/\[[^\]]*\]\s*/g, '').trim();
-      if (text) setLines((prev) => [...prev.slice(-1), { role, text }]);
-    },
   });
 
   // If the participant closes the tab mid-interview, still hand the conversation to the server.
@@ -148,7 +140,6 @@ function Interview({
 
   async function start() {
     setError('');
-    setLines([]);
     finished.current = false;
     conversationId.current = '';
     questionSnapshot.current = study.questions;
@@ -182,7 +173,6 @@ function Interview({
   useEffect(() => {
     if (phase === 'done') setGesture((g) => g + 1);
   }, [phase]);
-  const productName = study.name || 'this product';
 
   return (
     <Shell>

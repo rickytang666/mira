@@ -207,7 +207,7 @@ export const setStudyLogo: SetStudyLogo<{ studyId: string; logo: string | null }
 type AddSourceInput = { studyId: string; kind: string; title: string; content: string; detail: string };
 
 // Study.context is the joined text of its sources, so it is rebuilt on every source change.
-async function rebuildStudyContext(studyId: string, entities: { Study: any; Source: any }) {
+async function rebuildStudyContext(studyId: string, entities: Parameters<AddSource>[1]['entities']) {
   const sources: Source[] = await entities.Source.findMany({ where: { studyId }, orderBy: { createdAt: 'asc' } });
   const studyContext = sources
     .map((source) => source.content)
