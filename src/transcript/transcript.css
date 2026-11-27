@@ -1,0 +1,105 @@
+/* Same column and hairline rhythm as the report; each turn is one ruled, clickable row. */
+.fw-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  text-decoration: none;
+}
+.fw-transcript-questions {
+  margin: 0 0 40px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.fw-transcript-questions summary {
+  cursor: pointer;
+  color: var(--ink);
+  font-weight: 500;
+}
+.fw-transcript-questions ol {
+  margin: 12px 0 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+}
+.fw-turns {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--border);
+}
+.fw-turn {
+  border-bottom: 1px solid var(--line);
+  border-left: 2px solid transparent;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+  scroll-margin: 96px;
+}
+.fw-turn.is-highlighted {
+  border-left-color: var(--logo-background);
+  background: var(--accent-soft);
+}
+.fw-turn.is-playing {
+  border-left-color: var(--brand);
+}
+.fw-turn .fw-error {
+  padding: 0 16px 12px;
+}
+.fw-report .fw-turn-button {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  border: 0;
+  background: none;
+  text-align: left;
+  padding: 16px;
+  color: var(--text);
+}
+.fw-report .fw-turn-button:disabled {
+  cursor: default;
+}
+.fw-turn-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.fw-turn-speaker {
+  font-weight: 600;
+  color: var(--brand);
+}
+.fw-turn.is-mira .fw-turn-speaker {
+  color: var(--muted);
+}
+.fw-turn-button:hover:not(:disabled) .fw-turn-speaker {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.fw-turn-text {
+  font-size: 16px;
+  line-height: 1.6;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.fw-turn.is-participant .fw-turn-text {
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 18px;
+  color: var(--ink);
+}
+.fw-turn.is-playing .fw-play-icon {
+  background: var(--surface);
+  color: var(--brand);
+  box-shadow: inset 0 0 0 1.5px var(--brand);
+}
+@media (prefers-reduced-motion: reduce) {
+  .fw-turn {
+    transition: none;
+  }
+}

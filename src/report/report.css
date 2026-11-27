@@ -328,6 +328,15 @@
 .fw-quote-sep {
   color: var(--border-strong);
 }
+.fw-quote-participant {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+}
+.fw-quote-participant:hover {
+  color: var(--brand);
+}
 .fw-more {
   border: 0;
   background: none;
