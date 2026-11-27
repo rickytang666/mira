@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # the curl installer can't install Wasp 0.21+, npm is the official method now
+      - name: Install Wasp CLI
+        run: |
+          npm install -g @wasp.sh/wasp-cli@0.26.1
+          wasp version
+
+      # no database or secrets: the DATABASE_URL notice from wasp compile is expected
+      - run: npm run verify
+
+      - name: Check for a clean working tree
+        run: |
+          changes="$(git status --porcelain)"
+          if [ -n "$changes" ]; then
+            echo "::error::verify left uncommitted changes"
+            echo "$changes"
+            git diff
+            exit 1
+          fi
+
+  react-doctor:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      statuses: write
+    steps:
+      # full history so the action can find the merge base
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - uses: millionco/react-doctor@v2
+        with:
+          blocking: none
+          comment-on-clean: false
+          commit-status: false
