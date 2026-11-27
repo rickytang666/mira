@@ -26,27 +26,9 @@ export type TranscriptTurn = {
 export type FetchedConversation = {
   conversationId: string;
   status: 'initiated' | 'in-progress' | 'processing' | 'done' | 'failed'; // job retries until "done"
+  agentId?: string;
   durationSecs: number;
   turns: TranscriptTurn[];
-};
-
-// ---- Track 3: src/agent/synthesizeInterview.ts ----
-
-export type SynthesizeInterviewInput = {
-  goal: string;
-  questions: string[];
-  turns: TranscriptTurn[];
-  existingThemeLabels: string[]; // reuse a label when the idea matches, so counts add up across interviews
-};
-
-export type SynthesizedQuote = {
-  text: string; // verbatim from a user turn
-  startSec: number; // that user turn's timeInCallSecs
-  endSec: number; // next turn's timeInCallSecs, or durationSecs
-};
-
-export type SynthesizeInterviewOutput = {
-  themes: { label: string; quotes: SynthesizedQuote[] }[]; // each theme counts once per interview
 };
 
 // ---- Track 2 <-> ElevenLabs agent prompt: dynamic variables passed to startSession ----

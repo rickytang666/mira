@@ -2,6 +2,7 @@ import { prisma, config } from 'wasp/server';
 import type { FetchedConversation, ReportView } from '../contract';
 import { fetchConversation } from '../jobs/elevenlabsClient';
 import { refreshStudyReport, type ReportRepository } from './pipeline';
+import { participantTitle } from './participants';
 import { isSubstantive } from './substantive';
 
 export const reportRepository: ReportRepository = {
@@ -28,7 +29,7 @@ export const reportRepository: ReportRepository = {
         .filter((call) => call.transcript && isSubstantive(call.transcript as unknown as FetchedConversation))
         .map((call, index) => ({
           interviewId: call.id,
-          title: `Participant ${String(index + 1).padStart(2, '0')}`,
+          title: participantTitle(index),
           conversation: call.transcript as unknown as FetchedConversation,
           // Older calls lack a snapshot; do not claim they used today's revised questions.
           questions: Array.isArray(call.questionSnapshot)

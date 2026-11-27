@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Play, Square } from 'lucide-react';
-import type { ReportLoader, StudyReport } from '../agent/internalTypes';
+import { Link } from 'react-router';
+import type { ReportLoader, ReportQuote, StudyReport } from '../agent/internalTypes';
 import { createQuotePlayer, playable, type PlayerState } from './audioPlayer';
 import { useReport } from './useReport';
 import './report.css';
@@ -12,11 +13,12 @@ export interface ReportContentProps {
   /** For a query adapter: keep this function stable (module scope or useCallback). */
   loadReport?: ReportLoader;
   pollMs?: number;
-  sample?: boolean;
   actions?: ReactNode;
   beforeContent?: ReactNode;
   emptyAction?: ReactNode;
   emptyMessage?: string;
+  /** Needs a router; a quote without a returned link keeps a plain participant label. */
+  participantHref?: (quote: ReportQuote) => string | undefined;
 }
 /** Eases a number from its last shown value to the new one, so live updates read as change, not a jump. */
 function EasedNumber({ value }: { value: number }) {
@@ -58,11 +60,11 @@ export function ReportContent({
   report: provided,
   loadReport,
   pollMs,
-  sample = false,
   actions,
   beforeContent,
   emptyAction,
   emptyMessage,
+  participantHref,
 }: ReportContentProps) {
   const live = useReport(studyId, loadReport, pollMs);
   const report = provided ?? live.report;
@@ -121,6 +123,7 @@ export function ReportContent({
     const active = selected && playerState.status !== 'idle';
     const enabled = playable(quote);
     const time = quote.startSec === null ? '' : formatTime(quote.startSec);
+    const href = participantHref?.(quote);
     return (
       <article className={`fw-quote ${hero ? 'fw-hero-quote' : ''} ${active ? 'is-playing' : ''}`} key={quote.id}>
         <blockquote>“{quote.text}”</blockquote>
@@ -153,7 +156,17 @@ export function ReportContent({
           <span className="fw-quote-sep" aria-hidden="true">
             ·
           </span>
-          <span>{quote.participantLabel}</span>
+          {href ? (
+            <Link
+              className="fw-quote-participant"
+              to={href}
+              aria-label={`Open ${quote.participantLabel}'s transcript at this quote`}
+            >
+              {quote.participantLabel}
+            </Link>
+          ) : (
+            <span>{quote.participantLabel}</span>
+          )}
           {time && (
             <>
               <span className="fw-quote-sep" aria-hidden="true">
@@ -177,9 +190,8 @@ export function ReportContent({
     <section className="fw-report" aria-label="Interview research report">
       <header className="fw-report-heading">
         <div>
-          <h1>{sample ? 'Sample report' : report?.productName || 'Report'}</h1>
+          <h1>{report?.productName || 'Report'}</h1>
           {report?.goal && <p className="fw-description">{report.goal}</p>}
-          {sample && <p className="fw-description">Illustrative data, not real interviews.</p>}
         </div>
         {actions && <div className="fw-heading-aside">{actions}</div>}
       </header>
@@ -306,9 +318,7 @@ export function ReportContent({
               </button>
             </div>
             <span className="fw-update">
-              {sample
-                ? 'Preview'
-                : `Updated ${new Date(report.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+              {`Updated ${new Date(report.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
             </span>
           </div>
           {!report.themes.length ? (
