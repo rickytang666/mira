@@ -21,8 +21,11 @@ vi.mock('../sources', () => ({ importWebsite: vi.fn() }));
 vi.mock('../agent/suggestQuestions', () => ({ suggestQuestions: vi.fn() }));
 vi.mock('../report/server', () => ({ readSavedReport: vi.fn(), rebuildQueued: vi.fn(async () => false) }));
 
-const { updateStudy, addSource, getPublicStudy, finishInterview, getReport } = await import('./operations');
+const { createStudy, updateStudy, addSource, getPublicStudy, finishInterview, getReport } = await import(
+  './operations'
+);
 const { readSavedReport } = await import('../report/server');
+const { suggestQuestions } = await import('../agent/suggestQuestions');
 
 // Operations receive client JSON, so tests pass shapes the TypeScript input type would reject.
 const call = (operation: unknown, args: unknown, context: unknown = {}) =>
@@ -114,6 +117,26 @@ describe('addSource', () => {
       statusCode: 400,
     });
     expect(e.Source.create).not.toHaveBeenCalled();
+  });
+
+  it('rebuilds the study context from every source, capped at 60,000 characters', async () => {
+    const e = entities();
+    e.Source.findMany.mockResolvedValue([{ content: 'first' }, { content: 'b'.repeat(70_000) }]);
+    await call(addSource, source, { entities: e });
+    expect(e.Study.update).toHaveBeenCalledWith({
+      where: { id: 's1' },
+      data: { context: `first\n\n${'b'.repeat(59_993)}`, reportRevision: { increment: 1 }, reportError: null },
+    });
+  });
+});
+
+describe('createStudy', () => {
+  it('caps the joined source context at 60,000 characters', async () => {
+    vi.mocked(suggestQuestions).mockResolvedValue({ questions: ['Why?'] });
+    const create = vi.fn().mockResolvedValue({ id: 's1' });
+    await call(createStudy, { goal: 'Learn', description: 'd'.repeat(70_000) }, { entities: { Study: { create } } });
+    expect(vi.mocked(suggestQuestions).mock.calls[0][0].context).toBe('d'.repeat(60_000));
+    expect(create.mock.calls[0][0].data.context).toBe('d'.repeat(60_000));
   });
 });
 

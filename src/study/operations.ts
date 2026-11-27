@@ -32,6 +32,15 @@ function productNameFromTitle(title: string, hostname: string): string {
   return pick || hostname.replace(/^www\./, '');
 }
 
+const MAX_STUDY_CONTEXT_LENGTH = 60_000;
+
+function joinSourceContext(sources: { content: string }[]): string {
+  return sources
+    .map((source) => source.content)
+    .join('\n\n')
+    .slice(0, MAX_STUDY_CONTEXT_LENGTH);
+}
+
 type CreateStudyInput = { productUrl?: string; description?: string; goal: string; audience?: string };
 
 export const createStudy: CreateStudy<CreateStudyInput, { id: string }> = async (args, context) => {
@@ -71,9 +80,8 @@ export const createStudy: CreateStudy<CreateStudyInput, { id: string }> = async 
       detail: `${description.split(/\s+/).length} words`,
     });
   }
-  const contextParts = sources.map((source) => source.content);
   const audience = args.audience?.trim() ?? '';
-  const studyContext = contextParts.join('\n\n').slice(0, 60000);
+  const studyContext = joinSourceContext(sources);
 
   let questions: string[];
   try {
@@ -210,13 +218,9 @@ type AddSourceInput = { studyId: string; kind: string; title: string; content: s
 // Study.context is the joined text of its sources, so it is rebuilt on every source change.
 async function rebuildStudyContext(studyId: string, entities: { Study: any; Source: any }) {
   const sources: Source[] = await entities.Source.findMany({ where: { studyId }, orderBy: { createdAt: 'asc' } });
-  const studyContext = sources
-    .map((source) => source.content)
-    .join('\n\n')
-    .slice(0, 60000);
   await entities.Study.update({
     where: { id: studyId },
-    data: { context: studyContext, reportRevision: { increment: 1 }, reportError: null },
+    data: { context: joinSourceContext(sources), reportRevision: { increment: 1 }, reportError: null },
   });
 }
 
