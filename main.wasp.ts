@@ -21,6 +21,8 @@ import { processInterview } from './src/jobs/processInterview' with { type: 'ref
 import { interviewAudio } from './src/jobs/interviewAudio' with { type: 'ref' };
 import { regenerateStudyReport } from './src/report/operations' with { type: 'ref' };
 import { InterviewPage } from './src/interview/InterviewPage' with { type: 'ref' };
+import { TranscriptPage } from './src/transcript/TranscriptPage' with { type: 'ref' };
+import { getInterview } from './src/transcript/operations' with { type: 'ref' };
 
 export default app({
   name: 'mira',
@@ -58,5 +60,7 @@ export default app({
     action(generateStudyQuestions, { entities: ['Study'] }),
     action(regenerateStudyReport, { entities: ['Study', 'Question', 'Interview', 'Theme', 'Quote'] }),
     route('InterviewRoute', '/i/:studyId', page(InterviewPage)),
+    route('TranscriptRoute', '/study/:studyId/interviews/:interviewId', page(TranscriptPage)),
+    query(getInterview, { entities: ['Study', 'Interview'] }),
   ],
 });
