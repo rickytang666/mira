@@ -1,16 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
-import {
-  FileText,
-  Globe,
-  Loader2,
-  Pencil,
-  Plug,
-  Plus,
-  Trash2,
-  Upload,
-  X,
-} from 'lucide-react';
+import { FileText, Globe, Loader2, Pencil, Plug, Plus, Trash2, Upload, X } from 'lucide-react';
 import {
   useQuery,
   getStudy,
@@ -49,14 +39,20 @@ const kinds = {
 
 // Scraped pages carry SEO titles like "Acme: Free AI thing for teams | Acme"; show just the name.
 function cleanSourceTitle(title: string) {
-  const parts = title.split(/\s+[|–—·•]\s+|\s+-\s+/).map((part) => part.trim()).filter(Boolean);
+  const parts = title
+    .split(/\s+[|–—·•]\s+|\s+-\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
   if (parts.length === 0) return title;
   const last = parts[parts.length - 1];
   const name = parts.length > 1 && last.length <= 32 ? last : parts[0].split(/:\s/)[0];
   return name.length > 60 ? `${name.slice(0, 57).trimEnd()}…` : name;
 }
 function sourcePreview(content: string, max = 260) {
-  const text = content.replace(/[#*_`>]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const text = content
+    .replace(/[#*_`>]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
   return text.length > max ? `${text.slice(0, max).replace(/\s+\S*$/, '')}…` : text;
 }
 
@@ -131,8 +127,7 @@ export function KnowledgePage() {
         const text = await page.getTextContent();
         content += text.items.map((item) => ('str' in item ? item.str : '')).join(' ') + '\n';
       }
-      if (!content.trim())
-        throw new Error('This PDF has no readable text. Please paste a description instead.');
+      if (!content.trim()) throw new Error('This PDF has no readable text. Please paste a description instead.');
       await add(
         {
           title: file.name,
@@ -150,10 +145,7 @@ export function KnowledgePage() {
   }
   return (
     <Layout page="knowledge" sourceCount={sources.length} questionCount={study?.questions.length ?? 0}>
-      <PageHeader
-        title="Knowledge"
-        description="What Mira knows about the product before each interview."
-      />
+      <PageHeader title="Knowledge" description="What Mira knows about the product before each interview." />
       <ErrorNote message={saveError} />
       <section className="product-card">
         <div className="product-details">
@@ -181,25 +173,19 @@ export function KnowledgePage() {
             </span>
             <h3>{item.name}</h3>
             <p>{item.description}</p>
-            <span className="tile-link">
-              {item.hint}
-            </span>
+            <span className="tile-link">{item.hint}</span>
           </button>
         ))}
       </div>
       <section className="sources-panel">
         <div className="panel-heading">
-          <h2>
-            Sources
-          </h2>
+          <h2>Sources</h2>
           <span className="subtle"></span>
         </div>
         {sources.length === 0 ? (
           <div className="empty-sources">
             <h3>No sources yet</h3>
-            <p>
-              Add your site or a short description so Mira knows the product.
-            </p>
+            <p>Add your site or a short description so Mira knows the product.</p>
           </div>
         ) : (
           <div className="source-list">
@@ -220,7 +206,9 @@ export function KnowledgePage() {
                       })}
                     </small>
                     {source.content && <p className="source-snippet">{sourcePreview(source.content)}</p>}
-                    <button className="text-link source-more" onClick={() => setView(source)}>Read full text</button>
+                    <button className="text-link source-more" onClick={() => setView(source)}>
+                      Read full text
+                    </button>
                   </div>
                   <button
                     className="icon-button delete"
@@ -342,9 +330,7 @@ export function KnowledgePage() {
                           autoFocus
                           value={value}
                           onChange={(e) => setValue(e.target.value)}
-                          placeholder={
-                            kind === 'mcp' ? 'https://your-server.com/mcp' : 'https://your-product.com'
-                          }
+                          placeholder={kind === 'mcp' ? 'https://your-server.com/mcp' : 'https://your-product.com'}
                         />
                       )}
                     </label>
@@ -361,12 +347,7 @@ export function KnowledgePage() {
                       </label>
                     )}
                     <div className="modal-actions">
-                      <button
-                        className="button secondary"
-                        type="button"
-                        disabled={busy}
-                        onClick={() => setKind(null)}
-                      >
+                      <button className="button secondary" type="button" disabled={busy} onClick={() => setKind(null)}>
                         Cancel
                       </button>
                       <button className="button primary" disabled={busy || !value.trim()}>

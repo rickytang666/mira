@@ -3,7 +3,11 @@ import type { StudyResearchContext } from '../agent/studyContext';
 import { synthesizeStudy, type StudyCall } from '../agent/synthesizeStudy';
 import type { ReportView } from '../contract';
 
-export interface ReportSnapshot { study: StudyResearchContext; calls: StudyCall[]; revision: number }
+export interface ReportSnapshot {
+  study: StudyResearchContext;
+  calls: StudyCall[];
+  revision: number;
+}
 export interface ReportRepository {
   load(studyId: string): Promise<ReportSnapshot>;
   save(studyId: string, revision: number, report: ReportView): Promise<boolean>;
@@ -19,7 +23,11 @@ export async function refreshStudyReport(studyId: string, repository: ReportRepo
       const report = await synthesizeStudy(snapshot.study, snapshot.calls, options);
       if (await repository.save(studyId, snapshot.revision, report)) return report;
     } catch (error) {
-      await repository.fail(studyId, snapshot.revision, error instanceof Error ? error.message : 'Report generation failed.');
+      await repository.fail(
+        studyId,
+        snapshot.revision,
+        error instanceof Error ? error.message : 'Report generation failed.',
+      );
       throw error;
     }
   }

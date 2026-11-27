@@ -13,7 +13,10 @@ export type ConnectedReportProps = {
 
 /** Mount with Wasp query data OR a stable getReport loader; accepts the exact team contract. */
 export function ConnectedReport({ studyId, productName, report, loadReport }: ConnectedReportProps) {
-  const adapted = useMemo(() => report ? fromReportView(report, productName) : undefined, [report, productName]);
-  const load = useCallback(async (id: string, signal: AbortSignal) => fromReportView(await loadReport!(id, signal), productName), [loadReport, productName]);
-  return <ReportContent studyId={studyId} report={adapted} loadReport={loadReport ? load : undefined}/>;
+  const adapted = useMemo(() => (report ? fromReportView(report, productName) : undefined), [report, productName]);
+  const load = useCallback(
+    async (id: string, signal: AbortSignal) => fromReportView(await loadReport!(id, signal), productName),
+    [loadReport, productName],
+  );
+  return <ReportContent studyId={studyId} report={adapted} loadReport={loadReport ? load : undefined} />;
 }

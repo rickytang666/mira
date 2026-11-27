@@ -24,7 +24,11 @@ function sessionVariables(study: PublicStudy): Record<string, string> {
     study_id: study.id,
     questions: study.questions.map((q, i) => `${i + 1}. ${q}`).join('\n'),
   };
-  const vars: Record<string, string> = { product_name: study.name || 'this product', audience: '', product_context: '' };
+  const vars: Record<string, string> = {
+    product_name: study.name || 'this product',
+    audience: '',
+    product_context: '',
+  };
   for (const [k, v] of Object.entries(base)) if (typeof v === 'string') vars[k] = v;
   vars.product_context = vars.product_context.slice(0, MAX_SPOKEN_CONTEXT);
   if (!vars.audience) vars.audience = 'someone who has used this product';
@@ -38,10 +42,39 @@ export function InterviewPage() {
   // Mic is closed while Mira talks: phone speakers echo her voice back and hall noise cut her off mid-question.
   const [agentTalking, setAgentTalking] = useState(false);
 
-  if (isLoading) return <Shell><div className="iv-notice"><Loader2 className="iv-spin" size={22} /><p>Loading your interview…</p></div></Shell>;
-  if (error || !study) return <Shell><Notice title="This interview link isn't valid." body="Ask whoever shared it for a fresh link or QR code." /></Shell>;
-  if (!study.questions.length) return <Shell><Notice title="This study has no questions yet." body="The team needs to add interview questions before it can start." /></Shell>;
-  if (!AGENT_ID) return <Shell><Notice title="Voice interviewer not configured." body="Set REACT_APP_ELEVENLABS_AGENT_ID in .env.client and restart the app." /></Shell>;
+  if (isLoading)
+    return (
+      <Shell>
+        <div className="iv-notice">
+          <Loader2 className="iv-spin" size={22} />
+          <p>Loading your interview…</p>
+        </div>
+      </Shell>
+    );
+  if (error || !study)
+    return (
+      <Shell>
+        <Notice title="This interview link isn't valid." body="Ask whoever shared it for a fresh link or QR code." />
+      </Shell>
+    );
+  if (!study.questions.length)
+    return (
+      <Shell>
+        <Notice
+          title="This study has no questions yet."
+          body="The team needs to add interview questions before it can start."
+        />
+      </Shell>
+    );
+  if (!AGENT_ID)
+    return (
+      <Shell>
+        <Notice
+          title="Voice interviewer not configured."
+          body="Set REACT_APP_ELEVENLABS_AGENT_ID in .env.client and restart the app."
+        />
+      </Shell>
+    );
 
   return (
     <ConversationProvider agentId={AGENT_ID} isMuted={muted || agentTalking}>
@@ -50,7 +83,17 @@ export function InterviewPage() {
   );
 }
 
-function Interview({ study, muted, setMuted, onAgentTalking }: { study: PublicStudy; muted: boolean; setMuted: (m: boolean) => void; onAgentTalking: (talking: boolean) => void }) {
+function Interview({
+  study,
+  muted,
+  setMuted,
+  onAgentTalking,
+}: {
+  study: PublicStudy;
+  muted: boolean;
+  setMuted: (m: boolean) => void;
+  onAgentTalking: (talking: boolean) => void;
+}) {
   const [phase, setPhase] = useState<Phase>('ready');
   const [error, setError] = useState('');
   const [lines, setLines] = useState<Line[]>([]);
@@ -61,21 +104,30 @@ function Interview({ study, muted, setMuted, onAgentTalking }: { study: PublicSt
   const finish = useCallback(() => {
     if (finished.current || !conversationId.current) return;
     finished.current = true;
-    void reportFinished({ studyId: study.id, conversationId: conversationId.current, questionSnapshot: questionSnapshot.current });
+    void reportFinished({
+      studyId: study.id,
+      conversationId: conversationId.current,
+      questionSnapshot: questionSnapshot.current,
+    });
   }, [study.id]);
 
   const conversation = useConversation({
-    onConnect: ({ conversationId: id }) => { conversationId.current = id; setPhase('live'); },
-    onDisconnect: details => {
-      finish();
-      if (details.reason === 'error') { setError(details.message || 'The connection dropped.'); setPhase(conversationId.current ? 'done' : 'error'); }
-      else setPhase('done');
+    onConnect: ({ conversationId: id }) => {
+      conversationId.current = id;
+      setPhase('live');
     },
-    onError: message => setError(message),
+    onDisconnect: (details) => {
+      finish();
+      if (details.reason === 'error') {
+        setError(details.message || 'The connection dropped.');
+        setPhase(conversationId.current ? 'done' : 'error');
+      } else setPhase('done');
+    },
+    onError: (message) => setError(message),
     // Expressive mode puts audio tags like "[Warmly]" in the text; they are for the voice, not the screen.
     onMessage: ({ role, message }) => {
       const text = message.replace(/\[[^\]]*\]\s*/g, '').trim();
-      if (text) setLines(prev => [...prev.slice(-1), { role, text }]);
+      if (text) setLines((prev) => [...prev.slice(-1), { role, text }]);
     },
   });
 
@@ -107,7 +159,10 @@ function Interview({ study, muted, setMuted, onAgentTalking }: { study: PublicSt
   const speaking = live && conversation.isSpeaking;
   // Reopen the mic a beat after she stops, so the tail of her own audio is not heard as an answer.
   useEffect(() => {
-    if (speaking) { onAgentTalking(true); return; }
+    if (speaking) {
+      onAgentTalking(true);
+      return;
+    }
     const timer = setTimeout(() => onAgentTalking(false), 350);
     return () => clearTimeout(timer);
   }, [speaking, onAgentTalking]);
@@ -115,38 +170,67 @@ function Interview({ study, muted, setMuted, onAgentTalking }: { study: PublicSt
   const [gesture, setGesture] = useState(0);
   const shirtColor = useLogoBackground(study.logo ?? null);
   // A small wave when the interview is submitted.
-  useEffect(() => { if (phase === 'done') setGesture(g => g + 1); }, [phase]);
+  useEffect(() => {
+    if (phase === 'done') setGesture((g) => g + 1);
+  }, [phase]);
   const productName = study.name || 'this product';
 
   return (
     <Shell>
-      <div className="iv-stage" onPointerDown={() => setGesture(g => g + 1)}>
+      <div className="iv-stage" onPointerDown={() => setGesture((g) => g + 1)}>
         <div className="iv-figure">
           {/* After the call she holds a wide smile ('ee' shape) as a thank-you. */}
-          <CharacterCanvas mode={speaking ? 'speaking' : live ? 'listening' : 'idle'} mouthOpen={phase === 'done' ? 0.45 : mouthOpen} mouthShape={phase === 'done' ? 'ee' : mouthOpen > 0.15 ? 'aa' : 'rest'} gesture={gesture} shirtColor={shirtColor} />
+          <CharacterCanvas
+            mode={speaking ? 'speaking' : live ? 'listening' : 'idle'}
+            mouthOpen={phase === 'done' ? 0.45 : mouthOpen}
+            mouthShape={phase === 'done' ? 'ee' : mouthOpen > 0.15 ? 'aa' : 'rest'}
+            gesture={gesture}
+            shirtColor={shirtColor}
+          />
           {study.logo && <img className="iv-shirt-logo" src={study.logo} alt="" />}
         </div>
       </div>
 
-      {error && <div className="iv-error"><AlertCircle size={16} />{error}</div>}
+      {error && (
+        <div className="iv-error">
+          <AlertCircle size={16} />
+          {error}
+        </div>
+      )}
 
       <div className="iv-actions">
         {(phase === 'ready' || phase === 'error') && (
-          <button className="iv-mic" onClick={start} aria-label={phase === 'error' ? 'Try again' : 'Start interview'}>{phase === 'error' ? <RotateCcw size={28} /> : <Mic size={30} />}</button>
+          <button className="iv-mic" onClick={start} aria-label={phase === 'error' ? 'Try again' : 'Start interview'}>
+            {phase === 'error' ? <RotateCcw size={28} /> : <Mic size={30} />}
+          </button>
         )}
-        {phase === 'connecting' && <button className="iv-mic" disabled aria-label="Connecting"><Loader2 className="iv-spin" size={28} /></button>}
+        {phase === 'connecting' && (
+          <button className="iv-mic" disabled aria-label="Connecting">
+            <Loader2 className="iv-spin" size={28} />
+          </button>
+        )}
         {live && (
           <>
-            <button className={`iv-round ${muted ? 'off' : ''}`} onClick={() => setMuted(!muted)} aria-label={muted ? 'Unmute microphone' : 'Mute microphone'}>
+            <button
+              className={`iv-round ${muted ? 'off' : ''}`}
+              onClick={() => setMuted(!muted)}
+              aria-label={muted ? 'Unmute microphone' : 'Mute microphone'}
+            >
               {muted ? <MicOff size={22} /> : <Mic size={22} />}
             </button>
-            <button className="iv-round end" onClick={() => conversation.endSession()} aria-label="End interview"><PhoneOff size={22} /></button>
+            <button className="iv-round end" onClick={() => conversation.endSession()} aria-label="End interview">
+              <PhoneOff size={22} />
+            </button>
           </>
         )}
         {phase === 'done' && (
           <div className="iv-done" role="status" aria-label="Interview submitted">
-            <span className="iv-check"><Check size={34} strokeWidth={3} /></span>
-            <button className="iv-round" onClick={() => setPhase('ready')} aria-label="Start over"><RotateCcw size={22} /></button>
+            <span className="iv-check">
+              <Check size={34} strokeWidth={3} />
+            </span>
+            <button className="iv-round" onClick={() => setPhase('ready')} aria-label="Start over">
+              <RotateCcw size={22} />
+            </button>
           </div>
         )}
       </div>
@@ -158,11 +242,15 @@ function Interview({ study, muted, setMuted, onAgentTalking }: { study: PublicSt
 function useLogoBackground(logo: string | null): [number, number, number] | undefined {
   const [color, setColor] = useState<[number, number, number] | undefined>();
   useEffect(() => {
-    if (!logo) { setColor(undefined); return; }
+    if (!logo) {
+      setColor(undefined);
+      return;
+    }
     const image = new Image();
     image.onload = () => {
       const canvas = document.createElement('canvas');
-      canvas.width = 8; canvas.height = 8;
+      canvas.width = 8;
+      canvas.height = 8;
       const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
       ctx.drawImage(image, 0, 0, 8, 8);
       const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
@@ -179,11 +267,18 @@ function useAgentMouth(speaking: boolean, getOutputVolume: () => number): number
   const read = useRef(getOutputVolume);
   read.current = getOutputVolume;
   useEffect(() => {
-    if (!speaking) { setOpen(0); return; }
+    if (!speaking) {
+      setOpen(0);
+      return;
+    }
     let raf = 0;
     const tick = () => {
       let volume = 0;
-      try { volume = read.current(); } catch { volume = 0; }
+      try {
+        volume = read.current();
+      } catch {
+        volume = 0;
+      }
       setOpen(Math.min(1, volume * 2.5));
       raf = requestAnimationFrame(tick);
     };
@@ -196,13 +291,17 @@ function useAgentMouth(speaking: boolean, getOutputVolume: () => number): number
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="iv-page">
-      <main className="iv-card">
-        {children}
-      </main>
+      <main className="iv-card">{children}</main>
     </div>
   );
 }
 
 function Notice({ title, body }: { title: string; body: string }) {
-  return <div className="iv-notice"><AlertCircle size={22} /><h1>{title}</h1><p>{body}</p></div>;
+  return (
+    <div className="iv-notice">
+      <AlertCircle size={22} />
+      <h1>{title}</h1>
+      <p>{body}</p>
+    </div>
+  );
 }

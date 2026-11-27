@@ -45,17 +45,41 @@ export function LogoUploader({ studyId, logo }: { studyId: string; logo: string 
 
   return (
     <div className="logo-uploader">
-      <button type="button" className="logo-slot" disabled={busy} onClick={() => input.current?.click()} aria-label={logo ? 'Replace your logo' : 'Upload your logo'}>
-        {busy ? <Loader2 size={20} className="spin" /> : logo ? <img src={logo} alt="Your logo" /> : <ImagePlus size={22} />}
+      <button
+        type="button"
+        className="logo-slot"
+        disabled={busy}
+        onClick={() => input.current?.click()}
+        aria-label={logo ? 'Replace your logo' : 'Upload your logo'}
+      >
+        {busy ? (
+          <Loader2 size={20} className="spin" />
+        ) : logo ? (
+          <img src={logo} alt="Your logo" />
+        ) : (
+          <ImagePlus size={22} />
+        )}
       </button>
       <div>
         <strong>{logo ? 'Your logo' : 'Add your logo'}</strong>
         <small>{error || 'Mira wears it on her shirt during interviews.'}</small>
         {logo && !busy && (
-          <button type="button" className="text-link logo-remove" onClick={() => save(null)}><Trash2 size={13} />Remove</button>
+          <button type="button" className="text-link logo-remove" onClick={() => save(null)}>
+            <Trash2 size={13} />
+            Remove
+          </button>
         )}
       </div>
-      <input ref={input} type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden onChange={(e) => { void pick(e.target.files?.[0]); e.target.value = ''; }} />
+      <input
+        ref={input}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/svg+xml"
+        hidden
+        onChange={(e) => {
+          void pick(e.target.files?.[0]);
+          e.target.value = '';
+        }}
+      />
     </div>
   );
 }
