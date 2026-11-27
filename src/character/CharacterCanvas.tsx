@@ -6,6 +6,8 @@ export type MouthShape = 'rest' | 'aa' | 'ee' | 'oh' | 'mm';
 export interface CharacterCanvasProps {
   mode: CharacterMode;
   mouthOpen: number;
+  /** Read every frame instead of mouthOpen, so a fast-changing level doesn't re-render the parent. */
+  readMouthOpen?: () => number;
   mouthShape: MouthShape;
   gesture: number;
   reducedMotion?: boolean;
@@ -64,7 +66,8 @@ export function CharacterCanvas(props: CharacterCanvasProps) {
             pointerY: pointer.current.y,
             reduced: !!state.reducedMotion,
           });
-          mouth += (Math.max(0, Math.min(1, state.mouthOpen)) - mouth) * (1 - Math.exp(-dt * 24));
+          const target = state.readMouthOpen ? state.readMouthOpen() : state.mouthOpen;
+          mouth += (Math.max(0, Math.min(1, target)) - mouth) * (1 - Math.exp(-dt * 24));
           ctx.setTransform(1, 0, 0, 1, 0, 0);
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           const scale = Math.min(canvas.width / RIG_WIDTH, canvas.height / RIG_HEIGHT);

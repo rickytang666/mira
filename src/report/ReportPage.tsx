@@ -4,6 +4,7 @@ import { useQuery, getReport, getStudy, regenerateStudyReport } from 'wasp/clien
 import { Layout } from '../Layout';
 import { ReportContent } from './ReportContent';
 import { fromReportView } from './fromReportView';
+import { transcriptHref } from '../transcript/turns';
 
 export function ReportPage() {
   const { studyId = '' } = useParams();
@@ -37,6 +38,9 @@ export function ReportPage() {
       ) : (
         <ReportContent
           report={fromReportView(report)}
+          participantHref={(quote) =>
+            quote.interviewId ? transcriptHref(studyId, quote.interviewId, quote.startSec) : undefined
+          }
           actions={
             <button
               className="fw-button fw-button-primary"
