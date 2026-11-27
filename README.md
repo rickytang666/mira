@@ -1,46 +1,49 @@
 # Mira
 
-Mira is a user researcher you can hire in a minute. Give her your product's URL and what you want to learn. She writes the interview, talks to your users by voice on their phones, and hands you a report of themes and quotes you can play back in their own voices.
+Mira runs short voice interviews with your users and turns them into a report. You give it your product and what you want to learn; it writes the questions, interviews people on their phones, and returns themes with quotes you can play back in the participant's voice.
 
-Open source and runs on your own ElevenLabs and OpenRouter keys.
+It's open source and runs on your own ElevenLabs and OpenRouter keys.
 
 ## How it works
 
-1. **Brief.** Mira reads your site and writes 3 to 5 interview questions about it.
-2. **Interviews.** Participants scan a QR code and talk to Mira for about a minute. No app, no sign-up. Mira tells them up front that the call is recorded and shared with your team. When an answer is vague she asks one concrete follow-up; she's built for quick signal, not deep discovery interviews.
-3. **Report.** After each call, Mira pulls the transcript and recording, groups answers into themes, and links every quote to the moment it was said.
+1. **Brief.** Add your product as a URL, a description, a PDF or an MCP server. Mira writes 3 to 5 interview questions from it, which you can edit.
+2. **Interview.** Participants scan a QR code and talk to Mira for about a minute, with no app or sign-up. Mira says up front that the call is recorded for your team, and switches to the participant's language if they answer in another one.
+3. **Report.** After each call, Mira saves the transcript and rebuilds the study report: a summary, themes, and quotes linked to the moment they were said.
 
-## Built with
+When an answer is vague, Mira asks one concrete follow-up, then moves on. It's built for quick signal, not deep discovery interviews.
 
-- **ElevenLabs Conversational AI** runs every interview:
-  - one voice agent, given each study's product, goal and questions as dynamic variables when the call starts
-  - expressive speech, natural follow-ups, and the `end_call` tool so Mira ends the interview herself
-  - after the call, the transcript with per-turn timestamps and the recording, which let each quote play from the moment it was said
-- **Wasp** is the full stack:
-  - React pages, operations and auth-free participant links on Prisma and PostgreSQL
-  - a PgBoss background job that processes each finished interview, with retries
-  - a custom API route that serves recordings with byte ranges, so the player can seek to a quote
-- **OpenRouter** (DeepSeek V4.1 Flash) writes the questions and synthesizes the report.
+## Tech stack
+
+- **ElevenLabs Conversational AI**: voice interviews, transcripts and recordings
+- **Wasp 0.26**: React 19, Prisma, PostgreSQL, pg-boss
+- **OpenRouter**: DeepSeek V4.1 Flash for questions and reports
+- **Biome, Vitest, GitHub Actions**: lint, tests and CI
+
+How the pieces connect: [`src/agent/INTEGRATION.md`](src/agent/INTEGRATION.md). Voice agent config: [`docs/ELEVENLABS-AGENT.md`](docs/ELEVENLABS-AGENT.md).
 
 ## Run it locally
 
-You need Node.js 24.22.1 or newer, the Wasp CLI 0.26.1, PostgreSQL, an ElevenLabs API key with Agents write permission ([agent setup](docs/ELEVENLABS-AGENT.md)), and an OpenRouter API key.
+Needs Node.js 24.22.1+, PostgreSQL, an ElevenLabs key with Agents write permission, and an OpenRouter key.
 
 ```bash
-npm ci
-npm run setup:wasp                   # sets up Wasp's generated spec package
-cp .env.server.example .env.server   # add your keys and DATABASE_URL
+npm install -g @wasp.sh/wasp-cli@0.26.1
+npm ci && npm run setup:wasp
+cp .env.server.example .env.server   # fill in before setup:agent
 cp .env.client.example .env.client
-npm run setup:agent                  # creates the ElevenLabs agent; add the two ID lines it prints
-createdb mira
-wasp db migrate-dev
-npm run dev                          # client on :3002, server on :3003
+npm run setup:agent                  # add the two agent ID lines it prints
+createdb mira && wasp db migrate-dev
+npm run dev                          # client :3002, server :3003
 ```
 
-`npm run setup:wasp` runs `wasp install` with lockfile writes off: on a fresh clone the `.wasp/out` workspaces don't exist yet, so a plain `wasp install` prunes them from `package-lock.json`. `npm run verify` (compile, typecheck, lint, tests) runs it first.
+- **On a phone:** phones need HTTPS for the mic. Install `cloudflared`, run `npm run tunnels`, then `npm run dev:tunnel` and open the URL it prints.
+- **Checks:** `npm run verify` runs compile, typecheck, Biome and Vitest, with no database or keys. CI runs it on every PR.
 
-Phones need HTTPS for the microphone. Install `cloudflared` (`brew install cloudflared`), run `npm run tunnels` in one terminal and leave it running, then `npm run dev:tunnel` instead of `npm run dev`, and open the client URL it prints.
+## Limitations
 
-## Checks
+- No accounts: anyone who can reach the app sees every study
+- Agent auth is off: set call limits in ElevenLabs
+- A report covers up to 100,000 transcript characters
 
-`npm run verify` runs `wasp compile`, the type check, Biome and the Vitest suite, and needs no database or API keys. `npm test` runs only the tests.
+## License
+
+MIT. See [LICENSE](LICENSE).
