@@ -74,7 +74,7 @@ export function buildAgentConfig(
               type: 'system',
               name: 'language_detection',
               description: '',
-              // switching only in the first two participant turns, so a foreign brand name can't flip a call midway
+              // with no switch in the first two participant turns the language locks, so a foreign brand name can't flip an English call later
               params: { systemToolType: 'language_detection', onlyAtConversationStart: true },
             },
           },
