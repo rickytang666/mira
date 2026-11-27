@@ -21,20 +21,7 @@
     "enabled": true,
     "rules": {
       "preset": "recommended",
-      "a11y": {
-        "noAutofocus": "warn",
-        "noLabelWithoutControl": "warn",
-        "noStaticElementInteractions": "warn",
-        "useButtonType": "warn",
-        "useKeyWithClickEvents": "warn",
-        "useSemanticElements": "warn"
-      },
-      "correctness": { "useExhaustiveDependencies": "warn" },
-      "suspicious": {
-        "noArrayIndexKey": "warn",
-        "noDuplicateProperties": "warn",
-        "noShorthandPropertyOverrides": "warn"
-      }
+      "style": { "noDescendingSpecificity": "off" }
     }
   }
 }

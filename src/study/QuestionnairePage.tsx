@@ -89,7 +89,7 @@ export function QuestionnairePage() {
         description="Mira asks these in order and follows up on her own."
         action={
           dirty ? (
-            <button className="button primary" disabled={saving || generating} onClick={save}>
+            <button type="button" className="button primary" disabled={saving || generating} onClick={save}>
               {saving ? <Loader2 size={15} className="spin" /> : <Check size={15} />}Save changes
             </button>
           ) : undefined
@@ -146,7 +146,12 @@ export function QuestionnairePage() {
       <section className="form-panel questions-panel">
         <div className="panel-heading">
           <h2>Questions</h2>
-          <button className="button secondary" disabled={generating || saving || !goal.trim()} onClick={generate}>
+          <button
+            type="button"
+            className="button secondary"
+            disabled={generating || saving || !goal.trim()}
+            onClick={generate}
+          >
             {generating ? (
               <>
                 <Loader2 size={15} className="spin" />
@@ -192,6 +197,7 @@ export function QuestionnairePage() {
                 </div>
                 <div className="question-controls">
                   <button
+                    type="button"
                     className="icon-button"
                     disabled={generating || saving || index === 0}
                     aria-label="Move question up"
@@ -200,6 +206,7 @@ export function QuestionnairePage() {
                     <ArrowUp size={15} />
                   </button>
                   <button
+                    type="button"
                     className="icon-button"
                     disabled={generating || saving || index === questions.length - 1}
                     aria-label="Move question down"
@@ -208,6 +215,7 @@ export function QuestionnairePage() {
                     <ArrowDown size={15} />
                   </button>
                   <button
+                    type="button"
                     className="icon-button delete"
                     disabled={generating || saving}
                     aria-label={`Delete question ${index + 1}`}
@@ -221,6 +229,7 @@ export function QuestionnairePage() {
           )}
         </div>
         <button
+          type="button"
           className="add-question"
           disabled={generating || saving}
           onClick={() => edit([...questions, { key: newKey(), text: '', followUp: true }])}

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { FileText, Globe, Loader2, Pencil, Plug, Plus, Trash2, Upload, X } from 'lucide-react';
 import {
@@ -77,6 +77,23 @@ export function KnowledgePage() {
     setToken('');
     setError('');
   }
+  function closeModal() {
+    if (busy) return;
+    setKind(null);
+    setView(null);
+  }
+  const modalOpen = Boolean(kind || view);
+  // on the document so Escape works even when focus never entered the dialog
+  useEffect(() => {
+    if (!modalOpen || busy) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      setKind(null);
+      setView(null);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [modalOpen, busy]);
   async function add(source: { title: string; content: string; detail: string }, sourceKind: SourceKind) {
     await addSource({ studyId, kind: sourceKind, ...source });
     setKind(null);
@@ -168,7 +185,7 @@ export function KnowledgePage() {
       </div>
       <div className="source-grid">
         {Object.entries(kinds).map(([id, item]) => (
-          <button className="source-tile" key={id} onClick={() => open(id as SourceKind)}>
+          <button type="button" className="source-tile" key={id} onClick={() => open(id as SourceKind)}>
             <span className={`source-icon ${id}`}>
               <item.icon size={21} />
             </span>
@@ -207,11 +224,12 @@ export function KnowledgePage() {
                       })}
                     </small>
                     {source.content && <p className="source-snippet">{sourcePreview(source.content)}</p>}
-                    <button className="text-link source-more" onClick={() => setView(source)}>
+                    <button type="button" className="text-link source-more" onClick={() => setView(source)}>
                       Read full text
                     </button>
                   </div>
                   <button
+                    type="button"
                     className="icon-button delete"
                     aria-label={`Remove ${source.title}`}
                     onClick={() => deleteSource({ sourceId: source.id })}
@@ -234,30 +252,21 @@ export function KnowledgePage() {
         </Link>
       </div>
       {(kind || view) && (
+        // biome-ignore lint/a11y/noStaticElementInteractions: backdrop dismissal is a shortcut; the dialog's close button is the accessible control
+        // biome-ignore lint/a11y/useKeyWithClickEvents: Escape is handled on the document while the dialog is open
         <div
           className="modal-backdrop"
-          onClick={() => {
-            if (!busy) {
-              setKind(null);
-              setView(null);
-            }
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeModal();
           }}
         >
-          <section
-            className="modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="modal-title"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
             <button
+              type="button"
               className="modal-close icon-button"
               disabled={busy}
               aria-label="Close dialog"
-              onClick={() => {
-                setKind(null);
-                setView(null);
-              }}
+              onClick={closeModal}
             >
               <X size={20} />
             </button>
@@ -295,7 +304,12 @@ export function KnowledgePage() {
                       hidden
                       onChange={(e) => upload(e.target.files?.[0])}
                     />
-                    <button disabled={busy} className="upload-zone" onClick={() => fileRef.current?.click()}>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      className="upload-zone"
+                      onClick={() => fileRef.current?.click()}
+                    >
                       {busy ? <Loader2 className="spin" /> : <Upload />}
                       <strong>{busy ? 'Reading your document…' : 'Choose a PDF'}</strong>
                       <span>Text-based PDFs, up to 10 MB · first 60 pages</span>
@@ -313,11 +327,13 @@ export function KnowledgePage() {
                         />
                       </label>
                     )}
-                    <label className="field">
+                    <label className="field" htmlFor="source-value">
                       {kind === 'url' ? 'Product URL' : kind === 'mcp' ? 'MCP endpoint' : 'Description'}
                       {kind === 'description' ? (
                         <textarea
+                          id="source-value"
                           required
+                          // biome-ignore lint/a11y/noAutofocus: focus moves into the dialog when it opens
                           autoFocus
                           rows={7}
                           maxLength={80000}
@@ -327,7 +343,9 @@ export function KnowledgePage() {
                         />
                       ) : (
                         <input
+                          id="source-value"
                           required
+                          // biome-ignore lint/a11y/noAutofocus: focus moves into the dialog when it opens
                           autoFocus
                           value={value}
                           onChange={(e) => setValue(e.target.value)}
@@ -351,7 +369,7 @@ export function KnowledgePage() {
                       <button className="button secondary" type="button" disabled={busy} onClick={() => setKind(null)}>
                         Cancel
                       </button>
-                      <button className="button primary" disabled={busy || !value.trim()}>
+                      <button type="submit" className="button primary" disabled={busy || !value.trim()}>
                         {busy ? (
                           <>
                             <Loader2 size={16} className="spin" />

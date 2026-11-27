@@ -41,11 +41,17 @@ const joints = {
   right: { shoulder: [827, 820] as Point, elbow: [853, 1363] as Point, wrist: [643, 1389] as Point },
 };
 
+function context2d(canvas: HTMLCanvasElement, options?: CanvasRenderingContext2DSettings) {
+  const ctx = canvas.getContext('2d', options);
+  if (!ctx) throw new Error('Canvas 2D is unavailable.');
+  return ctx;
+}
+
 function paperRemoved(image: HTMLImageElement) {
   const c = document.createElement('canvas');
   c.width = 1024;
   c.height = 1536;
-  const ctx = c.getContext('2d', { willReadFrequently: true })!;
+  const ctx = context2d(c, { willReadFrequently: true });
   ctx.drawImage(image, 0, 0);
   const frame = ctx.getImageData(0, 0, 1024, 1536),
     data = frame.data,
@@ -88,7 +94,7 @@ function makeSprite(
     canvas = document.createElement('canvas');
   canvas.width = w;
   canvas.height = h;
-  const ctx = canvas.getContext('2d')!;
+  const ctx = context2d(canvas);
   ctx.translate(-x, -y);
   ctx.save();
   const outline = new Path2D(parts[key]);
@@ -108,7 +114,7 @@ function solidUnderlay(source: Sprite, paint: (ctx: CanvasRenderingContext2D) =>
   const c = document.createElement('canvas');
   c.width = source.canvas.width;
   c.height = source.canvas.height;
-  const ctx = c.getContext('2d')!;
+  const ctx = context2d(c);
   ctx.translate(-source.x, -source.y);
   paint(ctx);
   ctx.drawImage(source.canvas, source.x, source.y);
@@ -132,7 +138,7 @@ function shirtShade(r: number, g: number, b: number, target: Rgb): Rgb {
 }
 // The shirt is the only teal in the drawing, so a hue test below the neckline finds it.
 function recolorShirt(c: HTMLCanvasElement, target: Rgb) {
-  const ctx = c.getContext('2d', { willReadFrequently: true })!,
+  const ctx = context2d(c, { willReadFrequently: true }),
     x0 = 150,
     y0 = 640,
     w = 800,
@@ -165,7 +171,7 @@ export function createLayeredRig(image: HTMLImageElement, shirtColor?: Rgb) {
     return `rgb(${r} ${g} ${b})`;
   };
   const colorCache = new Map<string, string>();
-  const colors = source.getContext('2d', { willReadFrequently: true })!;
+  const colors = context2d(source, { willReadFrequently: true });
   const color = (x: number, y: number) => {
     const key = x + ',' + y;
     const cached = colorCache.get(key);
@@ -240,7 +246,7 @@ export function createLayeredRig(image: HTMLImageElement, shirtColor?: Rgb) {
     leftHand = makeSprite(source, 'leftHand');
   const rightFore = makeSprite(source, 'rightFore'),
     rightHand = makeSprite(source, 'rightHand');
-  const sampling = source.getContext('2d', { willReadFrequently: true })!;
+  const sampling = context2d(source, { willReadFrequently: true });
   const sample = (x: number, y: number) => {
     const d = sampling.getImageData(x, y, 1, 1).data;
     return `rgb(${d[0]} ${d[1]} ${d[2]})`;
@@ -253,7 +259,7 @@ export function createLayeredRig(image: HTMLImageElement, shirtColor?: Rgb) {
   const glasses = document.createElement('canvas');
   glasses.width = 360;
   glasses.height = 190;
-  const gctx = glasses.getContext('2d')!;
+  const gctx = context2d(glasses);
   const g = sampling.getImageData(355, 320, 360, 190);
   for (let i = 0; i < g.data.length; i += 4) {
     const r = g.data[i],

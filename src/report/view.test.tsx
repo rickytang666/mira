@@ -1,3 +1,4 @@
+import { load } from 'cheerio';
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { fromReportView } from './fromReportView';
@@ -13,7 +14,9 @@ describe('report rendering from the team contract', () => {
     expect(html).toContain('Participant 01');
     expect(html).toContain('Summary');
     expect(html).toContain('Next steps');
-    expect(html).toMatch(/button[^>]+disabled=""[^>]+aria-label="Play quote/);
+    const play = load(html)('button.fw-play').first();
+    expect(play.attr('aria-label')).toMatch(/^Play quote/);
+    expect(play.is(':disabled')).toBe(true);
   });
   it('shows pending analysis instead of sample findings for a real empty report', () => {
     const html = renderToStaticMarkup(
@@ -51,7 +54,15 @@ describe('report rendering from the team contract', () => {
       />,
     );
     expect(html).toContain('Play quote from Participant quote at 0:12');
-    expect(html).toMatch(/<button class="fw-play" aria-label="Play quote[^"]*">.*?Play<\/button>/);
+    const $ = load(html);
+    const buttons = $('button.fw-play').toArray();
+    expect(buttons.length).toBeGreaterThan(0);
+    for (const button of buttons) {
+      const play = $(button);
+      expect(play.attr('aria-label')).toMatch(/^Play quote/);
+      expect(play.text().trim()).toBe('Play');
+      expect(play.is(':disabled')).toBe(false);
+    }
     expect(html).not.toContain('disabled=""');
   });
 });

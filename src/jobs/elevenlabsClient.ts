@@ -60,9 +60,10 @@ export async function fetchConversation(conversationId: string): Promise<Fetched
       return (await response.json()) as RawConversation;
     },
   );
-  const turns: TranscriptTurn[] = (raw.transcript ?? [])
-    .filter((turn) => turn.message && turn.message.trim())
-    .map((turn) => ({ role: turn.role, text: turn.message!.trim(), timeInCallSecs: turn.time_in_call_secs }));
+  const turns: TranscriptTurn[] = (raw.transcript ?? []).flatMap((turn) => {
+    const text = turn.message?.trim();
+    return text ? [{ role: turn.role, text, timeInCallSecs: turn.time_in_call_secs }] : [];
+  });
   return {
     conversationId: raw.conversation_id,
     agentId: raw.agent_id,

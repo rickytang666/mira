@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Play, Square } from 'lucide-react';
 import { Link } from 'react-router';
 import type { ReportLoader, ReportQuote, StudyReport } from '../agent/internalTypes';
@@ -82,14 +82,18 @@ export function ReportContent({
       player.current = null;
     };
   }, []);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: resets the player and expanded themes when the study changes
   useEffect(() => {
     player.current?.stop();
     setExpanded({});
   }, [report?.studyId]);
-  const quotes = report ? [...new Map(report.themes.flatMap((t) => t.quotes).map((q) => [q.id, q])).values()] : [];
+  const quotes = useMemo(
+    () => (report ? [...new Map(report.themes.flatMap((t) => t.quotes).map((q) => [q.id, q])).values()] : []),
+    [report],
+  );
   useEffect(() => {
     if (playerState.quoteId && !quotes.some((q) => q.id === playerState.quoteId)) player.current?.stop();
-  }, [report, playerState.quoteId]);
+  }, [quotes, playerState.quoteId]);
   useEffect(() => {
     if (!report) return;
     const labels = new Set(quotes.map((q) => q.participantLabel));
@@ -100,7 +104,7 @@ export function ReportContent({
     if (report.completedCount > previous.count)
       setArrival(fresh ? `New interview from ${fresh}` : 'New interview received');
     else if (fresh) setArrival(`New quotes from ${fresh}`);
-  }, [report]);
+  }, [report, quotes]);
   useEffect(() => {
     if (!arrival) return;
     const timer = setTimeout(() => setArrival(''), 5000);
@@ -129,6 +133,7 @@ export function ReportContent({
         <blockquote>“{quote.text}”</blockquote>
         <div className="fw-quote-meta">
           <button
+            type="button"
             className="fw-play"
             disabled={!enabled}
             aria-label={`${active ? 'Stop' : 'Play'} quote from ${quote.participantLabel}${quote.startSec !== null ? ` at ${formatTime(quote.startSec)}` : ''}`}
@@ -202,7 +207,9 @@ export function ReportContent({
             {report ? 'Showing the last successful update. ' : ''}
             {live.error}
           </span>
-          <button onClick={live.refresh}>Retry</button>
+          <button type="button" onClick={live.refresh}>
+            Retry
+          </button>
         </div>
       )}
       {live.loading && !report ? (
@@ -257,6 +264,7 @@ export function ReportContent({
                   return (
                     <li key={theme.id}>
                       <button
+                        type="button"
                         className="fw-chart-row"
                         onClick={() => openTheme(theme.id)}
                         aria-label={`${theme.label}: ${theme.count} of ${report.completedCount} interviews. Jump to theme`}
@@ -289,6 +297,7 @@ export function ReportContent({
               <p className={summaryOpen ? '' : 'fw-clamp'}>{report.summary}</p>
               {report.summary.length > 160 && (
                 <button
+                  type="button"
                   className="fw-text-button fw-read-more"
                   aria-expanded={summaryOpen}
                   onClick={() => setSummaryOpen((v) => !v)}
@@ -309,11 +318,12 @@ export function ReportContent({
             </p>
           )}
           <div className="fw-toolbar">
+            {/* biome-ignore lint/a11y/useSemanticElements: a toggle-button group, not form fields, so fieldset does not fit */}
             <div role="group" aria-label="Report view">
-              <button aria-pressed={tab === 'themes'} onClick={() => setTab('themes')}>
+              <button type="button" aria-pressed={tab === 'themes'} onClick={() => setTab('themes')}>
                 Themes <span>{report.themes.length}</span>
               </button>
-              <button aria-pressed={tab === 'quotes'} onClick={() => setTab('quotes')}>
+              <button type="button" aria-pressed={tab === 'quotes'} onClick={() => setTab('quotes')}>
                 All quotes <span>{quotes.length}</span>
               </button>
             </div>
@@ -364,6 +374,7 @@ export function ReportContent({
                   </div>
                   {theme.quotes.length > 2 && (
                     <button
+                      type="button"
                       className="fw-more"
                       aria-expanded={!!expanded[theme.id]}
                       onClick={() => setExpanded((v) => ({ ...v, [theme.id]: !v[theme.id] }))}
@@ -379,6 +390,7 @@ export function ReportContent({
             <section className="fw-question-findings" aria-label="Answers to your research questions">
               <h2>By question</h2>
               {report.questionFindings.map((item, index) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: findings have no id and hold no state, so position is a stable key
                 <article key={index}>
                   <div>
                     <h3>{item.question}</h3>
@@ -394,6 +406,7 @@ export function ReportContent({
               <h2>Next steps</h2>
               <ol>
                 {report.recommendations.map((item, index) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: recommendations have no id and hold no state, so position is a stable key
                   <li key={index}>
                     <p>{item.text}</p>
                     {!!item.themeIds.length && (
@@ -402,6 +415,7 @@ export function ReportContent({
                           const theme = report.themes.find((t) => t.id === id);
                           return theme ? (
                             <button
+                              type="button"
                               key={id}
                               onClick={() => {
                                 setTab('themes');

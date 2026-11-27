@@ -72,6 +72,7 @@ a:focus-visible {
 input:focus,
 textarea:focus {
   outline: none;
+  /* biome-ignore lint/complexity/noImportantStyles: the focus border must win over every component's own border color */
   border-color: var(--focus) !important;
   box-shadow: 0 0 0 3px var(--accent-soft);
 }

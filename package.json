@@ -4,13 +4,14 @@
   "scripts": {
     "dev": "wasp start --client-port 3002 --server-port 3003",
     "check": "wasp compile",
+    "setup:wasp": "test -f .wasp/spec/package.json || npm_config_package_lock=false wasp install",
     "tunnels": "scripts/tunnels.sh",
     "dev:tunnel": "scripts/dev-tunnel.sh",
     "setup:agent": "node --env-file-if-exists=.env.server --env-file-if-exists=.env.client scripts/setup-agent.ts",
     "typecheck": "tsc -p tsconfig.src.json --noEmit && tsc -p tsconfig.scripts.json",
     "lint": "biome check .",
     "test": "vitest run",
-    "verify": "wasp compile && npm run typecheck && npm run lint && npm run test",
+    "verify": "npm run setup:wasp && wasp compile && npm run typecheck && npm run lint && npm run test",
     "doctor": "npx -y react-doctor@latest . --offline --fail-on none"
   },
   "workspaces": [

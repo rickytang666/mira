@@ -41,6 +41,7 @@ export function NewStudyPage() {
           <label className="field">
             Product URL
             <input
+              // biome-ignore lint/a11y/noAutofocus: the product URL is the first thing to fill on this page
               autoFocus
               value={productUrl}
               onChange={(e) => setProductUrl(e.target.value)}
@@ -74,6 +75,7 @@ export function NewStudyPage() {
           )}
           <div className="modal-actions">
             <button
+              type="submit"
               className="button primary"
               disabled={busy || !goal.trim() || (!productUrl.trim() && !description.trim())}
             >
