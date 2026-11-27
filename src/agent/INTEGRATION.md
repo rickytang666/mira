@@ -51,9 +51,7 @@ Only participant turns are evidence. Model output chooses turn IDs, then server 
 
 Recordings use Track 1's server audio proxy. Stored report audio URLs are reconstructed from the current server URL when read, so changing an HTTPS tunnel does not strand old quotes.
 
-## Preview and checks
-
-The standalone layout preview remains at `http://127.0.0.1:3014`; it is fictional and its manual import tools are developer-only. The Wasp study route uses actual database data. Do not confuse the preview with the live study.
+## Checks
 
 Focused tests:
 
