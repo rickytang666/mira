@@ -2,7 +2,8 @@ import { prisma, config } from 'wasp/server';
 import type { FetchedConversation, ReportView } from '../contract';
 import { fetchConversation } from '../jobs/elevenlabsClient';
 import { refreshStudyReport, type ReportRepository } from './pipeline';
-import { isSubstantive, participantTitle } from './participants';
+import { participantTitle } from './participants';
+import { isSubstantive } from './substantive';
 
 export const reportRepository: ReportRepository = {
   async load(studyId) {

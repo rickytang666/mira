@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { readAgentTexts } from '../agent/config.ts';
+import { ADDITIONAL_LANGUAGES, readAgentTexts } from '../agent/config.ts';
 import { describeSetupError, setupAgent } from './setup-agent.ts';
 
 const texts = readAgentTexts();
@@ -86,6 +86,25 @@ describe('setupAgent', () => {
     expect(config.turn).toEqual({ turn_eagerness: 'normal' });
     expect(config.conversation).toEqual({ max_duration_seconds: 600 });
     expect(body.platform_settings).toEqual({ auth: { enable_auth: false }, privacy: { record_voice: true } });
+  });
+
+  it('greets in English and lets language detection switch to every preset', async () => {
+    const fetchMock = mockFetch(200, { agent_id: 'agent_new' });
+    await setupAgent({ apiKey: 'test-key', texts, fetch: fetchMock });
+
+    const config = sentRequest(fetchMock).body.conversation_config;
+    expect(config.agent.language).toBe('en');
+    expect(config.agent.prompt.built_in_tools.language_detection).toEqual({
+      type: 'system',
+      name: 'language_detection',
+      description: '',
+      params: { system_tool_type: 'language_detection', only_at_conversation_start: true },
+    });
+    expect(Object.keys(config.language_presets).sort()).toEqual([...ADDITIONAL_LANGUAGES].sort());
+    expect(config.language_presets).not.toHaveProperty('en');
+    expect(config.language_presets.es).toEqual({ overrides: {} });
+    expect(texts.firstMessage).toMatch(/answer in any language/);
+    expect(texts.systemPrompt).toMatch(/call the language_detection tool/);
   });
 
   it('sends the API key header', async () => {
