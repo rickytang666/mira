@@ -1,6 +1,7 @@
-import { prisma, config } from 'wasp/server';
+import { prisma } from 'wasp/server';
 import type { FetchedConversation, ReportView } from '../contract';
 import { rebuildStudyReport } from 'wasp/server/jobs';
+import { interviewAudioUrl } from '../jobs/audioUrl';
 import { fetchConversation } from '../jobs/elevenlabsClient';
 import { oneRebuildAtATime, refreshStudyReport, type ReportRepository } from './pipeline';
 import { participantTitle } from './participants';
@@ -36,7 +37,7 @@ export const reportRepository: ReportRepository = {
           questions: Array.isArray(call.questionSnapshot)
             ? call.questionSnapshot.filter((q): q is string => typeof q === 'string')
             : [],
-          audioUrl: `${config.serverUrl}/api/interviews/${call.id}/audio`,
+          audioUrl: interviewAudioUrl(call.id),
         })),
     };
   },

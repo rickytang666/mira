@@ -19,9 +19,10 @@ vi.mock('wasp/server', () => ({
 vi.mock('wasp/server/jobs', () => ({ processInterview: { submit: vi.fn() } }));
 vi.mock('../sources', () => ({ importWebsite: vi.fn() }));
 vi.mock('../agent/suggestQuestions', () => ({ suggestQuestions: vi.fn() }));
-vi.mock('../report/server', () => ({ readSavedReport: vi.fn() }));
+vi.mock('../report/server', () => ({ readSavedReport: vi.fn(), rebuildQueued: vi.fn(async () => false) }));
 
-const { updateStudy, addSource, getPublicStudy, finishInterview } = await import('./operations');
+const { updateStudy, addSource, getPublicStudy, finishInterview, getReport } = await import('./operations');
+const { readSavedReport } = await import('../report/server');
 
 // Operations receive client JSON, so tests pass shapes the TypeScript input type would reject.
 const call = (operation: unknown, args: unknown, context: unknown = {}) =>
@@ -135,5 +136,58 @@ describe('finishInterview', () => {
     await expect(finish(['x'.repeat(2001)])).rejects.toMatchObject({ statusCode: 400 });
     expect(upsert).not.toHaveBeenCalled();
     await expect(finish([...Array(49).fill('Why?'), 'x'.repeat(2000)])).resolves.toEqual({ interviewId: 'i1' });
+  });
+});
+
+describe('getReport', () => {
+  const study = {
+    id: 's1',
+    name: 'Acme',
+    goal: 'Learn',
+    report: null,
+    reportError: null,
+    reportRevision: 1,
+    interviews: [{ status: 'done' }],
+    themes: [
+      {
+        id: 't1',
+        label: 'Setup',
+        count: 1,
+        quotes: [{ id: 'q1', text: 'Hard', startSec: 1, endSec: 2, interviewId: 'i1' }],
+      },
+    ],
+  };
+  const context = { entities: { Study: { findUnique: async () => study } } };
+  const audioUrls = (report: unknown) =>
+    (report as { themes: { quotes: { audioUrl: string }[] }[] }).themes.flatMap((t) => t.quotes.map((q) => q.audioUrl));
+
+  it('serves stored quotes through the interview audio route', async () => {
+    const report = await call(getReport, { studyId: 's1' }, context);
+    expect(audioUrls(report)).toEqual(['http://localhost:3001/api/interviews/i1/audio']);
+  });
+
+  it('points saved quotes from an interview at the audio route and keeps other audio', async () => {
+    vi.mocked(readSavedReport).mockReturnValueOnce({
+      revision: 1,
+      value: {
+        studyId: 's1',
+        goal: 'Learn',
+        interviewsDone: 1,
+        interviewsProcessing: 0,
+        themes: [
+          {
+            id: 't1',
+            label: 'Setup',
+            count: 1,
+            quotes: [
+              { id: 'q1', text: 'Hard', startSec: 1, interviewId: 'i2', audioUrl: 'stale' },
+              { id: 'q2', text: 'Pasted', startSec: 0, audioUrl: 'pasted.mp3' },
+            ],
+          },
+        ],
+      },
+    });
+    const report = await call(getReport, { studyId: 's1' }, context);
+    expect(audioUrls(report)).toEqual(['http://localhost:3001/api/interviews/i2/audio', 'pasted.mp3']);
   });
 });

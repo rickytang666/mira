@@ -1,4 +1,4 @@
-import { HttpError, config, prisma } from 'wasp/server';
+import { HttpError, prisma } from 'wasp/server';
 import { processInterview } from 'wasp/server/jobs';
 import type {
   CreateStudy,
@@ -18,6 +18,7 @@ import { importWebsite } from '../sources';
 import { suggestQuestions } from '../agent/suggestQuestions';
 import { interviewVariables } from '../agent/studyContext';
 import { readSavedReport, rebuildQueued } from '../report/server';
+import { interviewAudioUrl } from '../jobs/audioUrl';
 import { isRebuilding, synthesisStatus } from '../report/pipeline';
 
 // Page titles look like "Tagline | Brand" or "Brand - Tagline"; the brand is the short side.
@@ -337,9 +338,7 @@ export const getReport: GetReport<{ studyId: string }, ReportView> = async ({ st
         ...theme,
         quotes: theme.quotes.map((quote) => ({
           ...quote,
-          audioUrl: quote.interviewId
-            ? `${config.serverUrl}/api/interviews/${quote.interviewId}/audio`
-            : quote.audioUrl,
+          audioUrl: quote.interviewId ? interviewAudioUrl(quote.interviewId) : quote.audioUrl,
         })),
       })),
     };
@@ -357,7 +356,7 @@ export const getReport: GetReport<{ studyId: string }, ReportView> = async ({ st
         startSec: quote.startSec,
         endSec: quote.endSec,
         interviewId: quote.interviewId,
-        audioUrl: `${config.serverUrl}/api/interviews/${quote.interviewId}/audio`,
+        audioUrl: interviewAudioUrl(quote.interviewId),
       })),
     })),
   };
