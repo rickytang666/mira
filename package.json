@@ -1,9 +1,12 @@
 {
   "name": "mira",
   "type": "module",
+  "engines": {
+    "node": ">=24.22.1"
+  },
   "scripts": {
     "dev": "wasp start --client-port 3002 --server-port 3003",
-    "check": "wasp compile",
+    "compile": "wasp compile",
     "setup:wasp": "test -f .wasp/spec/package.json || npm_config_package_lock=false wasp install",
     "tunnels": "scripts/tunnels.sh",
     "dev:tunnel": "scripts/dev-tunnel.sh",

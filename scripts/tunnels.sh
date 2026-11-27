@@ -3,8 +3,11 @@
 # Keep it running in its own terminal: a restart gives new URLs and breaks printed QR codes. Then run `npm run dev:tunnel`.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-LOG_DIR="${TMPDIR:-/tmp}/fieldwork-tunnels"
+if ! command -v cloudflared > /dev/null; then echo "cloudflared not found; install it (brew install cloudflared) and rerun" >&2; exit 1; fi
+LOG_DIR="${TMPDIR:-/tmp}/mira-tunnels"
 mkdir -p "$LOG_DIR"
+# quick tunnel URLs die with this script, so drop them and the tunnels on exit; dev:tunnel then refuses to start on dead URLs
+trap 'rm -f .tunnel-urls; kill $(jobs -p) 2> /dev/null || true' EXIT
 
 start_tunnel() { cloudflared tunnel --no-autoupdate --url "http://localhost:$1" > "$LOG_DIR/$1.log" 2>&1 & }
 tunnel_url() {

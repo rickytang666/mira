@@ -1,4 +1,7 @@
 /** Server-only OpenRouter adapter. Never import into a client page. */
+// keep in sync with OPENROUTER_MODEL in .env.server.example; llm.test.ts checks it
+export const DEFAULT_OPENROUTER_MODEL = 'deepseek/deepseek-v4.1-flash-1017';
+
 export interface JsonRequest {
   system: string;
   input: unknown;
@@ -14,7 +17,7 @@ export async function generateJson(request: JsonRequest, options: AgentOptions =
   if (options.generateJson) return options.generateJson(request);
   const apiKey = (options.apiKey ?? process.env.OPENROUTER_API_KEY)?.trim();
   if (!apiKey) throw new Error('Set OPENROUTER_API_KEY in .env.server and restart the server to enable AI generation.');
-  const model = (options.model ?? process.env.OPENROUTER_MODEL)?.trim() || 'openrouter/free';
+  const model = (options.model ?? process.env.OPENROUTER_MODEL)?.trim() || DEFAULT_OPENROUTER_MODEL;
   const signal = options.signal
     ? AbortSignal.any([options.signal, AbortSignal.timeout(90_000)])
     : AbortSignal.timeout(90_000);
