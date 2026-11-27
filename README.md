@@ -36,3 +36,7 @@ npm run dev                          # client on :3002, server on :3003
 ```
 
 Phones need HTTPS for the microphone. Install `cloudflared` (`brew install cloudflared`), run `npm run tunnels` in one terminal and leave it running, then `npm run dev:tunnel` instead of `npm run dev`, and open the client URL it prints.
+
+## Checks
+
+`npm run verify` runs `wasp compile`, the type check, Biome and the Vitest suite, and needs no database or API keys. `npm test` runs only the tests.
