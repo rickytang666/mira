@@ -60,6 +60,8 @@ async function main(): Promise<number> {
     } else {
       console.log(`Created agent ${result.agentId}. Add this line to .env.client:`);
       console.log(`REACT_APP_ELEVENLABS_AGENT_ID=${result.agentId}`);
+      console.log('And this line to .env.server:');
+      console.log(`ELEVENLABS_AGENT_ID=${result.agentId}`);
     }
     return 0;
   } catch (error) {
