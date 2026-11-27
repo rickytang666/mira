@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { ConnectedReport } from './ConnectedReport';
+import { fromReportView } from './fromReportView';
+import { ReportContent } from './ReportContent';
 import { sampleReportView } from './fixtures';
 
 describe('report rendering from the team contract', () => {
   it('renders evidence and counts without requiring browser-only globals', () => {
-    const html = renderToStaticMarkup(<ConnectedReport studyId={sampleReportView.studyId} report={sampleReportView} />);
+    const html = renderToStaticMarkup(<ReportContent report={fromReportView(sampleReportView)} />);
     expect(html).toContain('Setup needs a clearer next step');
     expect(html).toContain('3 of 3');
     expect(html).toContain('I got stuck connecting my API key.');
@@ -16,9 +17,14 @@ describe('report rendering from the team contract', () => {
   });
   it('shows pending analysis instead of sample findings for a real empty report', () => {
     const html = renderToStaticMarkup(
-      <ConnectedReport
-        studyId="new"
-        report={{ studyId: 'new', goal: 'Learn', interviewsDone: 0, interviewsProcessing: 1, themes: [] }}
+      <ReportContent
+        report={fromReportView({
+          studyId: 'new',
+          goal: 'Learn',
+          interviewsDone: 0,
+          interviewsProcessing: 1,
+          themes: [],
+        })}
       />,
     );
     expect(html).toContain('Analyzing interviews');
@@ -27,9 +33,8 @@ describe('report rendering from the team contract', () => {
   });
   it('makes a timestamped recording playable', () => {
     const html = renderToStaticMarkup(
-      <ConnectedReport
-        studyId="one"
-        report={{
+      <ReportContent
+        report={fromReportView({
           studyId: 'one',
           goal: 'Learn',
           interviewsDone: 1,
@@ -42,7 +47,7 @@ describe('report rendering from the team contract', () => {
               quotes: [{ id: 'q', text: 'I got stuck.', startSec: 12, audioUrl: '/recording/one' }],
             },
           ],
-        }}
+        })}
       />,
     );
     expect(html).toContain('Play quote from Participant quote at 0:12');

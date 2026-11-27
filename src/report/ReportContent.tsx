@@ -12,7 +12,6 @@ export interface ReportContentProps {
   /** For a query adapter: keep this function stable (module scope or useCallback). */
   loadReport?: ReportLoader;
   pollMs?: number;
-  sample?: boolean;
   actions?: ReactNode;
   beforeContent?: ReactNode;
   emptyAction?: ReactNode;
@@ -58,7 +57,6 @@ export function ReportContent({
   report: provided,
   loadReport,
   pollMs,
-  sample = false,
   actions,
   beforeContent,
   emptyAction,
@@ -177,9 +175,8 @@ export function ReportContent({
     <section className="fw-report" aria-label="Interview research report">
       <header className="fw-report-heading">
         <div>
-          <h1>{sample ? 'Sample report' : report?.productName || 'Report'}</h1>
+          <h1>{report?.productName || 'Report'}</h1>
           {report?.goal && <p className="fw-description">{report.goal}</p>}
-          {sample && <p className="fw-description">Illustrative data, not real interviews.</p>}
         </div>
         {actions && <div className="fw-heading-aside">{actions}</div>}
       </header>
@@ -306,9 +303,7 @@ export function ReportContent({
               </button>
             </div>
             <span className="fw-update">
-              {sample
-                ? 'Preview'
-                : `Updated ${new Date(report.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+              {`Updated ${new Date(report.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
             </span>
           </div>
           {!report.themes.length ? (

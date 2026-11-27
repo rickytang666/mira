@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { buildReport } from './buildReport';
-import { sampleInterviews, sampleReport, sampleStudy } from './fixtures';
+import { sampleReportView } from './fixtures';
 import { createQuotePlayer } from './audioPlayer';
 import { fromReportView } from './fromReportView';
 
@@ -29,30 +28,6 @@ describe('report aggregation', () => {
       participantLabel: 'Participant quote',
     });
   });
-  it('counts interviews, not quotes, including repeated processing results', () => {
-    const duplicatedTheme = {
-      ...sampleInterviews[0],
-      synthesis: {
-        ...sampleInterviews[0].synthesis!,
-        themes: [sampleInterviews[0].synthesis!.themes[0], sampleInterviews[0].synthesis!.themes[0]],
-      },
-    };
-    const report = buildReport(sampleStudy, [
-      duplicatedTheme,
-      duplicatedTheme,
-      ...sampleInterviews.slice(1),
-      { id: 'pending', status: 'processing' },
-      { id: 'bad', status: 'failed' },
-    ]);
-    expect(report.completedCount).toBe(3);
-    expect(report.processingCount).toBe(1);
-    expect(report.failedCount).toBe(1);
-    expect(report.themes[0].count).toBe(3);
-    expect(report.themes[0].quotes).toHaveLength(3);
-  });
-  it('does not include findings from incomplete interviews', () => {
-    expect(buildReport(sampleStudy, [{ ...sampleInterviews[0], status: 'processing' }]).themes).toEqual([]);
-  });
 });
 
 class MockAudio {
@@ -72,7 +47,12 @@ class MockAudio {
   load = vi.fn();
   removeAttribute = vi.fn();
 }
-const quote = { ...sampleReport.themes[0].quotes[0], audioUrl: '/audio/interview-1', startSec: 5, endSec: 14 };
+const quote = {
+  ...fromReportView(sampleReportView).themes[0].quotes[0],
+  audioUrl: '/audio/interview-1',
+  startSec: 5,
+  endSec: 14,
+};
 describe('quote playback', () => {
   it('starts at the quote offset and stops at the quote end', async () => {
     const audio = new MockAudio();
