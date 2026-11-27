@@ -3,6 +3,7 @@ import { Play, Square } from 'lucide-react';
 import { Link } from 'react-router';
 import type { ReportLoader, ReportQuote, StudyReport } from '../agent/internalTypes';
 import { createQuotePlayer, playable, type PlayerState } from './audioPlayer';
+import { formatTime } from './formatTime';
 import { useReport } from './useReport';
 import './report.css';
 
@@ -52,8 +53,6 @@ function EasedNumber({ value }: { value: number }) {
   }, [value]);
   return <>{shown}</>;
 }
-export const formatTime = (seconds: number) =>
-  `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 
 export function ReportContent({
   studyId = '',
