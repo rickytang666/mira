@@ -12,6 +12,7 @@ export function useReport(studyId: string, loadReport?: ReportLoader, pollMs = 5
   // biome-ignore lint/correctness/useExhaustiveDependencies: revision changes only to force a refresh
   useEffect(() => {
     if (!loadReport) return;
+    const load = loadReport;
     let disposed = false;
     let timer: ReturnType<typeof setTimeout>;
     const controller = new AbortController();
@@ -23,7 +24,7 @@ export function useReport(studyId: string, loadReport?: ReportLoader, pollMs = 5
     }));
     async function refresh() {
       try {
-        const report = await loadReport!(studyId, controller.signal);
+        const report = await load(studyId, controller.signal);
         if (report.studyId !== studyId) throw new Error('Received a report for a different study.');
         if (!disposed) setState({ studyId, report, loading: false, error: '' });
       } catch (error) {

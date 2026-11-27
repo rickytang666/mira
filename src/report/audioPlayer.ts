@@ -5,7 +5,7 @@ export interface PlayerState {
   status: 'idle' | 'loading' | 'playing';
   error: string;
 }
-export function playable(quote: ReportQuote): boolean {
+export function playable(quote: ReportQuote): quote is ReportQuote & { audioUrl: string; startSec: number } {
   return (
     !!quote.audioUrl &&
     quote.startSec !== null &&
@@ -61,12 +61,12 @@ export function createQuotePlayer(
     };
     const seek = () => {
       if (active !== selection || sought) return;
-      if (Number.isFinite(audio.duration) && quote.startSec! >= audio.duration) {
+      if (Number.isFinite(audio.duration) && quote.startSec >= audio.duration) {
         fail('The quote starts beyond this recording.');
         return;
       }
       try {
-        audio.currentTime = quote.startSec!;
+        audio.currentTime = quote.startSec;
         sought = true;
       } catch {
         fail('Could not seek this recording. Try again.');
@@ -82,7 +82,7 @@ export function createQuotePlayer(
       if (active === selection) stop();
     };
     audio.onerror = () => fail('Could not load the recording. Refresh the report or try again.');
-    audio.src = quote.audioUrl!;
+    audio.src = quote.audioUrl;
     audio.load();
     // Call play in the click gesture (important on mobile); metadata callback seeks before playback.
     try {

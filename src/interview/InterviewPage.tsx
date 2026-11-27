@@ -272,7 +272,8 @@ function useLogoBackground(logo: string | null): [number, number, number] | unde
       const canvas = document.createElement('canvas');
       canvas.width = 8;
       canvas.height = 8;
-      const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      if (!ctx) return;
       ctx.drawImage(image, 0, 0, 8, 8);
       const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
       setColor(a < 128 ? [255, 255, 255] : [r, g, b]);

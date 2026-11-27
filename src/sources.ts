@@ -44,14 +44,16 @@ export async function importWebsite({ url: input }: { url: string }) {
         signal: AbortSignal.timeout(15000),
         headers: { 'User-Agent': 'MiraResearch/1.0', Accept: 'text/html' },
       });
-      if (response.status >= 300 && response.status < 400 && response.headers.get('location')) {
-        url = await publicUrl(new URL(response.headers.get('location')!, url).href);
+      const location = response.headers.get('location');
+      if (response.status >= 300 && response.status < 400 && location) {
+        url = await publicUrl(new URL(location, url).href);
         continue;
       }
       if (!response.ok) throw new Error(`The website returned ${response.status}.`);
       if (!response.headers.get('content-type')?.includes('text/html'))
         throw new Error('This URL is not a web page. Use PDF upload for documents.');
-      const reader = response.body!.getReader();
+      if (!response.body) throw new Error('The website returned an empty page.');
+      const reader = response.body.getReader();
       const chunks: Uint8Array[] = [];
       let size = 0;
       while (true) {

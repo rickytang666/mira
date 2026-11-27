@@ -59,14 +59,11 @@ export const reportRepository: ReportRepository = {
             label: theme.label,
             count: theme.count,
             quotes: {
-              create: theme.quotes
-                .filter((q) => q.interviewId && !q.untimed && q.endSec !== undefined)
-                .map((q) => ({
-                  interviewId: q.interviewId!,
-                  text: q.text,
-                  startSec: q.startSec,
-                  endSec: q.endSec!,
-                })),
+              create: theme.quotes.flatMap((q) =>
+                q.interviewId && !q.untimed && q.endSec !== undefined
+                  ? [{ interviewId: q.interviewId, text: q.text, startSec: q.startSec, endSec: q.endSec }]
+                  : [],
+              ),
             },
           },
         });
