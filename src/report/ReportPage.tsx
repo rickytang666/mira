@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { useQuery, getReport, getStudy, regenerateStudyReport } from 'wasp/client/operations';
 import { Layout } from '../Layout';
 import { ReportContent } from './ReportContent';
 import { fromReportView } from './fromReportView';
+import { toMarkdown } from './markdown';
 import { transcriptHref } from '../transcript/turns';
 
 export function ReportPage() {
@@ -12,6 +13,12 @@ export function ReportPage() {
   const { data: study } = useQuery(getStudy, { studyId });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
+  useEffect(() => {
+    if (copyState === 'idle') return;
+    const timer = setTimeout(() => setCopyState('idle'), 2000);
+    return () => clearTimeout(timer);
+  }, [copyState]);
   async function regenerate() {
     setBusy(true);
     setError('');
@@ -22,6 +29,15 @@ export function ReportPage() {
       setError(error instanceof Error ? error.message : 'Could not update the report.');
     } finally {
       setBusy(false);
+    }
+  }
+  async function copyMarkdown() {
+    if (!report) return;
+    try {
+      await navigator.clipboard.writeText(toMarkdown(fromReportView(report)));
+      setCopyState('copied');
+    } catch {
+      setCopyState('failed');
     }
   }
   return (
@@ -42,13 +58,25 @@ export function ReportPage() {
             quote.interviewId ? transcriptHref(studyId, quote.interviewId, quote.startSec) : undefined
           }
           actions={
-            <button
-              className="fw-button fw-button-primary"
-              disabled={busy || !report.interviewsDone}
-              onClick={regenerate}
-            >
-              {busy ? 'Updating report…' : 'Update report'}
-            </button>
+            <>
+              <button
+                type="button"
+                className="fw-button"
+                disabled={!report.themes.length && !report.summary}
+                onClick={() => void copyMarkdown()}
+              >
+                <span aria-live="polite">
+                  {copyState === 'copied' ? 'Copied' : copyState === 'failed' ? 'Copy failed' : 'Copy as Markdown'}
+                </span>
+              </button>
+              <button
+                className="fw-button fw-button-primary"
+                disabled={busy || !report.interviewsDone}
+                onClick={regenerate}
+              >
+                {busy ? 'Updating report…' : 'Update report'}
+              </button>
+            </>
           }
           beforeContent={
             <>

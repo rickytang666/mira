@@ -3,7 +3,8 @@ import type { FetchedConversation, ReportView } from '../contract';
 import { rebuildStudyReport } from 'wasp/server/jobs';
 import { fetchConversation } from '../jobs/elevenlabsClient';
 import { oneRebuildAtATime, refreshStudyReport, type ReportRepository } from './pipeline';
-import { isSubstantive, participantTitle } from './participants';
+import { participantTitle } from './participants';
+import { isSubstantive } from './substantive';
 
 export const reportRepository: ReportRepository = {
   async load(studyId) {

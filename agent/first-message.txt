@@ -1,1 +1,1 @@
-Hi, I'm Mira, I do user research for the {{product_name}} team. This call is recorded so they can hear your answers. It takes about a minute. Ready?
+Hi, I'm Mira, I do user research for the {{product_name}} team. This call is recorded so they can hear your answers. It takes about a minute, and you can answer in any language. Ready?

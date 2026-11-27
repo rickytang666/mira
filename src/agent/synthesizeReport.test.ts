@@ -87,6 +87,29 @@ describe('multi-call report synthesis', () => {
     });
     expect(result.recommendations?.[0].themeIds).toEqual([result.themes[0].id]);
   });
+  it('asks for English labels and keeps non-English quotes verbatim', async () => {
+    const spanish = 'No encontré la configuración de la clave de API, tuve que preguntar en Discord.';
+    const raw = answer();
+    raw.themes[0].evidence = [{ callId: 'es', turnId: 'turn-1' }];
+    const generateJson = vi.fn(async (_request: { system: string }) => raw);
+    const report = await synthesizeReport(
+      {
+        ...input,
+        calls: [
+          {
+            id: 'es',
+            title: 'Lucía',
+            transcript: `[00:00] Interviewer: ¿Qué pasó?\n[00:04] Participant: ${spanish}\n[00:12] Interviewer: Gracias.`,
+          },
+        ],
+      },
+      { generateJson },
+    );
+    expect(generateJson.mock.calls[0][0].system).toMatch(/theme labels.*in English/);
+    expect(generateJson.mock.calls[0][0].system).toMatch(/verbatim in their original language/);
+    expect(report.themes[0].label).toBe('Unclear API key setup');
+    expect(report.themes[0].quotes[0]).toMatchObject({ text: spanish, startSec: 4, endSec: 12 });
+  });
   it('does not inflate counts or duplicate quotes for repeated evidence', async () => {
     const raw = answer();
     raw.themes[0].evidence.push(raw.themes[0].evidence[0]);
