@@ -21,6 +21,9 @@ function questionsOf(value: unknown): string[] {
   return value.map((question) => requiredText(question, 2000));
 }
 
+// The model echoes theme labels back with drifting case and spacing.
+const labelKey = (label: string) => label.toLowerCase().trim().replace(/\s+/g, ' ');
+
 const clock = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
 
 function lastQuestion(text: string): string {
@@ -148,8 +151,8 @@ If the transcripts only contain greetings, irrelevant text, or refusals, return 
     .flatMap((value, themeIndex) => {
       const theme = object(value);
       const label = requiredText(theme.label, 120);
-      const labelKey = label.toLowerCase().replace(/\s+/g, ' ');
-      if (themeIds.has(labelKey)) return [];
+      const key = labelKey(label);
+      if (themeIds.has(key)) return [];
       const id = `theme-${themeIndex + 1}`;
       if (!Array.isArray(theme.evidence) || !theme.evidence.length) return [];
       const seen = new Set<string>();
@@ -178,19 +181,21 @@ If the transcripts only contain greetings, irrelevant text, or refusals, return 
         ];
       });
       if (!quotes.length) return [];
-      themeIds.set(labelKey, id);
+      themeIds.set(key, id);
       return [{ id, label, summary: requiredText(theme.summary, 1000), count: supportingCalls.size, quotes }];
     })
     .sort((a, b) => b.count - a.count);
+  const citedThemeIds = (labels: unknown[]) =>
+    labels.flatMap((label) => {
+      const id = typeof label === 'string' ? themeIds.get(labelKey(label)) : undefined;
+      return id ? [id] : [];
+    });
   if (!Array.isArray(raw.recommendations) || raw.recommendations.length > 3)
     throw new Error('The report returned invalid next steps. Try again.');
   const recommendations = raw.recommendations.flatMap((value) => {
     const recommendation = object(value);
     const labels = Array.isArray(recommendation.themeLabels) ? recommendation.themeLabels.slice(0, 5) : [];
-    const ids = labels.flatMap((label) => {
-      const id = typeof label === 'string' ? themeIds.get(label.toLowerCase().trim().replace(/\s+/g, ' ')) : undefined;
-      return id ? [id] : [];
-    });
+    const ids = citedThemeIds(labels);
     // A next step with no theme behind it is dropped rather than failing the report.
     return ids.length ? [{ text: requiredText(recommendation.text, 600), themeIds: [...new Set(ids)] }] : [];
   });
@@ -216,11 +221,7 @@ If the transcripts only contain greetings, irrelevant text, or refusals, return 
       const status = finding.status as 'answered' | 'partial' | 'unanswered';
       if (!Array.isArray(finding.themeLabels)) throw new Error('Research question findings need evidence references.');
       // Model citation slips are repaired instead of failing the whole report: unknown labels drop, status follows the evidence.
-      const ids = finding.themeLabels.flatMap((label) => {
-        const id =
-          typeof label === 'string' ? themeIds.get(label.toLowerCase().trim().replace(/\s+/g, ' ')) : undefined;
-        return id ? [id] : [];
-      });
+      const ids = citedThemeIds(finding.themeLabels);
       const repairedStatus: typeof status =
         status === 'unanswered' ? (ids.length ? 'partial' : 'unanswered') : ids.length ? status : 'unanswered';
       return {
