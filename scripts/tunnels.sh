@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 if ! command -v cloudflared > /dev/null; then echo "cloudflared not found; install it (brew install cloudflared) and rerun" >&2; exit 1; fi
-LOG_DIR="${TMPDIR:-/tmp}/fieldwork-tunnels"
+LOG_DIR="${TMPDIR:-/tmp}/mira-tunnels"
 mkdir -p "$LOG_DIR"
 # quick tunnel URLs die with this script, so drop them and the tunnels on exit; dev:tunnel then refuses to start on dead URLs
 trap 'rm -f .tunnel-urls; kill $(jobs -p) 2> /dev/null || true' EXIT
