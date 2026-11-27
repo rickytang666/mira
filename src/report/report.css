@@ -601,9 +601,9 @@
   border: 0;
   background: none;
   color: var(--brand);
+  font: inherit;
   font-weight: 500;
   white-space: nowrap;
-  font: inherit;
 }
 .fw-error {
   font-size: 13px;
