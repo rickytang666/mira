@@ -81,6 +81,11 @@ export function finishRequest(apiUrl: string, entry: FinishedInterview): [string
 
 const pause = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
+// The server read the entry and refused it (study deleted, conversation in another study), so resending can't help.
+export function isFinalRejection(status: unknown): boolean {
+  return typeof status === 'number' && status >= 400 && status < 500 && status !== 408 && status !== 429;
+}
+
 /** finishInterview upserts on conversationId, so retrying and replaying are safe. */
 export async function deliver(
   entry: FinishedInterview,
@@ -96,6 +101,11 @@ export async function deliver(
       return true;
     } catch (err) {
       console.warn('[interview] finishInterview failed', attempt + 1, err);
+      if (isFinalRejection((err as { statusCode?: unknown } | null)?.statusCode)) {
+        // Marked saved only to stop replaying it on every page load.
+        markStored(store, entry, true);
+        return false;
+      }
       await wait(1000 * (attempt + 1));
     }
   }

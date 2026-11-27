@@ -4,6 +4,7 @@ import {
   deliver,
   type FinishedInterview,
   finishRequest,
+  isFinalRejection,
   isStoredSaved,
   type KeyValueStore,
   markStored,
@@ -35,7 +36,7 @@ export function reportFinishedOnUnload(entry: FinishedInterview) {
   const [url, init] = finishRequest(config.apiUrl, entry);
   fetch(url, init).then(
     (res) => {
-      if (res.ok) markStored(store, entry, true);
+      if (res.ok || isFinalRejection(res.status)) markStored(store, entry, true);
     },
     () => {},
   );

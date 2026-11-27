@@ -3,6 +3,7 @@ import {
   deliver,
   type FinishedInterview,
   finishRequest,
+  isFinalRejection,
   isStoredSaved,
   type KeyValueStore,
   markStored,
@@ -101,6 +102,20 @@ describe('deliver', () => {
     expect(await deliver(entry('a'), send, store, noWait)).toBe(false);
     expect(send).toHaveBeenCalledTimes(3);
     expect(unsavedStored(store)).toEqual([entry('a')]);
+  });
+
+  it('stops retrying and replaying once the server refuses the entry', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const store = memoryStore();
+    const send = vi.fn(() => Promise.reject(Object.assign(new Error('Study not found.'), { statusCode: 404 })));
+    expect(await deliver(entry('a'), send, store, noWait)).toBe(false);
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(unsavedStored(store)).toEqual([]);
+  });
+
+  it('keeps retrying on timeouts, rate limits, and server errors', () => {
+    expect([404, 409, 400].every(isFinalRejection)).toBe(true);
+    expect([408, 429, 500, 503, undefined].some(isFinalRejection)).toBe(false);
   });
 });
 
