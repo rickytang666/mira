@@ -154,6 +154,23 @@ describe('multi-call report synthesis', () => {
     expect(result.themes).toHaveLength(1);
     expect(result.recommendations).toEqual([]);
   });
+  it('matches theme labels regardless of case and spacing', async () => {
+    const raw = {
+      ...answer(),
+      themes: [answer().themes[0], { ...answer().themes[0], label: 'unclear  API key SETUP' }],
+      recommendations: [{ text: 'Test a permissions example.', themeLabels: ['  UNCLEAR api   key setup '] }],
+      questionFindings: [
+        { questionIndex: 0, status: 'answered', finding: 'Setup was hard.', themeLabels: ['unclear api key setup'] },
+      ],
+    };
+    const result = await synthesizeReport(
+      { ...input, questions: ['What blocked setup?'] },
+      { generateJson: async () => raw },
+    );
+    expect(result.themes.map((theme) => theme.label)).toEqual(['Unclear API key setup']);
+    expect(result.recommendations?.[0].themeIds).toEqual([result.themes[0].id]);
+    expect(result.questionFindings?.[0]).toMatchObject({ status: 'answered', themeIds: [result.themes[0].id] });
+  });
   it('rejects duplicate calls before sending data to the provider', async () => {
     const generateJson = vi.fn();
     await expect(

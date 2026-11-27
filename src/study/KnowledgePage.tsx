@@ -12,6 +12,7 @@ import {
 } from 'wasp/client/operations';
 import type { Source } from 'wasp/entities';
 import { Layout, PageHeader, ErrorNote } from '../Layout';
+import { withScheme } from './url';
 
 type SourceKind = 'url' | 'description' | 'pdf' | 'mcp';
 
@@ -61,7 +62,6 @@ export function KnowledgePage() {
   const { data: study } = useQuery(getStudy, { studyId });
   const sources = study?.sources ?? [];
   const [name, setName] = useState<string | null>(null);
-  const saveError = '';
   const [kind, setKind] = useState<SourceKind | null>(null);
   const [view, setView] = useState<Source | null>(null);
   const [title, setTitle] = useState('');
@@ -116,7 +116,7 @@ export function KnowledgePage() {
       else if (kind === 'url')
         await add(
           await importWebsite({
-            url: value.trim().startsWith('http') ? value.trim() : `https://${value.trim()}`,
+            url: withScheme(value.trim()),
           }),
           kind,
         );
@@ -163,7 +163,6 @@ export function KnowledgePage() {
   return (
     <Layout page="knowledge" sourceCount={sources.length} questionCount={study?.questions.length ?? 0}>
       <PageHeader title="Knowledge" description="What Mira knows about the product before each interview." />
-      <ErrorNote message={saveError} />
       <section className="product-card">
         <div className="product-details">
           <label htmlFor="product-name">Product</label>

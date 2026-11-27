@@ -19,9 +19,13 @@ vi.mock('wasp/server', () => ({
 vi.mock('wasp/server/jobs', () => ({ processInterview: { submit: vi.fn() } }));
 vi.mock('../sources', () => ({ importWebsite: vi.fn() }));
 vi.mock('../agent/suggestQuestions', () => ({ suggestQuestions: vi.fn() }));
-vi.mock('../report/server', () => ({ readSavedReport: vi.fn() }));
+vi.mock('../report/server', () => ({ readSavedReport: vi.fn(), rebuildQueued: vi.fn(async () => false) }));
 
-const { updateStudy, addSource, getPublicStudy, finishInterview } = await import('./operations');
+const { createStudy, updateStudy, addSource, getPublicStudy, finishInterview, getReport } = await import(
+  './operations'
+);
+const { readSavedReport } = await import('../report/server');
+const { suggestQuestions } = await import('../agent/suggestQuestions');
 
 // Operations receive client JSON, so tests pass shapes the TypeScript input type would reject.
 const call = (operation: unknown, args: unknown, context: unknown = {}) =>
@@ -114,6 +118,26 @@ describe('addSource', () => {
     });
     expect(e.Source.create).not.toHaveBeenCalled();
   });
+
+  it('rebuilds the study context from every source, capped at 60,000 characters', async () => {
+    const e = entities();
+    e.Source.findMany.mockResolvedValue([{ content: 'first' }, { content: 'b'.repeat(70_000) }]);
+    await call(addSource, source, { entities: e });
+    expect(e.Study.update).toHaveBeenCalledWith({
+      where: { id: 's1' },
+      data: { context: `first\n\n${'b'.repeat(59_993)}`, reportRevision: { increment: 1 }, reportError: null },
+    });
+  });
+});
+
+describe('createStudy', () => {
+  it('caps the joined source context at 60,000 characters', async () => {
+    vi.mocked(suggestQuestions).mockResolvedValue({ questions: ['Why?'] });
+    const create = vi.fn().mockResolvedValue({ id: 's1' });
+    await call(createStudy, { goal: 'Learn', description: 'd'.repeat(70_000) }, { entities: { Study: { create } } });
+    expect(vi.mocked(suggestQuestions).mock.calls[0][0].context).toBe('d'.repeat(60_000));
+    expect(create.mock.calls[0][0].data.context).toBe('d'.repeat(60_000));
+  });
 });
 
 describe('finishInterview', () => {
@@ -124,5 +148,69 @@ describe('finishInterview', () => {
       call(finishInterview, { studyId: 's1', conversationId: '../agents/x' }, context),
     ).rejects.toMatchObject({ statusCode: 400 });
     expect(findUnique).not.toHaveBeenCalled();
+  });
+
+  it('rejects a question snapshot over the saved-question limits', async () => {
+    const upsert = vi.fn().mockResolvedValue({ id: 'i1', studyId: 's1', status: 'done' });
+    const context = { entities: { Study: { findUnique: async () => ({ questions: [] }) }, Interview: { upsert } } };
+    const finish = (questionSnapshot: unknown) =>
+      call(finishInterview, { studyId: 's1', conversationId: 'conv_1', questionSnapshot }, context);
+    await expect(finish(Array(51).fill('Why?'))).rejects.toMatchObject({ statusCode: 400 });
+    await expect(finish(['x'.repeat(2001)])).rejects.toMatchObject({ statusCode: 400 });
+    expect(upsert).not.toHaveBeenCalled();
+    await expect(finish([...Array(49).fill('Why?'), 'x'.repeat(2000)])).resolves.toEqual({ interviewId: 'i1' });
+  });
+});
+
+describe('getReport', () => {
+  const study = {
+    id: 's1',
+    name: 'Acme',
+    goal: 'Learn',
+    report: null,
+    reportError: null,
+    reportRevision: 1,
+    interviews: [{ status: 'done' }],
+    themes: [
+      {
+        id: 't1',
+        label: 'Setup',
+        count: 1,
+        quotes: [{ id: 'q1', text: 'Hard', startSec: 1, endSec: 2, interviewId: 'i1' }],
+      },
+    ],
+  };
+  const context = { entities: { Study: { findUnique: async () => study } } };
+  const audioUrls = (report: unknown) =>
+    (report as { themes: { quotes: { audioUrl: string }[] }[] }).themes.flatMap((t) => t.quotes.map((q) => q.audioUrl));
+
+  it('serves stored quotes through the interview audio route', async () => {
+    const report = await call(getReport, { studyId: 's1' }, context);
+    expect(audioUrls(report)).toEqual(['http://localhost:3001/api/interviews/i1/audio']);
+  });
+
+  it('points saved quotes from an interview at the audio route and keeps other audio', async () => {
+    vi.mocked(readSavedReport).mockReturnValueOnce({
+      revision: 1,
+      value: {
+        studyId: 's1',
+        goal: 'Learn',
+        interviewsDone: 1,
+        interviewsProcessing: 0,
+        themes: [
+          {
+            id: 't1',
+            label: 'Setup',
+            count: 1,
+            quotes: [
+              { id: 'q1', text: 'Hard', startSec: 1, interviewId: 'i2', audioUrl: 'stale' },
+              { id: 'q2', text: 'Pasted', startSec: 0, audioUrl: 'pasted.mp3' },
+            ],
+          },
+        ],
+      },
+    });
+    const report = await call(getReport, { studyId: 's1' }, context);
+    expect(audioUrls(report)).toEqual(['http://localhost:3001/api/interviews/i2/audio', 'pasted.mp3']);
   });
 });

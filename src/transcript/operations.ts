@@ -1,6 +1,7 @@
-import { HttpError, config } from 'wasp/server';
+import { HttpError } from 'wasp/server';
 import type { GetInterview } from 'wasp/server/operations';
-import { participantTitles } from '../report/participants';
+import { interviewAudioUrl } from '../jobs/audioUrl';
+import { participantTitles, savedQuestions } from '../report/participants';
 import { type InterviewView, transcriptLines } from './turns';
 
 // Founder-side, no login, the same access as getReport.
@@ -24,10 +25,8 @@ export const getInterview: GetInterview<{ studyId: string; interviewId: string }
     status: interview.status,
     createdAt: interview.createdAt.toISOString(),
     durationSecs: interview.durationSecs,
-    questions: Array.isArray(interview.questionSnapshot)
-      ? interview.questionSnapshot.filter((q): q is string => typeof q === 'string')
-      : [],
+    questions: savedQuestions(interview.questionSnapshot),
     turns,
-    audioUrl: turns.length ? `${config.serverUrl}/api/interviews/${interview.id}/audio` : null,
+    audioUrl: turns.length ? interviewAudioUrl(interview.id) : null,
   };
 };
