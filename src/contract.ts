@@ -18,14 +18,14 @@ export type SuggestQuestionsOutput = {
 
 // Mirrors GET /v1/convai/conversations/{id}: transcript[].role, .message, .time_in_call_secs.
 export type TranscriptTurn = {
-  role: "agent" | "user";
+  role: 'agent' | 'user';
   text: string;
   timeInCallSecs: number;
 };
 
 export type FetchedConversation = {
   conversationId: string;
-  status: "initiated" | "in-progress" | "processing" | "done" | "failed"; // job retries until "done"
+  status: 'initiated' | 'in-progress' | 'processing' | 'done' | 'failed'; // job retries until "done"
   durationSecs: number;
   turns: TranscriptTurn[];
 };
@@ -95,7 +95,12 @@ export type ReportView = {
   summary?: string;
   updatedAt?: string;
   recommendations?: { text: string; themeIds: string[] }[];
-  questionFindings?: { question: string; status: 'answered' | 'partial' | 'unanswered'; finding: string; themeIds: string[] }[];
+  questionFindings?: {
+    question: string;
+    status: 'answered' | 'partial' | 'unanswered';
+    finding: string;
+    themeIds: string[];
+  }[];
   themes: {
     id: string;
     label: string;

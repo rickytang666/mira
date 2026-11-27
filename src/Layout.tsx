@@ -26,7 +26,9 @@ export function Layout({
       <aside className="sidebar">
         <Link className="brand" to="/" aria-label="Mira home">
           <Mark />
-          <span className="brand-name">Mira<small>User researcher</small></span>
+          <span className="brand-name">
+            Mira<small>User researcher</small>
+          </span>
         </Link>
         <nav aria-label="Studies">
           <NavLink end to="/" className={`nav-item ${page === 'studies' ? 'selected' : ''}`}>
@@ -36,16 +38,35 @@ export function Layout({
           {!!studies?.length && <div className="nav-label">Studies</div>}
           {studies?.map((study) => (
             <div key={study.id} className="nav-study">
-              <Link to={`/study/${study.id}/report`} className={`nav-item nav-study-name ${study.id === studyId ? 'open' : ''}`}>
+              <Link
+                to={`/study/${study.id}/report`}
+                className={`nav-item nav-study-name ${study.id === studyId ? 'open' : ''}`}
+              >
                 <span>{study.name}</span>
               </Link>
               {study.id === studyId &&
                 [
                   { id: 'report', path: `/study/${studyId}/report`, icon: BarChart3, label: 'Report', count: 0 },
-                  { id: 'questionnaire', path: `/study/${studyId}/questionnaire`, icon: ListChecks, label: 'Questions and QR', count: questionCount },
-                  { id: 'knowledge', path: `/study/${studyId}/knowledge`, icon: BookOpen, label: 'Knowledge', count: sourceCount },
+                  {
+                    id: 'questionnaire',
+                    path: `/study/${studyId}/questionnaire`,
+                    icon: ListChecks,
+                    label: 'Questions and QR',
+                    count: questionCount,
+                  },
+                  {
+                    id: 'knowledge',
+                    path: `/study/${studyId}/knowledge`,
+                    icon: BookOpen,
+                    label: 'Knowledge',
+                    count: sourceCount,
+                  },
                 ].map((item) => (
-                  <NavLink key={item.id} to={item.path} className={`nav-item nav-sub ${page === item.id ? 'selected' : ''}`}>
+                  <NavLink
+                    key={item.id}
+                    to={item.path}
+                    className={`nav-item nav-sub ${page === item.id ? 'selected' : ''}`}
+                  >
                     <item.icon size={16} />
                     <span>{item.label}</span>
                     {item.count > 0 && <span className="nav-count">{item.count}</span>}
@@ -55,8 +76,12 @@ export function Layout({
           ))}
         </nav>
         <div className="sidebar-credits">
-          <a href="https://wasp.sh" target="_blank" rel="noreferrer">Built with Wasp</a>
-          <a href="https://elevenlabs.io" target="_blank" rel="noreferrer">Voice by ElevenLabs</a>
+          <a href="https://wasp.sh" target="_blank" rel="noreferrer">
+            Built with Wasp
+          </a>
+          <a href="https://elevenlabs.io" target="_blank" rel="noreferrer">
+            Voice by ElevenLabs
+          </a>
         </div>
       </aside>
       <div className="main-shell">
@@ -65,15 +90,7 @@ export function Layout({
     </div>
   );
 }
-export function PageHeader({
-  title,
-  description,
-  action,
-}: {
-  title: string;
-  description: string;
-  action?: ReactNode;
-}) {
+export function PageHeader({ title, description, action }: { title: string; description: string; action?: ReactNode }) {
   return (
     <div className="page-heading">
       <div>

@@ -89,7 +89,12 @@ export interface StudyReport {
   summary?: string;
   synthesizedInterviews?: number;
   recommendations?: { text: string; themeIds: string[] }[];
-  questionFindings?: { question: string; status: 'answered' | 'partial' | 'unanswered'; finding: string; themeIds: string[] }[];
+  questionFindings?: {
+    question: string;
+    status: 'answered' | 'partial' | 'unanswered';
+    finding: string;
+    themeIds: string[];
+  }[];
 }
 
 export type ReportLoader = (studyId: string, signal: AbortSignal) => Promise<StudyReport>;

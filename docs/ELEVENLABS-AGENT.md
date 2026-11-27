@@ -12,15 +12,15 @@ REACT_APP_ELEVENLABS_AGENT_ID=<your-agent-id>
 
 `InterviewPage.tsx` sends `getPublicStudy().dynamicVariables` (the `InterviewDynamicVariables` type in `src/contract.ts`), plus `product_name`:
 
-| Variable | Source | Notes |
-| --- | --- | --- |
-| `product_name` | `study.name` | Not in the contract type: the agent needs a name to say out loud, not a URL |
-| `product_url` | contract | |
-| `goal` | contract | |
-| `audience` | contract | Falls back to "someone who has used this product" |
-| `questions` | contract | Numbered, one per line. A question may end with `[Do not ask a follow-up for this question.]` |
-| `product_context` | contract | Trimmed to 8,000 characters on the phone to keep each voice turn fast |
-| `study_id` | contract | Not used in the prompt |
+| Variable          | Source       | Notes                                                                                         |
+| ----------------- | ------------ | --------------------------------------------------------------------------------------------- |
+| `product_name`    | `study.name` | Not in the contract type: the agent needs a name to say out loud, not a URL                   |
+| `product_url`     | contract     |                                                                                               |
+| `goal`            | contract     |                                                                                               |
+| `audience`        | contract     | Falls back to "someone who has used this product"                                             |
+| `questions`       | contract     | Numbered, one per line. A question may end with `[Do not ask a follow-up for this question.]` |
+| `product_context` | contract     | Trimmed to 8,000 characters on the phone to keep each voice turn fast                         |
+| `study_id`        | contract     | Not used in the prompt                                                                        |
 
 Every variable used in the prompt must always be sent, or ElevenLabs refuses to start the call. The page always sends `product_name`, `audience`, and `product_context`, even when empty.
 
@@ -58,14 +58,14 @@ Background on the product, for understanding answers only. Never read it out or 
 
 As read from the API on 2026-11-26.
 
-| Setting | Value |
-| --- | --- |
-| Voice | voice ID `ZanLYTrbe2MUsXisnpwn`, `eleven_v4_turbo`, expressive mode on |
-| LLM | `deepseek-v41-flash`, temperature 0, no token limit |
-| System tools | End call on |
-| Turn eagerness | Normal |
-| Max conversation duration | 600 s |
-| Authentication | Off: the phone connects with the agent ID only, so set call limits |
-| Audio storage | On: the report plays quote clips from the recording |
+| Setting                   | Value                                                                  |
+| ------------------------- | ---------------------------------------------------------------------- |
+| Voice                     | voice ID `ZanLYTrbe2MUsXisnpwn`, `eleven_v4_turbo`, expressive mode on |
+| LLM                       | `deepseek-v41-flash`, temperature 0, no token limit                    |
+| System tools              | End call on                                                            |
+| Turn eagerness            | Normal                                                                 |
+| Max conversation duration | 600 s                                                                  |
+| Authentication            | Off: the phone connects with the agent ID only, so set call limits     |
+| Audio storage             | On: the report plays quote clips from the recording                    |
 
 Expressive mode writes audio tags like `[Warmly]` into the transcript text. The phone page strips them from captions.

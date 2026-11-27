@@ -40,16 +40,32 @@ export function NewStudyPage() {
           <ErrorNote message={error} />
           <label className="field">
             Product URL
-            <input autoFocus value={productUrl} onChange={(e) => setProductUrl(e.target.value)} placeholder="https://your-product.com" />
+            <input
+              autoFocus
+              value={productUrl}
+              onChange={(e) => setProductUrl(e.target.value)}
+              placeholder="https://your-product.com"
+            />
           </label>
           <label className="field">
             What do you want to learn?
-            <textarea required rows={3} value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="e.g. Why new users leave before finishing onboarding." />
+            <textarea
+              required
+              rows={3}
+              value={goal}
+              onChange={(e) => setGoal(e.target.value)}
+              placeholder="e.g. Why new users leave before finishing onboarding."
+            />
           </label>
           {showDescription ? (
             <label className="field">
               Describe your product <span>(used when the site can't be read)</span>
-              <textarea rows={4} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What does it do, and who is it for?" />
+              <textarea
+                rows={4}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="What does it do, and who is it for?"
+              />
             </label>
           ) : (
             <button type="button" className="text-link" onClick={() => setShowDescription(true)}>
@@ -57,15 +73,27 @@ export function NewStudyPage() {
             </button>
           )}
           <div className="modal-actions">
-            <button className="button primary" disabled={busy || !goal.trim() || (!productUrl.trim() && !description.trim())}>
-              {busy ? <><Loader2 size={16} className="spin" />Writing your questions…</> : <>Create study</>}
+            <button
+              className="button primary"
+              disabled={busy || !goal.trim() || (!productUrl.trim() && !description.trim())}
+            >
+              {busy ? (
+                <>
+                  <Loader2 size={16} className="spin" />
+                  Writing your questions…
+                </>
+              ) : (
+                <>Create study</>
+              )}
             </button>
           </div>
         </div>
       </form>
       {studies && studies.length > 0 && (
         <section className="form-panel">
-          <div className="panel-heading"><h2>Your studies</h2></div>
+          <div className="panel-heading">
+            <h2>Your studies</h2>
+          </div>
           <div className="form-content">
             {studies.map((study) => (
               <div className="channel-row" key={study.id}>
@@ -73,8 +101,12 @@ export function NewStudyPage() {
                   <strong>{study.name}</strong>
                   <small>{study.goal}</small>
                 </div>
-                <Link className="text-link" to={`/study/${study.id}/report`}>Report</Link>
-                <Link className="text-link" to={`/study/${study.id}/questionnaire`}>Questions</Link>
+                <Link className="text-link" to={`/study/${study.id}/report`}>
+                  Report
+                </Link>
+                <Link className="text-link" to={`/study/${study.id}/questionnaire`}>
+                  Questions
+                </Link>
               </div>
             ))}
           </div>

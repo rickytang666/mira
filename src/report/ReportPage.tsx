@@ -12,22 +12,66 @@ export function ReportPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   async function regenerate() {
-    setBusy(true); setError('');
-    try { await regenerateStudyReport({ studyId }); await refetch(); }
-    catch (error) { setError(error instanceof Error ? error.message : 'Could not update the report.'); }
-    finally { setBusy(false); }
+    setBusy(true);
+    setError('');
+    try {
+      await regenerateStudyReport({ studyId });
+      await refetch();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Could not update the report.');
+    } finally {
+      setBusy(false);
+    }
   }
-  return <Layout page="report" sourceCount={study?.sources.length ?? 0} questionCount={study?.questions.length ?? 0}>
-    {loadError && <div className="fw-notice" role="alert">Could not load the report. <button onClick={() => void refetch()}>Retry</button></div>}
-    {!report ? <div className="fw-empty" role="status">Loading report…</div> : <ReportContent
-      report={fromReportView(report)}
-      actions={<button className="fw-button fw-button-primary" disabled={busy || !report.interviewsDone} onClick={regenerate}>{busy ? 'Updating report…' : 'Update report'}</button>}
-      beforeContent={<>
-        {(error || report.synthesisError) && <div className="fw-notice" role="alert">{error || report.synthesisError} Your interviews are saved. Try Update report again.</div>}
-        {(busy || report.synthesisStatus === 'processing') && <p className="fw-notice" role="status">Analyzing the latest interviews. This page updates on its own.</p>}
-        {!busy && report.synthesisStatus === 'waiting' && report.interviewsDone > 0 && <p className="fw-notice" role="status">Analyzing the latest interviews. This page updates on its own.</p>}
-      </>}
-      emptyAction={<Link className="fw-button" to={`/study/${studyId}/questionnaire`}>Review interview questions</Link>}
-    />}
-  </Layout>;
+  return (
+    <Layout page="report" sourceCount={study?.sources.length ?? 0} questionCount={study?.questions.length ?? 0}>
+      {loadError && (
+        <div className="fw-notice" role="alert">
+          Could not load the report. <button onClick={() => void refetch()}>Retry</button>
+        </div>
+      )}
+      {!report ? (
+        <div className="fw-empty" role="status">
+          Loading report…
+        </div>
+      ) : (
+        <ReportContent
+          report={fromReportView(report)}
+          actions={
+            <button
+              className="fw-button fw-button-primary"
+              disabled={busy || !report.interviewsDone}
+              onClick={regenerate}
+            >
+              {busy ? 'Updating report…' : 'Update report'}
+            </button>
+          }
+          beforeContent={
+            <>
+              {(error || report.synthesisError) && (
+                <div className="fw-notice" role="alert">
+                  {error || report.synthesisError} Your interviews are saved. Try Update report again.
+                </div>
+              )}
+              {(busy || report.synthesisStatus === 'processing') && (
+                <p className="fw-notice" role="status">
+                  Analyzing the latest interviews. This page updates on its own.
+                </p>
+              )}
+              {!busy && report.synthesisStatus === 'waiting' && report.interviewsDone > 0 && (
+                <p className="fw-notice" role="status">
+                  Analyzing the latest interviews. This page updates on its own.
+                </p>
+              )}
+            </>
+          }
+          emptyAction={
+            <Link className="fw-button" to={`/study/${studyId}/questionnaire`}>
+              Review interview questions
+            </Link>
+          }
+        />
+      )}
+    </Layout>
+  );
 }

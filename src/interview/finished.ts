@@ -11,7 +11,10 @@ const key = 'fieldwork.finishedInterviews.v1';
 function keepLocalCopy(entry: FinishedInterview & { saved: boolean }) {
   try {
     const list = JSON.parse(localStorage.getItem(key) || '[]');
-    localStorage.setItem(key, JSON.stringify([...(Array.isArray(list) ? list : []), { ...entry, at: new Date().toISOString() }]));
+    localStorage.setItem(
+      key,
+      JSON.stringify([...(Array.isArray(list) ? list : []), { ...entry, at: new Date().toISOString() }]),
+    );
   } catch {
     // Storage blocked (private mode): the server call is what matters.
   }
@@ -25,7 +28,7 @@ export async function reportFinished(entry: FinishedInterview): Promise<boolean>
       return true;
     } catch (err) {
       console.warn('[interview] finishInterview failed', attempt + 1, err);
-      await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+      await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
     }
   }
   keepLocalCopy({ ...entry, saved: false });
