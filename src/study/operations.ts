@@ -36,6 +36,8 @@ export const createStudy: CreateStudy<CreateStudyInput, { id: string }> = async 
   let productUrl = args.productUrl?.trim() ?? "";
   if (!productUrl && !description) throw new HttpError(400, "Add your product URL or describe it.");
   if (productUrl && !/^https?:\/\//.test(productUrl)) productUrl = `https://${productUrl}`;
+  // The scrape fallback below parses the URL again, so an unparseable one would escape as a bare 500.
+  if (productUrl && !URL.canParse(productUrl)) throw new HttpError(400, "Enter a complete URL, including https://.");
 
   let name = "My product";
   const sources: { kind: string; title: string; content: string; detail: string }[] = [];
@@ -57,7 +59,12 @@ export const createStudy: CreateStudy<CreateStudyInput, { id: string }> = async 
   const audience = args.audience?.trim() ?? "";
   const studyContext = contextParts.join("\n\n").slice(0, 60000);
 
-  const { questions } = await suggestQuestions({ productName: name, goal, audience, context: studyContext });
+  let questions: string[];
+  try {
+    ({ questions } = await suggestQuestions({ productName: name, goal, audience, context: studyContext }));
+  } catch (error) {
+    throw new HttpError(400, error instanceof Error ? error.message : "Could not generate questions.");
+  }
   const study = await context.entities.Study.create({
     data: {
       name,
