@@ -66,7 +66,7 @@ export function createLayeredRig(image:HTMLImageElement,shirtColor?:Rgb){
   const colorCache=new Map<string,string>();
   const colors=source.getContext('2d',{willReadFrequently:true})!;
   const color=(x:number,y:number)=>{const key=x+','+y;const cached=colorCache.get(key);if(cached)return cached;const d=colors.getImageData(x,y,1,1).data;const value=`rgb(${d[0]} ${d[1]} ${d[2]})`;colorCache.set(key,value);return value;};
-  [[195,1280],[218,1154],[842,1350]].forEach(([x,y])=>color(x,y));
+  for (const [x,y] of [[195,1280],[218,1154],[842,1350]]) color(x,y);
   const head=makeSprite(source,'head');
   const body=makeSprite(source,'body',[headPath,leftUpperPath,leftForePath,leftHandPath,rightUpperPath,rightForePath,rightHandPath]);
   // Reconstruct the small occluded areas behind the original forearm. These are

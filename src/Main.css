@@ -112,7 +112,7 @@ h2{font-size:13px;font-weight:600;letter-spacing:-.15px}
 .modal-backdrop{position:fixed;inset:0;z-index:50;background:var(--overlay);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:24px}
 .modal{background:var(--surface);border-radius:14px;width:520px;max-width:100%;padding:34px;position:relative;max-height:90vh;overflow:auto;box-shadow:0 24px 80px var(--shadow)}
 .modal-close{position:absolute;top:15px;right:15px}
-.modal h2{font-family:'Manrope';font-size:23px;letter-spacing:-.7px;margin-bottom:12px}
+.modal h2{font-family:'Manrope',sans-serif;font-size:23px;letter-spacing:-.7px;margin-bottom:12px}
 .modal-description{font-size:12px;line-height:1.8;color:var(--muted);margin-bottom:24px}
 .field{display:block;font-size:11px;font-weight:500;color:var(--text);margin-bottom:22px}
 .field input,.field textarea{display:block;width:100%;padding:12px 14px;border:1px solid var(--border);background:var(--surface-tint);border-radius:6px;margin-top:9px;font-size:12px;color:var(--text);resize:vertical;line-height:1.8}
@@ -162,7 +162,7 @@ input::placeholder,textarea::placeholder{color:var(--subtle)}
 .metrics>div{padding:24px;border-right:1px solid var(--border)}
 .metrics>div:last-child{border:0}
 .metrics span{display:block;font-size:11px;color:var(--muted)}
-.metrics strong{display:block;font-family:'Manrope';font-size:32px;font-weight:500;color:var(--text);margin:10px 0}
+.metrics strong{display:block;font-family:'Manrope',sans-serif;font-size:32px;font-weight:500;color:var(--text);margin:10px 0}
 .metrics small{font-size:9px;color:var(--muted)}
 .report-empty{text-align:center;border:1px solid var(--border);background:var(--surface);border-radius:9px;padding:36px 24px 24px}
 .report-illustration{position:relative;width:150px;height:86px;margin:0 auto 20px}
@@ -172,7 +172,7 @@ input::placeholder,textarea::placeholder{color:var(--subtle)}
 .bubble-two{right:10px;bottom:8px;transform:rotate(8deg);background:var(--accent)}
 .illustration-line{position:absolute;top:26px;left:45px;border:1px dashed var(--border-strong);width:60px;height:38px}
 .spark{position:absolute;right:11px;top:-3px;color:var(--icon);font-size:21px}
-.report-empty h2{font-family:'Manrope';font-size:22px;font-weight:600;letter-spacing:-.6px;margin-bottom:12px}
+.report-empty h2{font-family:'Manrope',sans-serif;font-size:22px;font-weight:600;letter-spacing:-.6px;margin-bottom:12px}
 .report-empty>p{font-size:12px;line-height:1.9;color:var(--muted);max-width:410px;margin:0 auto 23px}
 .report-empty .eyebrow{font-size:8px}
 .evidence-note{display:flex;align-items:center;justify-content:center;gap:6px;font-size:9px;color:var(--subtle);margin-top:28px}

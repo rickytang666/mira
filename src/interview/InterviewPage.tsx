@@ -93,7 +93,7 @@ function Interview({ study, muted, setMuted, onAgentTalking }: { study: PublicSt
     questionSnapshot.current = study.questions;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(t => t.stop());
+      for (const t of stream.getTracks()) t.stop();
     } catch {
       setError('Microphone access is blocked. Allow it in your browser settings, then try again.');
       setPhase('error');

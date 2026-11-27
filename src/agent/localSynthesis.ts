@@ -14,7 +14,7 @@ export function synthesizeLocally(input: SynthesizeInterviewInput): InterviewSyn
   const used = new Set<string>();
   const themes = categories.flatMap(([label, pattern]) => {
     const matching = turns.filter(t => t.text.length >= 20 && pattern.test(t.text) && !used.has(t.id)).slice(0, 3);
-    matching.forEach(t => used.add(t.id));
+    for (const t of matching) used.add(t.id);
     return matching.length ? [{ label, summary: 'Review the participant’s words below; this is a keyword grouping.', quotes: matching.map(t => ({ turnId: t.id, text: t.text, startSec: t.startSec, endSec: t.endSec })) }] : [];
   });
   const remaining = turns.filter(t => t.text.length >= 40 && !used.has(t.id)).slice(0, 3);

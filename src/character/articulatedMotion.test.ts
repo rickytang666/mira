@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ArticulatedMotion, poseEnvelope } from './articulatedMotion';
+import { ArticulatedMotion, poseEnvelope, type RigPose } from './articulatedMotion';
 
 const input = { mode: 'idle', gesture: 0, pointerX: 0, pointerY: 0, reduced: false };
 
@@ -7,7 +7,7 @@ describe('articulated gestures', () => {
   it('raises the forearm substantially and settles back before the next gesture', () => {
     const motion = new ArticulatedMotion(() => .5);
     let peak = 0;
-    let pose;
+    let pose: RigPose | undefined;
     for (let i = 0; i <= 420; i++) {
       pose = motion.update(i / 60, 1 / 60, input);
       peak = Math.max(peak, pose.rightFore);
