@@ -2,10 +2,12 @@
 
 Mira is a user researcher you can hire in a minute. Give her your product's URL and what you want to learn. She writes the interview, talks to your users by voice on their phones, and hands you a report of themes and quotes you can play back in their own voices.
 
+Open source and runs on your own ElevenLabs and OpenRouter keys.
+
 ## How it works
 
 1. **Brief.** Mira reads your site and writes 3 to 5 interview questions about it.
-2. **Interviews.** Participants scan a QR code and talk to Mira for about a minute. No app, no sign-up.
+2. **Interviews.** Participants scan a QR code and talk to Mira for about a minute. No app, no sign-up. Mira tells them up front that the call is recorded and shared with your team. When an answer is vague she asks one concrete follow-up; she's built for quick signal, not deep discovery interviews.
 3. **Report.** After each call, Mira pulls the transcript and recording, groups answers into themes, and links every quote to the moment it was said.
 
 ## Built with
@@ -27,7 +29,7 @@ You need Node.js 24.22.1 or newer, the Wasp CLI 0.26.1, PostgreSQL, an ElevenLab
 ```bash
 cp .env.server.example .env.server   # add your keys and DATABASE_URL
 cp .env.client.example .env.client   # add your ElevenLabs agent ID
-createdb fieldwork
+createdb mira
 wasp db migrate-dev
 npm run dev                          # client on :3002, server on :3003
 ```
