@@ -1,7 +1,8 @@
 import type { FetchedConversation, ReportView } from '../contract';
 import type { AgentOptions } from './llm';
 import type { StudyResearchContext } from './studyContext';
-import { synthesizeReport } from './synthesizeReport';
+import { synthesizeCalls } from './synthesizeReport';
+import { parseTranscript } from './transcript';
 
 export interface StudyCall {
   interviewId: string;
@@ -23,7 +24,19 @@ export async function synthesizeStudy(
   const processing = unique.filter(
     (call) => call.conversation.status === 'processing' || call.conversation.status === 'in-progress',
   ).length;
-  if (!completed.length)
+  const readable = completed.flatMap((call) => {
+    try {
+      const turns = parseTranscript(JSON.stringify(call.conversation));
+      return [{ id: call.interviewId, title: call.title, questions: call.questions, turns }];
+    } catch (error) {
+      // One malformed call must not freeze the report for every other interview.
+      console.warn(
+        `skipping interview ${call.interviewId} in report: ${error instanceof Error ? error.message : 'unreadable transcript'}`,
+      );
+      return [];
+    }
+  });
+  if (!readable.length)
     return {
       studyId: study.id,
       productName: study.productName,
@@ -33,7 +46,7 @@ export async function synthesizeStudy(
       themes: [],
       updatedAt: new Date().toISOString(),
     };
-  const report = await synthesizeReport(
+  const report = await synthesizeCalls(
     {
       studyId: study.id,
       productName: study.productName,
@@ -41,13 +54,8 @@ export async function synthesizeStudy(
       audience: study.audience,
       context: study.context,
       questions: study.questions.map((q) => q.text),
-      calls: completed.map((call) => ({
-        id: call.interviewId,
-        title: call.title,
-        questions: call.questions,
-        transcript: JSON.stringify(call.conversation),
-      })),
     },
+    readable,
     options,
   );
   const audio = new Map(completed.map((call) => [call.interviewId, call.audioUrl ?? '']));

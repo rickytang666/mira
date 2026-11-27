@@ -1,6 +1,19 @@
 import type { GenerateReportInput, ReportView } from '../contract';
+import type { TranscriptTurn } from './internalTypes';
 import { generateJson, object, requiredText, type AgentOptions } from './llm';
 import { parseTranscript } from './transcript';
+
+export type ReportInput = Omit<GenerateReportInput, 'calls'>;
+export interface ReportCall {
+  id: string;
+  title: string;
+  questions?: string[];
+  turns: TranscriptTurn[];
+}
+
+const MAX_REPORT_CHARS = 100_000;
+// Mira's question usually closes her turn; the lead-in before it is not evidence.
+const MAX_QUESTION_CHARS = 240;
 
 function questionsOf(value: unknown): string[] {
   if (value === undefined) return [];
@@ -8,8 +21,48 @@ function questionsOf(value: unknown): string[] {
   return value.map((question) => requiredText(question, 2000));
 }
 
-/** One synthesis across the calls keeps themes consistent and counts traceable to evidence. */
+const clock = (sec: number) => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
+
+function lastQuestion(text: string): string {
+  if (text.length <= MAX_QUESTION_CHARS) return text;
+  const tail = text.slice(-MAX_QUESTION_CHARS);
+  const sentenceEnd = tail.search(/[.!?]\s+\S/);
+  return `…${sentenceEnd === -1 ? tail : tail.slice(sentenceEnd + 1).trimStart()}`;
+}
+
+/** Plain text for the model: each participant answer after the question Mira asked, cited by turn ID. */
+export function compactTranscript(turns: TranscriptTurn[]): string {
+  const lines: string[] = [];
+  let asked: string[] = [];
+  for (const turn of turns) {
+    if (turn.role === 'agent') {
+      asked.push(turn.text);
+      continue;
+    }
+    if (asked.length) lines.push(`Mira: ${lastQuestion(asked.join(' '))}`);
+    asked = [];
+    lines.push(`[${turn.id}${turn.startSec === null ? '' : ` ${clock(turn.startSec)}`}] ${turn.text}`);
+  }
+  return lines.join('\n');
+}
+
+/** Pasted-transcript entry point: any unreadable transcript fails the whole request. */
 export async function synthesizeReport(input: GenerateReportInput, options: AgentOptions = {}): Promise<ReportView> {
+  if (!Array.isArray(input.calls) || input.calls.length < 1)
+    throw new Error('Add at least one completed call transcript.');
+  const calls = input.calls.map((call) => {
+    if (typeof call.transcript !== 'string') throw new Error('Each call needs a transcript.');
+    return { id: call.id, title: call.title, questions: call.questions, turns: parseTranscript(call.transcript) };
+  });
+  return synthesizeCalls(input, calls, options);
+}
+
+/** One synthesis across the calls keeps themes consistent and counts traceable to evidence. */
+export async function synthesizeCalls(
+  input: ReportInput,
+  parsedCalls: ReportCall[],
+  options: AgentOptions = {},
+): Promise<ReportView> {
   const studyId = requiredText(input.studyId, 200);
   const productName = requiredText(input.productName, 200);
   if (typeof input.goal !== 'string' || input.goal.length > 4000)
@@ -19,22 +72,23 @@ export async function synthesizeReport(input: GenerateReportInput, options: Agen
     throw new Error('Product context must be text under 120,000 characters.');
   if (input.audience !== undefined && (typeof input.audience !== 'string' || input.audience.length > 2000))
     throw new Error('Audience must be text under 2,000 characters.');
-  if (!Array.isArray(input.calls) || input.calls.length < 1)
-    throw new Error('Add at least one completed call transcript.');
+  if (parsedCalls.length < 1) throw new Error('Add at least one completed call transcript.');
   let total = 0;
   const ids = new Set<string>();
-  const calls = input.calls.map((call) => {
+  const calls = parsedCalls.map((call) => {
     const id = requiredText(call.id, 200);
     if (ids.has(id)) throw new Error('Each call must have a unique ID.');
     ids.add(id);
-    if (typeof call.transcript !== 'string') throw new Error('Each call needs a transcript.');
-    total += call.transcript.length;
-    if (total > 100_000) throw new Error('Use at most 100,000 transcript characters per report.');
+    const transcript = compactTranscript(call.turns);
+    total += transcript.length;
+    // Last resort: compact text keeps a typical study well under this.
+    if (total > MAX_REPORT_CHARS) throw new Error('Use at most 100,000 transcript characters per report.');
     return {
       id,
       title: requiredText(call.title, 120),
       questions: questionsOf(call.questions ?? input.questions),
-      turns: parseTranscript(call.transcript),
+      turns: call.turns,
+      transcript,
     };
   });
   const base: ReportView = {
@@ -62,7 +116,7 @@ export async function synthesizeReport(input: GenerateReportInput, options: Agen
     await generateJson(
       {
         system: `You are a rigorous user researcher writing a concise report for a product team.
-Analyze the supplied call transcripts together. Only user/participant turns are evidence; agent questions are not findings.
+Analyze the supplied call transcripts together. Each transcript is plain text: a "Mira:" line is the interviewer's question and is not evidence; each participant answer starts with [turnId m:ss], and only those answers are evidence.
 Return JSON with this shape:
 {"summary":"2–3 specific sentences explaining what was learned, with uncertainty and important differences preserved","themes":[{"label":"sentence case, at most 6 words, what participants did or felt, e.g. Finds music outside the app","summary":"1–2 sentences describing the observed pattern","evidence":[{"callId":"provided call id","turnId":"provided turn id"}]}],"recommendations":[{"text":"a concrete next experiment or research question, framed as a suggestion","themeLabels":["exact output theme label"]}],"questionFindings":[{"questionIndex":0,"status":"answered|partial|unanswered","finding":"What the participant evidence tells us about this research question, or what remains unknown","themeLabels":["supporting output theme label"]}]}.
 Theme labels are sentence case and at most 6 words, describing what participants did or felt (for example "Finds music outside the app"); no colons, no jargon.
@@ -80,7 +134,7 @@ If the transcripts only contain greetings, irrelevant text, or refusals, return 
           productContext: input.context ?? '',
           audience: input.audience ?? '',
           questions,
-          calls,
+          calls: calls.map(({ id, title, questions, transcript }) => ({ id, title, questions, transcript })),
         },
       },
       options,

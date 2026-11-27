@@ -1,7 +1,8 @@
 import { prisma, config } from 'wasp/server';
 import type { FetchedConversation, ReportView } from '../contract';
+import { rebuildStudyReport } from 'wasp/server/jobs';
 import { fetchConversation } from '../jobs/elevenlabsClient';
-import { refreshStudyReport, type ReportRepository } from './pipeline';
+import { oneRebuildAtATime, refreshStudyReport, type ReportRepository } from './pipeline';
 import { participantTitle } from './participants';
 import { isSubstantive } from './substantive';
 
@@ -78,7 +79,34 @@ export const reportRepository: ReportRepository = {
   },
 };
 
-export async function rebuildReport(studyId: string, force = false) {
+// pg-boss 8 prefixes singleton-queue keys with this; the unique index then covers only queued jobs, not active ones.
+const SINGLETON_QUEUE_PREFIX = '__pgboss__singleton_queue';
+
+// At most one waiting rebuild per study; a submit while one runs still queues one more, so no interview is missed.
+export async function queueReportRebuild(studyId: string) {
+  await rebuildStudyReport.submit({ studyId }, { singletonKey: studyId, useSingletonQueue: true });
+}
+
+export async function rebuildQueued(studyId: string): Promise<boolean> {
+  try {
+    // pg-boss has no lookup by singleton key, so read its job table directly.
+    const rows = await prisma.$queryRaw<unknown[]>`
+      SELECT 1 FROM pgboss.job
+      WHERE name = 'rebuildStudyReport' AND singletonkey = ${SINGLETON_QUEUE_PREFIX + studyId} AND state IN ('created', 'retry', 'active')
+      LIMIT 1`;
+    return rows.length > 0;
+  } catch (error) {
+    console.warn(`could not read the report rebuild queue: ${error instanceof Error ? error.message : error}`);
+    return false;
+  }
+}
+
+export function rebuildReport(studyId: string, force = false) {
+  // The saved-report check runs inside the lock, so a waiting rebuild reuses the one that just finished.
+  return oneRebuildAtATime(studyId, () => rebuildLatest(studyId, force));
+}
+
+async function rebuildLatest(studyId: string, force: boolean) {
   const study = await prisma.study.findUniqueOrThrow({ where: { id: studyId } });
   const cached = readSavedReport(study.report);
   if (!force && cached?.revision === study.reportRevision && !study.reportError) return cached.value;
