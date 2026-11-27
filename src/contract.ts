@@ -26,6 +26,7 @@ export type TranscriptTurn = {
 export type FetchedConversation = {
   conversationId: string;
   status: 'initiated' | 'in-progress' | 'processing' | 'done' | 'failed'; // job retries until "done"
+  agentId?: string;
   durationSecs: number;
   turns: TranscriptTurn[];
 };

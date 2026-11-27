@@ -27,7 +27,7 @@ Open source and runs on your own ElevenLabs and OpenRouter keys.
 You need Node.js 24.22.1 or newer, the Wasp CLI 0.26.1, PostgreSQL, an ElevenLabs API key and agent ([setup](docs/ELEVENLABS-AGENT.md)), and an OpenRouter API key.
 
 ```bash
-cp .env.server.example .env.server   # add your keys and DATABASE_URL
+cp .env.server.example .env.server   # add your keys, DATABASE_URL and ELEVENLABS_AGENT_ID
 cp .env.client.example .env.client   # add your ElevenLabs agent ID
 createdb mira
 wasp db migrate-dev

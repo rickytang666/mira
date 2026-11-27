@@ -124,12 +124,57 @@ type UpdateStudyInput = {
   questions?: { text: string; followUp: boolean }[];
 };
 
-export const updateStudy: UpdateStudy<UpdateStudyInput, void> = async (args, context) => {
-  const { studyId, questions, ...fields } = args;
+// Same limits the question and report agents enforce, so a saved study can always be sent to them.
+const MAX_NAME_LENGTH = 200;
+const MAX_GOAL_LENGTH = 4000;
+const MAX_AUDIENCE_LENGTH = 2000;
+const MAX_QUESTIONS = 50;
+const MAX_QUESTION_LENGTH = 2000;
+
+function optionalText(value: unknown, label: string, max: number): string | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string' || value.length > max)
+    throw new HttpError(400, `${label} must be text under ${max.toLocaleString('en-US')} characters.`);
+  return value;
+}
+
+function requireId(value: unknown, label: string): string {
+  if (typeof value !== 'string' || !value) throw new HttpError(400, `Missing ${label}.`);
+  return value;
+}
+
+function parseQuestions(value: unknown): { text: string; followUp: boolean }[] | undefined {
+  if (value === undefined) return undefined;
+  if (
+    !Array.isArray(value) ||
+    value.length > MAX_QUESTIONS ||
+    value.some(
+      (q) =>
+        typeof q !== 'object' ||
+        q === null ||
+        typeof q.text !== 'string' ||
+        q.text.length > MAX_QUESTION_LENGTH ||
+        typeof q.followUp !== 'boolean',
+    )
+  )
+    throw new HttpError(
+      400,
+      `Use at most ${MAX_QUESTIONS} questions, each under ${MAX_QUESTION_LENGTH.toLocaleString('en-US')} characters.`,
+    );
+  return value.map((q) => ({ text: q.text, followUp: q.followUp }));
+}
+
+export const updateStudy: UpdateStudy<UpdateStudyInput, void> = async (args) => {
+  const studyId = requireId(args.studyId, 'study');
+  const name = optionalText(args.name, 'Product name', MAX_NAME_LENGTH)?.trim();
+  if (name === '') throw new HttpError(400, 'Add a product name.');
+  const goal = optionalText(args.goal, 'Goal', MAX_GOAL_LENGTH);
+  const audience = optionalText(args.audience, 'Audience', MAX_AUDIENCE_LENGTH);
+  const questions = parseQuestions(args.questions);
   await prisma.$transaction(async (tx) => {
     await tx.study.update({
       where: { id: studyId },
-      data: { ...fields, reportRevision: { increment: 1 }, reportError: null },
+      data: { name, goal, audience, reportRevision: { increment: 1 }, reportError: null },
     });
     if (questions) {
       await tx.question.deleteMany({ where: { studyId } });
@@ -173,9 +218,19 @@ async function rebuildStudyContext(studyId: string, entities: { Study: any; Sour
   });
 }
 
+const SOURCE_KINDS = ['url', 'description', 'pdf', 'mcp'];
+const MAX_SOURCE_LABEL_LENGTH = 300;
+const MAX_SOURCE_CONTENT_LENGTH = 100_000;
+
 export const addSource: AddSource<AddSourceInput, void> = async (args, context) => {
-  await context.entities.Source.create({ data: args });
-  await rebuildStudyContext(args.studyId, context.entities);
+  const studyId = requireId(args.studyId, 'study');
+  if (!SOURCE_KINDS.includes(args.kind)) throw new HttpError(400, 'Unknown source type.');
+  const title = optionalText(args.title, 'Source title', MAX_SOURCE_LABEL_LENGTH) ?? '';
+  const content = optionalText(args.content, 'Source content', MAX_SOURCE_CONTENT_LENGTH) ?? '';
+  const detail = optionalText(args.detail, 'Source detail', MAX_SOURCE_LABEL_LENGTH) ?? '';
+  if (!content.trim()) throw new HttpError(400, 'This source has no text.');
+  await context.entities.Source.create({ data: { studyId, kind: args.kind, title, content, detail } });
+  await rebuildStudyContext(studyId, context.entities);
 };
 
 export const deleteSource: DeleteSource<{ sourceId: string }, void> = async ({ sourceId }, context) => {
@@ -212,7 +267,10 @@ export const finishInterview: FinishInterview<FinishInterviewInput, { interviewI
   { studyId, conversationId, questionSnapshot },
   context,
 ) => {
-  if (!conversationId) throw new HttpError(400, 'Missing conversationId.');
+  requireId(studyId, 'study');
+  // ElevenLabs conversation IDs are short URL-safe tokens; anything else never came from a call.
+  if (typeof conversationId !== 'string' || !/^[A-Za-z0-9_-]{1,200}$/.test(conversationId))
+    throw new HttpError(400, 'Invalid conversationId.');
   const study = await context.entities.Study.findUnique({
     where: { id: studyId },
     include: { questions: { orderBy: { order: 'asc' } } },

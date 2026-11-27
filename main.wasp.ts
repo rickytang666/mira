@@ -19,7 +19,7 @@ import {
 } from './src/study/operations' with { type: 'ref' };
 import { processInterview } from './src/jobs/processInterview' with { type: 'ref' };
 import { interviewAudio } from './src/jobs/interviewAudio' with { type: 'ref' };
-import { generateInterviewReport, regenerateStudyReport } from './src/report/operations' with { type: 'ref' };
+import { regenerateStudyReport } from './src/report/operations' with { type: 'ref' };
 import { InterviewPage } from './src/interview/InterviewPage' with { type: 'ref' };
 
 export default app({
@@ -55,7 +55,6 @@ export default app({
       performExecutorOptions: { pgBoss: { retryLimit: 3, retryDelay: 15, retryBackoff: true } },
     }),
     api('GET', '/api/interviews/:interviewId/audio', interviewAudio, { entities: ['Interview'] }),
-    action(generateInterviewReport),
     action(generateStudyQuestions, { entities: ['Study'] }),
     action(regenerateStudyReport, { entities: ['Study', 'Question', 'Interview', 'Theme', 'Quote'] }),
     route('InterviewRoute', '/i/:studyId', page(InterviewPage)),
