@@ -29,7 +29,7 @@ PgBoss retries `processInterview` up to three times with backoff (see `main.wasp
 
 ## Credentials and model
 
-All generation paths use the server-only OpenRouter adapter in `src/agent/llm.ts`. Copy `.env.server.example` to `.env.server` and set `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` and `OPENROUTER_REASONING`; the example names the recommended model. Never copy the key into source, docs, screenshots, or browser code.
+All generation paths use the server-only OpenRouter adapter in `src/agent/llm.ts`. Copy `.env.server.example` to `.env.server` and set `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` and `OPENROUTER_REASONING`; the example names the recommended model, which is also the default when `OPENROUTER_MODEL` is unset. Never copy the key into source, docs, screenshots, or browser code.
 
 Requests require JSON output support and have a 90-second deadline. Provider errors are sanitized so response bodies never reach the client. There is no automatic fallback to another model.
 

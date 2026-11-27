@@ -1,5 +1,6 @@
+import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { generateJson } from './llm';
+import { DEFAULT_OPENROUTER_MODEL, generateJson } from './llm';
 
 const prompt = { system: 'Return JSON with questions.', input: { goal: 'Understand setup' } };
 const success = () =>
@@ -13,7 +14,7 @@ describe('OpenRouter configuration and failures', () => {
     vi.unstubAllEnvs();
   });
 
-  it('uses server credentials, defaults to free routing, and requires JSON support', async () => {
+  it('uses server credentials, defaults to the example model, and requires JSON support', async () => {
     vi.stubEnv('OPENROUTER_API_KEY', 'test-openrouter-key');
     vi.stubEnv('OPENROUTER_MODEL', '');
     const fetch = vi.fn(async (_url: string, _init: RequestInit) => success());
@@ -23,11 +24,16 @@ describe('OpenRouter configuration and failures', () => {
     expect(url).toBe('https://openrouter.ai/api/v1/chat/completions');
     expect(request.headers).toMatchObject({ Authorization: 'Bearer test-openrouter-key' });
     expect(JSON.parse(request.body as string)).toMatchObject({
-      model: 'openrouter/free',
+      model: DEFAULT_OPENROUTER_MODEL,
       response_format: { type: 'json_object' },
       provider: { require_parameters: true },
       messages: [{ role: 'system' }, { role: 'user', content: JSON.stringify(prompt.input) }],
     });
+  });
+
+  it('keeps the default model in sync with .env.server.example', () => {
+    const example = readFileSync(new URL('../../.env.server.example', import.meta.url), 'utf8');
+    expect(example).toMatch(new RegExp(`^OPENROUTER_MODEL=${DEFAULT_OPENROUTER_MODEL.replaceAll('.', '\\.')}$`, 'm'));
   });
 
   it('honors a configured model and explicit server overrides', async () => {
