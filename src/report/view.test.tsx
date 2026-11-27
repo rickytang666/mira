@@ -16,13 +16,14 @@ describe('report rendering from the team contract', () => {
   });
   it('shows pending analysis instead of sample findings for a real empty report', () => {
     const html = renderToStaticMarkup(<ConnectedReport studyId="new" report={{ studyId: 'new', goal: 'Learn', interviewsDone: 0, interviewsProcessing: 1, themes: [] }}/>);
-    expect(html).toContain('Listening is done. Learning is next.');
+    expect(html).toContain('Analyzing interviews');
+    expect(html).toContain('This page updates when the findings are ready.');
     expect(html).not.toContain('Setup needs a clearer next step');
   });
   it('makes a timestamped recording playable', () => {
     const html = renderToStaticMarkup(<ConnectedReport studyId="one" report={{ studyId: 'one', goal: 'Learn', interviewsDone: 1, interviewsProcessing: 0, themes: [{ id: 't', label: 'Setup', count: 1, quotes: [{ id: 'q', text: 'I got stuck.', startSec: 12, audioUrl: '/recording/one' }] }] }}/>);
     expect(html).toContain('Play quote from Participant quote at 0:12');
-    expect(html).toContain('Listen');
+    expect(html).toMatch(/<button class="fw-play" aria-label="Play quote[^"]*">.*?Play<\/button>/);
     expect(html).not.toContain('disabled=""');
   });
 });

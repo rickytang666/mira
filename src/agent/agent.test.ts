@@ -82,10 +82,14 @@ describe('question generation', () => {
     expect(questions.every(q => typeof q === 'string')).toBe(true);
     expect(generateJson.mock.calls[0]?.[0]).toMatchObject({ input: context });
   });
-  it('rejects missing context and duplicate or insufficient questions', async () => {
+  it('rejects missing context and too few questions', async () => {
     await expect(suggestQuestions({ ...context, context: '' })).rejects.toThrow('missing');
     await expect(suggestQuestions(context, { generateJson: async () => ({ questions: [] }) })).rejects.toThrow('3 to 5');
-    await expect(suggestQuestions(context, { generateJson: async () => ({ questions: ['Same?', 'Same?', 'Other?'] }) })).rejects.toThrow('duplicate');
+  });
+  it('drops duplicate questions and trims extras to 5', async () => {
+    expect(await suggestQuestions(context, { generateJson: async () => ({ questions: ['Same?', 'same', 'Other?', 'Third?'] }) })).toEqual({ questions: ['Same?', 'Other?', 'Third?'] });
+    const many = ['One?', 'Two?', 'Three?', 'Four?', 'Five?', 'Six?'];
+    expect(await suggestQuestions(context, { generateJson: async () => ({ questions: many }) })).toEqual({ questions: many.slice(0, 5) });
   });
 });
 
