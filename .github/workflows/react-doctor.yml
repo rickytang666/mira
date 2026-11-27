@@ -1,0 +1,33 @@
+name: React Doctor
+
+on:
+  # scans the PR's changed files and comments only on issues new since the merge base
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  # scans main on every push to track the health score over time
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: react-doctor-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  react-doctor:
+    runs-on: ubuntu-latest
+    steps:
+      # full history so the action can find the merge base
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # report-only: never fails the check or posts a commit status
+      - uses: millionco/react-doctor@v2
+        with:
+          blocking: none
+          comment-on-clean: false
+          commit-status: false
