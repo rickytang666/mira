@@ -12,11 +12,12 @@ export async function setupAgent(options: {
   const client = new ElevenLabsClient({ apiKey: options.apiKey, fetch: options.fetch, maxRetries: 0 });
   const config = buildAgentConfig(options.texts);
   const agentId = options.agentId?.trim();
+  // the API now defaults versioning on, and once on it can't be turned off, so opt out explicitly
   if (agentId) {
-    await client.conversationalAi.agents.update(agentId, config);
+    await client.conversationalAi.agents.update(agentId, { ...config, enableVersioningIfNotEnabled: false });
     return { action: 'updated', agentId };
   }
-  const created = await client.conversationalAi.agents.create(config);
+  const created = await client.conversationalAi.agents.create({ ...config, enableVersioning: false });
   return { action: 'created', agentId: created.agentId };
 }
 

@@ -45,7 +45,7 @@ describe('setupAgent', () => {
     expect(result).toEqual({ action: 'created', agentId: 'agent_new' });
     const { url, method, body } = sentRequest(fetchMock);
     expect(method).toBe('POST');
-    expect(url).toBe('https://api.elevenlabs.io/v1/convai/agents/create');
+    expect(url).toBe('https://api.elevenlabs.io/v1/convai/agents/create?enable_versioning=false');
     expect(body.name).toBe('Mira');
     expect(body.conversation_config.agent.first_message).toBe(texts.firstMessage);
     expect(body.conversation_config.agent.prompt.prompt).toBe(texts.systemPrompt);
@@ -63,7 +63,7 @@ describe('setupAgent', () => {
     expect(result).toEqual({ action: 'updated', agentId: 'agent_123' });
     const { url, method, body } = sentRequest(fetchMock);
     expect(method).toBe('PATCH');
-    expect(url).toBe('https://api.elevenlabs.io/v1/convai/agents/agent_123');
+    expect(url).toBe('https://api.elevenlabs.io/v1/convai/agents/agent_123?enable_versioning_if_not_enabled=false');
     expect(body.conversation_config.agent.prompt.prompt).toBe(texts.systemPrompt);
   });
 

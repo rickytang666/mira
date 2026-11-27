@@ -14,7 +14,7 @@ npm run setup:agent
   REACT_APP_ELEVENLABS_AGENT_ID=<your-agent-id>
   ```
 
-- With it set, it updates that agent to match `agent/`. Run it again after editing the prompt or settings. Dashboard edits to the fields it sets get overwritten.
+- With it set, it updates that agent to match `agent/`. Run it again after editing the prompt or settings. Dashboard edits to the fields it sets get overwritten. It never turns on agent versioning, which ElevenLabs cannot turn off again.
 
 ## Dynamic variables
 
