@@ -20,9 +20,10 @@ import {
   importWebsite,
   importMcp,
 } from 'wasp/client/operations';
-import type { SourceKind } from '../store';
 import type { Source } from 'wasp/entities';
 import { Layout, PageHeader, ErrorNote } from '../Layout';
+
+type SourceKind = 'url' | 'description' | 'pdf' | 'mcp';
 
 const kinds = {
   url: { icon: Globe, name: 'Website', description: 'Start with your product URL', hint: 'Add a URL' },
