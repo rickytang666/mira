@@ -87,9 +87,12 @@ export const reportRepository: ReportRepository = {
   },
 };
 
-// One queued-or-active job per study: a submit while one runs is dropped, and that job catches up.
+// pg-boss 8 prefixes singleton-queue keys with this; the unique index then covers only queued jobs, not active ones.
+const SINGLETON_QUEUE_PREFIX = '__pgboss__singleton_queue';
+
+// At most one waiting rebuild per study; a submit while one runs still queues one more, so no interview is missed.
 export async function queueReportRebuild(studyId: string) {
-  await rebuildStudyReport.submit({ studyId }, { singletonKey: studyId });
+  await rebuildStudyReport.submit({ studyId }, { singletonKey: studyId, useSingletonQueue: true });
 }
 
 export async function rebuildQueued(studyId: string): Promise<boolean> {
@@ -97,7 +100,7 @@ export async function rebuildQueued(studyId: string): Promise<boolean> {
     // pg-boss has no lookup by singleton key, so read its job table directly.
     const rows = await prisma.$queryRaw<unknown[]>`
       SELECT 1 FROM pgboss.job
-      WHERE name = 'rebuildStudyReport' AND singletonkey = ${studyId} AND state IN ('created', 'retry', 'active')
+      WHERE name = 'rebuildStudyReport' AND singletonkey = ${SINGLETON_QUEUE_PREFIX + studyId} AND state IN ('created', 'retry', 'active')
       LIMIT 1`;
     return rows.length > 0;
   } catch (error) {
