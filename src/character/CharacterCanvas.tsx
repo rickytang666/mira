@@ -20,10 +20,11 @@ export function CharacterCanvas(props: CharacterCanvasProps) {
     pointer = useRef({ x: 0, y: 0 });
   latest.current = props;
   const [error, setError] = useState(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the rig reads props through latest and is rebuilt only when the shirt color changes
   useEffect(() => {
-    const canvas = canvasRef.current!,
-      ctx = canvas.getContext('2d', { alpha: true });
-    if (!ctx) {
+    const canvas = canvasRef.current,
+      ctx = canvas?.getContext('2d', { alpha: true });
+    if (!canvas || !ctx) {
       setError(true);
       return;
     }

@@ -9,6 +9,7 @@ export function useReport(studyId: string, loadReport?: ReportLoader, pollMs = 5
     error: '',
   });
   const [revision, setRevision] = useState(0);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: revision changes only to force a refresh
   useEffect(() => {
     if (!loadReport) return;
     let disposed = false;

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Play, Square } from 'lucide-react';
 import { Link } from 'react-router';
 import type { ReportLoader, ReportQuote, StudyReport } from '../agent/internalTypes';
@@ -82,14 +82,18 @@ export function ReportContent({
       player.current = null;
     };
   }, []);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: resets the player and expanded themes when the study changes
   useEffect(() => {
     player.current?.stop();
     setExpanded({});
   }, [report?.studyId]);
-  const quotes = report ? [...new Map(report.themes.flatMap((t) => t.quotes).map((q) => [q.id, q])).values()] : [];
+  const quotes = useMemo(
+    () => (report ? [...new Map(report.themes.flatMap((t) => t.quotes).map((q) => [q.id, q])).values()] : []),
+    [report],
+  );
   useEffect(() => {
     if (playerState.quoteId && !quotes.some((q) => q.id === playerState.quoteId)) player.current?.stop();
-  }, [report, playerState.quoteId]);
+  }, [quotes, playerState.quoteId]);
   useEffect(() => {
     if (!report) return;
     const labels = new Set(quotes.map((q) => q.participantLabel));
@@ -100,7 +104,7 @@ export function ReportContent({
     if (report.completedCount > previous.count)
       setArrival(fresh ? `New interview from ${fresh}` : 'New interview received');
     else if (fresh) setArrival(`New quotes from ${fresh}`);
-  }, [report]);
+  }, [report, quotes]);
   useEffect(() => {
     if (!arrival) return;
     const timer = setTimeout(() => setArrival(''), 5000);
@@ -314,6 +318,7 @@ export function ReportContent({
             </p>
           )}
           <div className="fw-toolbar">
+            {/* biome-ignore lint/a11y/useSemanticElements: a toggle-button group, not form fields, so fieldset does not fit */}
             <div role="group" aria-label="Report view">
               <button type="button" aria-pressed={tab === 'themes'} onClick={() => setTab('themes')}>
                 Themes <span>{report.themes.length}</span>
@@ -385,6 +390,7 @@ export function ReportContent({
             <section className="fw-question-findings" aria-label="Answers to your research questions">
               <h2>By question</h2>
               {report.questionFindings.map((item, index) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: findings have no id and hold no state, so position is a stable key
                 <article key={index}>
                   <div>
                     <h3>{item.question}</h3>
@@ -400,6 +406,7 @@ export function ReportContent({
               <h2>Next steps</h2>
               <ol>
                 {report.recommendations.map((item, index) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: recommendations have no id and hold no state, so position is a stable key
                   <li key={index}>
                     <p>{item.text}</p>
                     {!!item.themeIds.length && (

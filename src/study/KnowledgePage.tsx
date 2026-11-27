@@ -77,6 +77,11 @@ export function KnowledgePage() {
     setToken('');
     setError('');
   }
+  function closeModal() {
+    if (busy) return;
+    setKind(null);
+    setView(null);
+  }
   async function add(source: { title: string; content: string; detail: string }, sourceKind: SourceKind) {
     await addSource({ studyId, kind: sourceKind, ...source });
     setKind(null);
@@ -235,22 +240,17 @@ export function KnowledgePage() {
         </Link>
       </div>
       {(kind || view) && (
+        // biome-ignore lint/a11y/noStaticElementInteractions: backdrop dismissal is a shortcut; the dialog's close button is the accessible control
         <div
           className="modal-backdrop"
-          onClick={() => {
-            if (!busy) {
-              setKind(null);
-              setView(null);
-            }
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeModal();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') closeModal();
           }}
         >
-          <section
-            className="modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="modal-title"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
             <button
               type="button"
               className="modal-close icon-button"
@@ -320,11 +320,13 @@ export function KnowledgePage() {
                         />
                       </label>
                     )}
-                    <label className="field">
+                    <label className="field" htmlFor="source-value">
                       {kind === 'url' ? 'Product URL' : kind === 'mcp' ? 'MCP endpoint' : 'Description'}
                       {kind === 'description' ? (
                         <textarea
+                          id="source-value"
                           required
+                          // biome-ignore lint/a11y/noAutofocus: focus moves into the dialog when it opens
                           autoFocus
                           rows={7}
                           maxLength={80000}
@@ -334,7 +336,9 @@ export function KnowledgePage() {
                         />
                       ) : (
                         <input
+                          id="source-value"
                           required
+                          // biome-ignore lint/a11y/noAutofocus: focus moves into the dialog when it opens
                           autoFocus
                           value={value}
                           onChange={(e) => setValue(e.target.value)}
