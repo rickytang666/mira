@@ -18,6 +18,7 @@ import {
   generateStudyQuestions,
 } from './src/study/operations' with { type: 'ref' };
 import { processInterview } from './src/jobs/processInterview' with { type: 'ref' };
+import { rebuildStudyReport } from './src/jobs/rebuildStudyReport' with { type: 'ref' };
 import { interviewAudio } from './src/jobs/interviewAudio' with { type: 'ref' };
 import { generateInterviewReport, regenerateStudyReport } from './src/report/operations' with { type: 'ref' };
 import { InterviewPage } from './src/interview/InterviewPage' with { type: 'ref' };
@@ -50,6 +51,11 @@ export default app({
     action(finishInterview, { entities: ['Study', 'Interview'] }),
     query(getReport, { entities: ['Study', 'Interview', 'Theme', 'Quote'] }),
     job(processInterview, {
+      executor: 'PgBoss',
+      entities: ['Interview', 'Study', 'Question', 'Theme', 'Quote'],
+      performExecutorOptions: { pgBoss: { retryLimit: 3, retryDelay: 15, retryBackoff: true } },
+    }),
+    job(rebuildStudyReport, {
       executor: 'PgBoss',
       entities: ['Interview', 'Study', 'Question', 'Theme', 'Quote'],
       performExecutorOptions: { pgBoss: { retryLimit: 3, retryDelay: 15, retryBackoff: true } },

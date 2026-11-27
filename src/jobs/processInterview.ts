@@ -1,13 +1,11 @@
 import { prisma } from 'wasp/server';
 import type { ProcessInterview } from 'wasp/server/jobs';
 import { fetchConversation } from './elevenlabsClient';
-import { rebuildReport } from '../report/server';
+import { queueReportRebuild } from '../report/server';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export const processInterview: ProcessInterview<{ interviewId: string }, { themes: number }> = async ({
-  interviewId,
-}) => {
+export const processInterview: ProcessInterview<{ interviewId: string }, void> = async ({ interviewId }) => {
   const interview = await prisma.interview.findUniqueOrThrow({ where: { id: interviewId } });
   let transcriptSaved = Boolean(interview.transcript);
   try {
@@ -38,8 +36,8 @@ export const processInterview: ProcessInterview<{ interviewId: string }, { theme
       });
       transcriptSaved = true;
     }
-    const report = await rebuildReport(interview.studyId);
-    return { themes: report.themes.length };
+    // Interviews ending close together share one rebuild instead of racing each other.
+    await queueReportRebuild(interview.studyId);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Interview processing failed.';
     // A model outage must not erase a successfully fetched call or last-good report.

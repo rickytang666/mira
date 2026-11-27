@@ -17,7 +17,8 @@ import type { FinishInterviewInput, PublicStudy, ReportView } from '../contract'
 import { importWebsite } from '../sources';
 import { suggestQuestions } from '../agent/suggestQuestions';
 import { interviewVariables } from '../agent/studyContext';
-import { readSavedReport } from '../report/server';
+import { readSavedReport, rebuildQueued } from '../report/server';
+import { isRebuilding, synthesisStatus } from '../report/pipeline';
 
 // Page titles look like "Tagline | Brand" or "Brand - Tagline"; the brand is the short side.
 function productNameFromTitle(title: string, hostname: string): string {
@@ -237,7 +238,8 @@ export const finishInterview: FinishInterview<FinishInterviewInput, { interviewI
   });
   if (interview.studyId !== studyId) throw new HttpError(409, 'Conversation already belongs to another study.');
   // Resubmission is safe, and recovers if enqueueing failed after the row was created.
-  if (interview.status !== 'done') await processInterview.submit({ interviewId: interview.id });
+  if (interview.status !== 'done')
+    await processInterview.submit({ interviewId: interview.id }, { singletonKey: interview.id });
   return { interviewId: interview.id };
 };
 
@@ -259,15 +261,13 @@ export const getReport: GetReport<{ studyId: string }, ReportView> = async ({ st
     interviewsProcessing: processing,
     interviewsFailed: study.interviews.filter((i) => i.status === 'failed').length,
     synthesizedInterviews: saved?.value.interviewsDone ?? 0,
-    synthesisStatus: study.reportError
-      ? ('failed' as const)
-      : saved?.revision === study.reportRevision
-        ? ('ready' as const)
-        : done
-          ? ('waiting' as const)
-          : processing
-            ? ('processing' as const)
-            : ('waiting' as const),
+    synthesisStatus: await synthesisStatus({
+      error: Boolean(study.reportError),
+      savedRevision: saved?.revision,
+      revision: study.reportRevision,
+      done,
+      rebuildPending: async () => processing > 0 || isRebuilding(study.id) || (await rebuildQueued(study.id)),
+    }),
     synthesisError: study.reportError ?? undefined,
   };
   if (saved)

@@ -58,9 +58,12 @@ export function ReportPage() {
                   Analyzing the latest interviews. This page updates on its own.
                 </p>
               )}
-              {!busy && report.synthesisStatus === 'waiting' && report.interviewsDone > 0 && (
+              {!busy && report.synthesisStatus === 'stale' && (
                 <p className="fw-notice" role="status">
-                  Analyzing the latest interviews. This page updates on its own.
+                  Report is out of date.{' '}
+                  <button type="button" onClick={regenerate}>
+                    Update report
+                  </button>
                 </p>
               )}
             </>

@@ -68,7 +68,7 @@ export type ReportView = {
   interviewsDone: number;
   interviewsProcessing: number;
   interviewsFailed?: number;
-  synthesisStatus?: 'waiting' | 'processing' | 'ready' | 'failed';
+  synthesisStatus?: 'waiting' | 'processing' | 'ready' | 'failed' | 'stale';
   synthesisError?: string;
   synthesizedInterviews?: number;
   // Optional report enrichment; existing getReport consumers remain compatible.
