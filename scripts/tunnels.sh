@@ -3,6 +3,7 @@
 # Keep it running in its own terminal: a restart gives new URLs and breaks printed QR codes. Then run `npm run dev:tunnel`.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+if ! command -v cloudflared > /dev/null; then echo "cloudflared not found; install it (brew install cloudflared) and rerun" >&2; exit 1; fi
 LOG_DIR="${TMPDIR:-/tmp}/fieldwork-tunnels"
 mkdir -p "$LOG_DIR"
 
