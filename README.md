@@ -18,7 +18,7 @@ Mira is a user researcher you can hire in a minute. Give her your product's URL 
   - React pages, operations and auth-free participant links on Prisma and PostgreSQL
   - a PgBoss background job that processes each finished interview, with retries
   - a custom API route that serves recordings with byte ranges, so the player can seek to a quote
-- **OpenRouter** (Gemini 2.5 Flash) writes the questions and synthesizes the report.
+- **OpenRouter** (Gemini 3.5 Flash-Lite) writes the questions and synthesizes the report.
 
 ## Run it locally
 
