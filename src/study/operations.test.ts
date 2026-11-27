@@ -21,7 +21,7 @@ vi.mock('../sources', () => ({ importWebsite: vi.fn() }));
 vi.mock('../agent/suggestQuestions', () => ({ suggestQuestions: vi.fn() }));
 vi.mock('../report/server', () => ({ readSavedReport: vi.fn() }));
 
-const { updateStudy, getPublicStudy, finishInterview } = await import('./operations');
+const { updateStudy, addSource, getPublicStudy, finishInterview } = await import('./operations');
 
 // Operations receive client JSON, so tests pass shapes the TypeScript input type would reject.
 const call = (operation: unknown, args: unknown, context: unknown = {}) =>
@@ -88,6 +88,31 @@ describe('getPublicStudy', () => {
       dynamicVariables: { product_context: string };
     };
     expect(result.dynamicVariables.product_context.length).toBeLessThanOrEqual(8000);
+  });
+});
+
+describe('addSource', () => {
+  const entities = () => ({
+    Source: { create: vi.fn(), findMany: vi.fn().mockResolvedValue([]) },
+    Study: { update: vi.fn() },
+  });
+  const source = { studyId: 's1', kind: 'description', title: 'Notes', content: 'Some text', detail: '2 words' };
+
+  it('writes only the source fields', async () => {
+    const e = entities();
+    await call(addSource, { ...source, id: 'forged', createdAt: 'x' }, { entities: e });
+    expect(e.Source.create).toHaveBeenCalledWith({ data: source });
+  });
+
+  it('rejects an unknown kind and oversized content', async () => {
+    const e = entities();
+    await expect(call(addSource, { ...source, kind: 'script' }, { entities: e })).rejects.toMatchObject({
+      statusCode: 400,
+    });
+    await expect(call(addSource, { ...source, content: 'x'.repeat(100_001) }, { entities: e })).rejects.toMatchObject({
+      statusCode: 400,
+    });
+    expect(e.Source.create).not.toHaveBeenCalled();
   });
 });
 

@@ -157,7 +157,10 @@ function parseQuestions(value: unknown): { text: string; followUp: boolean }[] |
         typeof q.followUp !== 'boolean',
     )
   )
-    throw new HttpError(400, `Use at most ${MAX_QUESTIONS} questions, each under 2,000 characters.`);
+    throw new HttpError(
+      400,
+      `Use at most ${MAX_QUESTIONS} questions, each under ${MAX_QUESTION_LENGTH.toLocaleString('en-US')} characters.`,
+    );
   return value.map((q) => ({ text: q.text, followUp: q.followUp }));
 }
 
@@ -216,13 +219,15 @@ async function rebuildStudyContext(studyId: string, entities: { Study: any; Sour
 }
 
 const SOURCE_KINDS = ['url', 'description', 'pdf', 'mcp'];
+const MAX_SOURCE_LABEL_LENGTH = 300;
+const MAX_SOURCE_CONTENT_LENGTH = 100_000;
 
 export const addSource: AddSource<AddSourceInput, void> = async (args, context) => {
   const studyId = requireId(args.studyId, 'study');
   if (!SOURCE_KINDS.includes(args.kind)) throw new HttpError(400, 'Unknown source type.');
-  const title = optionalText(args.title, 'Source title', 300) ?? '';
-  const content = optionalText(args.content, 'Source content', 100_000) ?? '';
-  const detail = optionalText(args.detail, 'Source detail', 300) ?? '';
+  const title = optionalText(args.title, 'Source title', MAX_SOURCE_LABEL_LENGTH) ?? '';
+  const content = optionalText(args.content, 'Source content', MAX_SOURCE_CONTENT_LENGTH) ?? '';
+  const detail = optionalText(args.detail, 'Source detail', MAX_SOURCE_LABEL_LENGTH) ?? '';
   if (!content.trim()) throw new HttpError(400, 'This source has no text.');
   await context.entities.Source.create({ data: { studyId, kind: args.kind, title, content, detail } });
   await rebuildStudyContext(studyId, context.entities);
