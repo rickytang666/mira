@@ -21,6 +21,7 @@ afterEach(() => {
 describe('parseRange', () => {
   it.each([
     ['bytes=0-', 1000, { start: 0, end: 999 }],
+    ['bytes=0-1', 1000, { start: 0, end: 1 }],
     ['bytes=100-199', 1000, { start: 100, end: 199 }],
     ['bytes=-500', 1000, { start: 500, end: 999 }],
     ['bytes=-5000', 1000, { start: 0, end: 999 }],
@@ -65,11 +66,12 @@ describe('createAudioCache', () => {
     expect(cache.totalBytes()).toBeLessThanOrEqual(100);
   });
 
-  it('does not keep a recording larger than the cap', async () => {
-    const cache = createAudioCache(100, async () => audio(150));
+  it('does not keep a recording larger than the cap, or evict others for it', async () => {
+    const cache = createAudioCache(100, async (id: string) => audio(id === 'huge' ? 150 : 40));
+    await cache.get('small', 'small');
     await cache.get('huge', 'huge');
-    expect(cache.keys()).toEqual([]);
-    expect(cache.totalBytes()).toBe(0);
+    expect(cache.keys()).toEqual(['small']);
+    expect(cache.totalBytes()).toBe(40);
   });
 
   it('drops a failed download so the next request retries', async () => {

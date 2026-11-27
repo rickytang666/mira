@@ -46,6 +46,11 @@ export function createAudioCache(capBytes: number, load: (conversationId: string
     entry.audio.then(
       (audio) => {
         if (entries.get(key) !== entry) return;
+        // Too big to cache; dropping it alone keeps it from flushing every other recording first.
+        if (audio.bytes.length > capBytes) {
+          entries.delete(key);
+          return;
+        }
         entry.size = audio.bytes.length;
         totalBytes += entry.size;
         // Map iterates oldest first; in-flight entries have size 0 and are kept.
