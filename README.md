@@ -35,4 +35,4 @@ wasp db migrate-dev
 npm run dev                          # client on :3002, server on :3003
 ```
 
-Phones need HTTPS for the microphone. Run `npm run tunnels` in one terminal and leave it running, then `npm run dev:tunnel` instead of `npm run dev`, and open the client URL it prints.
+Phones need HTTPS for the microphone. Install `cloudflared` (`brew install cloudflared`), run `npm run tunnels` in one terminal and leave it running, then `npm run dev:tunnel` instead of `npm run dev`, and open the client URL it prints.
