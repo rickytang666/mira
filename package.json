@@ -6,7 +6,7 @@
   },
   "scripts": {
     "dev": "wasp start --client-port 3002 --server-port 3003",
-    "check": "wasp compile",
+    "compile": "wasp compile",
     "tunnels": "scripts/tunnels.sh",
     "dev:tunnel": "scripts/dev-tunnel.sh",
     "setup:agent": "node --env-file-if-exists=.env.server --env-file-if-exists=.env.client scripts/setup-agent.ts",
