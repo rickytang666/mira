@@ -13,18 +13,18 @@
     "rules": {
       "preset": "recommended",
       "a11y": {
-        "noAutofocus": "off",
-        "noLabelWithoutControl": "off",
-        "noStaticElementInteractions": "off",
-        "useButtonType": "off",
-        "useKeyWithClickEvents": "off",
-        "useSemanticElements": "off"
+        "noAutofocus": "warn",
+        "noLabelWithoutControl": "warn",
+        "noStaticElementInteractions": "warn",
+        "useButtonType": "warn",
+        "useKeyWithClickEvents": "warn",
+        "useSemanticElements": "warn"
       },
-      "correctness": { "useExhaustiveDependencies": "off" },
+      "correctness": { "useExhaustiveDependencies": "warn" },
       "suspicious": {
-        "noArrayIndexKey": "off",
-        "noDuplicateProperties": "off",
-        "noShorthandPropertyOverrides": "off"
+        "noArrayIndexKey": "warn",
+        "noDuplicateProperties": "warn",
+        "noShorthandPropertyOverrides": "warn"
       }
     }
   }
