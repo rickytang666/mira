@@ -256,10 +256,7 @@ export function KnowledgePage() {
               className="modal-close icon-button"
               disabled={busy}
               aria-label="Close dialog"
-              onClick={() => {
-                setKind(null);
-                setView(null);
-              }}
+              onClick={closeModal}
             >
               <X size={20} />
             </button>
