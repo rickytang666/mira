@@ -1,5 +1,8 @@
 import type { InterviewDynamicVariables, SuggestQuestionsInput } from '../contract';
 
+// getPublicStudy needs no login, so it sends only what a voice turn uses; a longer prompt also slows each turn.
+export const MAX_SPOKEN_CONTEXT = 8000;
+
 /** Structurally matches the current store and can also be built from persisted Study/Question rows. */
 export interface StudyResearchContext {
   id: string;
@@ -44,7 +47,7 @@ export function interviewVariables(study: StudyResearchContext): InterviewDynami
     product_url: study.productUrl,
     goal: study.goal,
     study_id: study.id,
-    product_context: study.context.slice(0, 40_000),
+    product_context: study.context.slice(0, MAX_SPOKEN_CONTEXT),
     audience: study.audience,
     questions: study.questions
       .map((q, i) => `${i + 1}. ${q.text}${q.followUp ? '' : ' [Do not ask a follow-up for this question.]'}`)

@@ -328,6 +328,15 @@
 .fw-quote-sep {
   color: var(--border-strong);
 }
+.fw-quote-participant {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+}
+.fw-quote-participant:hover {
+  color: var(--brand);
+}
 .fw-more {
   border: 0;
   background: none;
@@ -601,9 +610,9 @@
   border: 0;
   background: none;
   color: var(--brand);
+  font: inherit;
   font-weight: 500;
   white-space: nowrap;
-  font: inherit;
 }
 .fw-error {
   font-size: 13px;
