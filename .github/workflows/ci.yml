@@ -50,7 +50,6 @@ jobs:
       contents: read
       pull-requests: write
       issues: write
-      statuses: write
     steps:
       # full history so the action can find the merge base
       - uses: actions/checkout@v7
