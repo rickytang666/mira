@@ -54,4 +54,9 @@ describe('junk-call filter', () => {
     expect(countWords('... ?! -')).toBe(0);
     expect(countWords("I don't like the ads.")).toBe(5);
   });
+
+  it('counts spaced words the same way whitespace splitting did', () => {
+    expect(countWords('the sign-up flow is real-time, e-mail 10,000 U.S.')).toBe(8);
+    expect(isSubstantive(call(['the sign-up flow is real-time, I like', 'e-mail']))).toBe(false);
+  });
 });
