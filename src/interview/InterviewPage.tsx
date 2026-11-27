@@ -210,25 +210,36 @@ function Interview({
 
       <div className="iv-actions">
         {(phase === 'ready' || phase === 'error') && (
-          <button className="iv-mic" onClick={start} aria-label={phase === 'error' ? 'Try again' : 'Start interview'}>
+          <button
+            type="button"
+            className="iv-mic"
+            onClick={start}
+            aria-label={phase === 'error' ? 'Try again' : 'Start interview'}
+          >
             {phase === 'error' ? <RotateCcw size={28} /> : <Mic size={30} />}
           </button>
         )}
         {phase === 'connecting' && (
-          <button className="iv-mic" disabled aria-label="Connecting">
+          <button type="button" className="iv-mic" disabled aria-label="Connecting">
             <Loader2 className="iv-spin" size={28} />
           </button>
         )}
         {live && (
           <>
             <button
+              type="button"
               className={`iv-round ${muted ? 'off' : ''}`}
               onClick={() => setMuted(!muted)}
               aria-label={muted ? 'Unmute microphone' : 'Mute microphone'}
             >
               {muted ? <MicOff size={22} /> : <Mic size={22} />}
             </button>
-            <button className="iv-round end" onClick={() => conversation.endSession()} aria-label="End interview">
+            <button
+              type="button"
+              className="iv-round end"
+              onClick={() => conversation.endSession()}
+              aria-label="End interview"
+            >
               <PhoneOff size={22} />
             </button>
           </>
@@ -238,7 +249,7 @@ function Interview({
             <span className="iv-check">
               <Check size={34} strokeWidth={3} />
             </span>
-            <button className="iv-round" onClick={() => setPhase('ready')} aria-label="Start over">
+            <button type="button" className="iv-round" onClick={() => setPhase('ready')} aria-label="Start over">
               <RotateCcw size={22} />
             </button>
           </div>

@@ -129,6 +129,7 @@ export function ReportContent({
         <blockquote>“{quote.text}”</blockquote>
         <div className="fw-quote-meta">
           <button
+            type="button"
             className="fw-play"
             disabled={!enabled}
             aria-label={`${active ? 'Stop' : 'Play'} quote from ${quote.participantLabel}${quote.startSec !== null ? ` at ${formatTime(quote.startSec)}` : ''}`}
@@ -202,7 +203,9 @@ export function ReportContent({
             {report ? 'Showing the last successful update. ' : ''}
             {live.error}
           </span>
-          <button onClick={live.refresh}>Retry</button>
+          <button type="button" onClick={live.refresh}>
+            Retry
+          </button>
         </div>
       )}
       {live.loading && !report ? (
@@ -257,6 +260,7 @@ export function ReportContent({
                   return (
                     <li key={theme.id}>
                       <button
+                        type="button"
                         className="fw-chart-row"
                         onClick={() => openTheme(theme.id)}
                         aria-label={`${theme.label}: ${theme.count} of ${report.completedCount} interviews. Jump to theme`}
@@ -289,6 +293,7 @@ export function ReportContent({
               <p className={summaryOpen ? '' : 'fw-clamp'}>{report.summary}</p>
               {report.summary.length > 160 && (
                 <button
+                  type="button"
                   className="fw-text-button fw-read-more"
                   aria-expanded={summaryOpen}
                   onClick={() => setSummaryOpen((v) => !v)}
@@ -310,10 +315,10 @@ export function ReportContent({
           )}
           <div className="fw-toolbar">
             <div role="group" aria-label="Report view">
-              <button aria-pressed={tab === 'themes'} onClick={() => setTab('themes')}>
+              <button type="button" aria-pressed={tab === 'themes'} onClick={() => setTab('themes')}>
                 Themes <span>{report.themes.length}</span>
               </button>
-              <button aria-pressed={tab === 'quotes'} onClick={() => setTab('quotes')}>
+              <button type="button" aria-pressed={tab === 'quotes'} onClick={() => setTab('quotes')}>
                 All quotes <span>{quotes.length}</span>
               </button>
             </div>
@@ -364,6 +369,7 @@ export function ReportContent({
                   </div>
                   {theme.quotes.length > 2 && (
                     <button
+                      type="button"
                       className="fw-more"
                       aria-expanded={!!expanded[theme.id]}
                       onClick={() => setExpanded((v) => ({ ...v, [theme.id]: !v[theme.id] }))}
@@ -402,6 +408,7 @@ export function ReportContent({
                           const theme = report.themes.find((t) => t.id === id);
                           return theme ? (
                             <button
+                              type="button"
                               key={id}
                               onClick={() => {
                                 setTab('themes');

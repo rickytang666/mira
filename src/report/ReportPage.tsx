@@ -44,7 +44,10 @@ export function ReportPage() {
     <Layout page="report" sourceCount={study?.sources.length ?? 0} questionCount={study?.questions.length ?? 0}>
       {loadError && (
         <div className="fw-notice" role="alert">
-          Could not load the report. <button onClick={() => void refetch()}>Retry</button>
+          Could not load the report.{' '}
+          <button type="button" onClick={() => void refetch()}>
+            Retry
+          </button>
         </div>
       )}
       {!report ? (
@@ -70,6 +73,7 @@ export function ReportPage() {
                 </span>
               </button>
               <button
+                type="button"
                 className="fw-button fw-button-primary"
                 disabled={busy || !report.interviewsDone}
                 onClick={regenerate}

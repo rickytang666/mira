@@ -74,6 +74,7 @@ export function NewStudyPage() {
           )}
           <div className="modal-actions">
             <button
+              type="submit"
               className="button primary"
               disabled={busy || !goal.trim() || (!productUrl.trim() && !description.trim())}
             >

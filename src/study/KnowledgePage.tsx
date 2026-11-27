@@ -168,7 +168,7 @@ export function KnowledgePage() {
       </div>
       <div className="source-grid">
         {Object.entries(kinds).map(([id, item]) => (
-          <button className="source-tile" key={id} onClick={() => open(id as SourceKind)}>
+          <button type="button" className="source-tile" key={id} onClick={() => open(id as SourceKind)}>
             <span className={`source-icon ${id}`}>
               <item.icon size={21} />
             </span>
@@ -207,11 +207,12 @@ export function KnowledgePage() {
                       })}
                     </small>
                     {source.content && <p className="source-snippet">{sourcePreview(source.content)}</p>}
-                    <button className="text-link source-more" onClick={() => setView(source)}>
+                    <button type="button" className="text-link source-more" onClick={() => setView(source)}>
                       Read full text
                     </button>
                   </div>
                   <button
+                    type="button"
                     className="icon-button delete"
                     aria-label={`Remove ${source.title}`}
                     onClick={() => deleteSource({ sourceId: source.id })}
@@ -251,6 +252,7 @@ export function KnowledgePage() {
             onClick={(e) => e.stopPropagation()}
           >
             <button
+              type="button"
               className="modal-close icon-button"
               disabled={busy}
               aria-label="Close dialog"
@@ -295,7 +297,12 @@ export function KnowledgePage() {
                       hidden
                       onChange={(e) => upload(e.target.files?.[0])}
                     />
-                    <button disabled={busy} className="upload-zone" onClick={() => fileRef.current?.click()}>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      className="upload-zone"
+                      onClick={() => fileRef.current?.click()}
+                    >
                       {busy ? <Loader2 className="spin" /> : <Upload />}
                       <strong>{busy ? 'Reading your document…' : 'Choose a PDF'}</strong>
                       <span>Text-based PDFs, up to 10 MB · first 60 pages</span>
@@ -351,7 +358,7 @@ export function KnowledgePage() {
                       <button className="button secondary" type="button" disabled={busy} onClick={() => setKind(null)}>
                         Cancel
                       </button>
-                      <button className="button primary" disabled={busy || !value.trim()}>
+                      <button type="submit" className="button primary" disabled={busy || !value.trim()}>
                         {busy ? (
                           <>
                             <Loader2 size={16} className="spin" />
