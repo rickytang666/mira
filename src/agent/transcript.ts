@@ -29,13 +29,15 @@ export function parseTranscript(input: string | TranscriptTurn[], durationSec?: 
       const header =
         /^(?:\[?(\d{1,3}:\d{2}(?::\d{2})?(?:\.\d+)?)\]?\s*)?(?:(user|participant|respondent|customer|interviewee|agent|assistant|interviewer)\s*:\s*)?(.*)$/i;
       for (const line of text.split(/\r?\n/).filter((line) => line.trim())) {
-        const match = line.trim().match(header)!;
+        const match = header.exec(line.trim());
+        // the regex . never matches a lone \r or \u2028; fail loudly rather than drop speech
+        if (!match) throw new Error('Transcript line could not be read.');
         if (!match[1] && !match[2] && lines.length) {
           lines[lines.length - 1].text += '\n' + line.trim();
           continue;
         }
         const parts = match[1]?.split(':').map(Number);
-        if (parts && parts.slice(1).some((n) => n >= 60)) throw new Error('Invalid timestamp: ' + match[1]);
+        if (parts?.slice(1).some((n) => n >= 60)) throw new Error('Invalid timestamp: ' + match[1]);
         const startSec = parts ? parts.reduce((total, part) => total * 60 + part, 0) : null;
         lines.push({
           id: `turn-${lines.length}`,
@@ -80,6 +82,7 @@ export function parseTranscript(input: string | TranscriptTurn[], durationSec?: 
     })
     .filter((turn) => turn.text);
   let previous = -1;
+  const duration = seconds(durationSec);
   for (let i = 0; i < turns.length; i++) {
     const turn = turns[i];
     if (turn.startSec === null) {
@@ -87,13 +90,14 @@ export function parseTranscript(input: string | TranscriptTurn[], durationSec?: 
       continue;
     }
     if (turn.startSec < previous) throw new Error('Transcript timestamps must be in chronological order.');
-    previous = turn.startSec;
-    const next = turns.slice(i + 1).find((t) => t.startSec !== null && t.startSec > turn.startSec!)?.startSec;
-    const boundary = next ?? seconds(durationSec);
+    const start = turn.startSec;
+    previous = start;
+    const next = turns.slice(i + 1).find((t) => t.startSec !== null && t.startSec > start)?.startSec;
+    const boundary = next ?? duration;
     if (turn.endSec === null && boundary != null && boundary > turn.startSec) turn.endSec = boundary;
     if (turn.endSec !== null && (turn.endSec <= turn.startSec || (boundary != null && turn.endSec > boundary)))
       throw new Error('A transcript turn ends outside its time range.');
-    if (seconds(durationSec) !== null && turn.startSec > durationSec!)
+    if (duration !== null && turn.startSec > duration)
       throw new Error('Transcript timestamp exceeds recording duration.');
   }
   if (!turns.length) throw new Error('Transcript contains no spoken text.');

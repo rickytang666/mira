@@ -85,7 +85,7 @@ describe('quote playback', () => {
         }),
     );
     const queue = [first, second];
-    const player = createQuotePlayer(vi.fn(), () => queue.shift()! as unknown as HTMLAudioElement);
+    const player = createQuotePlayer(vi.fn(), () => queue.shift() as unknown as HTMLAudioElement);
     const pending = player.play(quote);
     await player.play({ ...quote, id: 'second', startSec: 20, endSec: 30 });
     resolve();

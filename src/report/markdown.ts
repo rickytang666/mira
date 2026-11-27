@@ -1,9 +1,7 @@
 import type { StudyReport } from '../agent/internalTypes';
+import { formatTime } from './formatTime';
 
 const statusLabels = { answered: 'Answered', partial: 'Partly answered', unanswered: 'Still open' } as const;
-
-const formatTimestamp = (seconds: number) =>
-  `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 
 // Escapes inline syntax anywhere and block syntax (headings, quotes, lists) only at a line start.
 function escapeLine(line: string): string {
@@ -27,7 +25,7 @@ function quoteBlock(quote: StudyReport['themes'][number]['quotes'][number]): str
     .split('\n')
     .map((line) => (line ? `> ${line}` : '>'))
     .join('\n');
-  const time = quote.startSec === null ? '' : `, ${formatTimestamp(quote.startSec)}`;
+  const time = quote.startSec === null ? '' : `, ${formatTime(quote.startSec)}`;
   return `${body}\n>\n> *${escapeInline(quote.participantLabel)}${time}*`;
 }
 

@@ -27,6 +27,8 @@ Open source and runs on your own ElevenLabs and OpenRouter keys.
 You need Node.js 24.22.1 or newer, the Wasp CLI 0.26.1, PostgreSQL, an ElevenLabs API key with Agents write permission ([agent setup](docs/ELEVENLABS-AGENT.md)), and an OpenRouter API key.
 
 ```bash
+npm ci
+npm run setup:wasp                   # sets up Wasp's generated spec package
 cp .env.server.example .env.server   # add your keys and DATABASE_URL
 cp .env.client.example .env.client
 npm run setup:agent                  # creates the ElevenLabs agent; add the two ID lines it prints
@@ -34,6 +36,8 @@ createdb mira
 wasp db migrate-dev
 npm run dev                          # client on :3002, server on :3003
 ```
+
+`npm run setup:wasp` runs `wasp install` with lockfile writes off: on a fresh clone the `.wasp/out` workspaces don't exist yet, so a plain `wasp install` prunes them from `package-lock.json`. `npm run verify` (compile, typecheck, lint, tests) runs it first.
 
 Phones need HTTPS for the microphone. Install `cloudflared` (`brew install cloudflared`), run `npm run tunnels` in one terminal and leave it running, then `npm run dev:tunnel` instead of `npm run dev`, and open the client URL it prints.
 

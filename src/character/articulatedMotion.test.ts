@@ -6,14 +6,14 @@ const input = { mode: 'idle', gesture: 0, pointerX: 0, pointerY: 0, reduced: fal
 describe('articulated gestures', () => {
   it('raises the forearm substantially and settles back before the next gesture', () => {
     const motion = new ArticulatedMotion(() => 0.5);
-    let peak = 0;
-    let pose: RigPose | undefined;
-    for (let i = 0; i <= 420; i++) {
+    let pose: RigPose = motion.update(0, 1 / 60, input);
+    let peak = Math.max(0, pose.rightFore);
+    for (let i = 1; i <= 420; i++) {
       pose = motion.update(i / 60, 1 / 60, input);
       peak = Math.max(peak, pose.rightFore);
     }
     expect(peak).toBeGreaterThan(0.9);
-    expect(Math.abs(pose!.rightFore)).toBeLessThan(0.001);
+    expect(Math.abs(pose.rightFore)).toBeLessThan(0.001);
   });
 
   it('keeps easing continuous through holds and returns', () => {

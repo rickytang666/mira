@@ -12,8 +12,6 @@ import './interview.css';
 
 const AGENT_ID = (import.meta.env.REACT_APP_ELEVENLABS_AGENT_ID as string | undefined) ?? '';
 
-type Line = { role: 'user' | 'agent'; text: string };
-
 /** Contract variables from getPublicStudy, plus product_name so the agent can say the product's name. */
 function sessionVariables(study: PublicStudy): Record<string, string> {
   const base = study.dynamicVariables ?? {
@@ -97,7 +95,6 @@ function Interview({
 }) {
   const [phase, setPhase] = useState<Phase>('ready');
   const [error, setError] = useState('');
-  const [lines, setLines] = useState<Line[]>([]);
   const conversationId = useRef('');
   const questionSnapshot = useRef<string[]>([]);
   const finished = useRef(false);
@@ -128,11 +125,6 @@ function Interview({
       setError(message);
       setPhase((p) => phaseAfterError(p, !!conversationId.current));
     },
-    // Expressive mode puts audio tags like "[Warmly]" in the text; they are for the voice, not the screen.
-    onMessage: ({ role, message }) => {
-      const text = message.replace(/\[[^\]]*\]\s*/g, '').trim();
-      if (text) setLines((prev) => [...prev.slice(-1), { role, text }]);
-    },
   });
 
   // If the participant closes the tab mid-interview, still hand the conversation to the server.
@@ -148,7 +140,6 @@ function Interview({
 
   async function start() {
     setError('');
-    setLines([]);
     finished.current = false;
     conversationId.current = '';
     questionSnapshot.current = study.questions;
@@ -182,7 +173,6 @@ function Interview({
   useEffect(() => {
     if (phase === 'done') setGesture((g) => g + 1);
   }, [phase]);
-  const productName = study.name || 'this product';
 
   return (
     <Shell>
@@ -210,25 +200,36 @@ function Interview({
 
       <div className="iv-actions">
         {(phase === 'ready' || phase === 'error') && (
-          <button className="iv-mic" onClick={start} aria-label={phase === 'error' ? 'Try again' : 'Start interview'}>
+          <button
+            type="button"
+            className="iv-mic"
+            onClick={start}
+            aria-label={phase === 'error' ? 'Try again' : 'Start interview'}
+          >
             {phase === 'error' ? <RotateCcw size={28} /> : <Mic size={30} />}
           </button>
         )}
         {phase === 'connecting' && (
-          <button className="iv-mic" disabled aria-label="Connecting">
+          <button type="button" className="iv-mic" disabled aria-label="Connecting">
             <Loader2 className="iv-spin" size={28} />
           </button>
         )}
         {live && (
           <>
             <button
+              type="button"
               className={`iv-round ${muted ? 'off' : ''}`}
               onClick={() => setMuted(!muted)}
               aria-label={muted ? 'Unmute microphone' : 'Mute microphone'}
             >
               {muted ? <MicOff size={22} /> : <Mic size={22} />}
             </button>
-            <button className="iv-round end" onClick={() => conversation.endSession()} aria-label="End interview">
+            <button
+              type="button"
+              className="iv-round end"
+              onClick={() => conversation.endSession()}
+              aria-label="End interview"
+            >
               <PhoneOff size={22} />
             </button>
           </>
@@ -238,7 +239,7 @@ function Interview({
             <span className="iv-check">
               <Check size={34} strokeWidth={3} />
             </span>
-            <button className="iv-round" onClick={() => setPhase('ready')} aria-label="Start over">
+            <button type="button" className="iv-round" onClick={() => setPhase('ready')} aria-label="Start over">
               <RotateCcw size={22} />
             </button>
           </div>
@@ -261,7 +262,8 @@ function useLogoBackground(logo: string | null): [number, number, number] | unde
       const canvas = document.createElement('canvas');
       canvas.width = 8;
       canvas.height = 8;
-      const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      if (!ctx) return;
       ctx.drawImage(image, 0, 0, 8, 8);
       const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
       setColor(a < 128 ? [255, 255, 255] : [r, g, b]);

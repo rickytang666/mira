@@ -49,6 +49,7 @@ describe('transcript normalization', () => {
     expect(() => parseTranscript('[00:90] User: hi')).toThrow('timestamp');
     expect(() => parseTranscript('[00:10] User: hi\n[00:05] Agent: hi')).toThrow('chronological');
     expect(() => parseTranscript('[00:10] User: hi', 5)).toThrow('duration');
+    expect(() => parseTranscript('User: hi\rthere')).toThrow('could not be read');
     expect(() =>
       parseTranscript(
         JSON.stringify([

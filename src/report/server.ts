@@ -1,9 +1,10 @@
-import { prisma, config } from 'wasp/server';
+import { prisma } from 'wasp/server';
 import type { FetchedConversation, ReportView } from '../contract';
 import { rebuildStudyReport } from 'wasp/server/jobs';
+import { interviewAudioUrl } from '../jobs/audioUrl';
 import { fetchConversation } from '../jobs/elevenlabsClient';
 import { oneRebuildAtATime, refreshStudyReport, type ReportRepository } from './pipeline';
-import { participantTitle } from './participants';
+import { participantTitle, savedQuestions } from './participants';
 import { isSubstantive } from './substantive';
 
 export const reportRepository: ReportRepository = {
@@ -33,10 +34,8 @@ export const reportRepository: ReportRepository = {
           title: participantTitle(index),
           conversation: call.transcript as unknown as FetchedConversation,
           // Older calls lack a snapshot; do not claim they used today's revised questions.
-          questions: Array.isArray(call.questionSnapshot)
-            ? call.questionSnapshot.filter((q): q is string => typeof q === 'string')
-            : [],
-          audioUrl: `${config.serverUrl}/api/interviews/${call.id}/audio`,
+          questions: savedQuestions(call.questionSnapshot),
+          audioUrl: interviewAudioUrl(call.id),
         })),
     };
   },
@@ -59,14 +58,11 @@ export const reportRepository: ReportRepository = {
             label: theme.label,
             count: theme.count,
             quotes: {
-              create: theme.quotes
-                .filter((q) => q.interviewId && !q.untimed && q.endSec !== undefined)
-                .map((q) => ({
-                  interviewId: q.interviewId!,
-                  text: q.text,
-                  startSec: q.startSec,
-                  endSec: q.endSec!,
-                })),
+              create: theme.quotes.flatMap((q) =>
+                q.interviewId && !q.untimed && q.endSec !== undefined
+                  ? [{ interviewId: q.interviewId, text: q.text, startSec: q.startSec, endSec: q.endSec }]
+                  : [],
+              ),
             },
           },
         });

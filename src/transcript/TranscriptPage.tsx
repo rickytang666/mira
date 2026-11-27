@@ -4,7 +4,7 @@ import { ArrowLeft, Play, Square } from 'lucide-react';
 import { useQuery, getInterview, getStudy } from 'wasp/client/operations';
 import { Layout } from '../Layout';
 import { createQuotePlayer, playable, type PlayerState } from '../report/audioPlayer';
-import { formatTime } from '../report/ReportContent';
+import { formatTime } from '../report/formatTime';
 import { lineAsQuote, parseAt, turnAt, type InterviewView } from './turns';
 import '../report/report.css';
 import './transcript.css';

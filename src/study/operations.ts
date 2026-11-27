@@ -1,4 +1,4 @@
-import { HttpError, config, prisma } from 'wasp/server';
+import { HttpError, prisma } from 'wasp/server';
 import { processInterview } from 'wasp/server/jobs';
 import type {
   CreateStudy,
@@ -18,7 +18,9 @@ import { importWebsite } from '../sources';
 import { suggestQuestions } from '../agent/suggestQuestions';
 import { interviewVariables } from '../agent/studyContext';
 import { readSavedReport, rebuildQueued } from '../report/server';
+import { interviewAudioUrl } from '../jobs/audioUrl';
 import { isRebuilding, synthesisStatus } from '../report/pipeline';
+import { withScheme } from './url';
 
 // Page titles look like "Tagline | Brand" or "Brand - Tagline"; the brand is the short side.
 function productNameFromTitle(title: string, hostname: string): string {
@@ -31,6 +33,15 @@ function productNameFromTitle(title: string, hostname: string): string {
   return pick || hostname.replace(/^www\./, '');
 }
 
+const MAX_STUDY_CONTEXT_LENGTH = 60_000;
+
+function joinSourceContext(sources: { content: string }[]): string {
+  return sources
+    .map((source) => source.content)
+    .join('\n\n')
+    .slice(0, MAX_STUDY_CONTEXT_LENGTH);
+}
+
 type CreateStudyInput = { productUrl?: string; description?: string; goal: string; audience?: string };
 
 export const createStudy: CreateStudy<CreateStudyInput, { id: string }> = async (args, context) => {
@@ -39,7 +50,7 @@ export const createStudy: CreateStudy<CreateStudyInput, { id: string }> = async 
   const description = args.description?.trim() ?? '';
   let productUrl = args.productUrl?.trim() ?? '';
   if (!productUrl && !description) throw new HttpError(400, 'Add your product URL or describe it.');
-  if (productUrl && !/^https?:\/\//.test(productUrl)) productUrl = `https://${productUrl}`;
+  if (productUrl) productUrl = withScheme(productUrl);
   // The scrape fallback below parses the URL again, so an unparseable one would escape as a bare 500.
   if (productUrl && !URL.canParse(productUrl)) throw new HttpError(400, 'Enter a complete URL, including https://.');
 
@@ -70,9 +81,8 @@ export const createStudy: CreateStudy<CreateStudyInput, { id: string }> = async 
       detail: `${description.split(/\s+/).length} words`,
     });
   }
-  const contextParts = sources.map((source) => source.content);
   const audience = args.audience?.trim() ?? '';
-  const studyContext = contextParts.join('\n\n').slice(0, 60000);
+  const studyContext = joinSourceContext(sources);
 
   let questions: string[];
   try {
@@ -207,15 +217,11 @@ export const setStudyLogo: SetStudyLogo<{ studyId: string; logo: string | null }
 type AddSourceInput = { studyId: string; kind: string; title: string; content: string; detail: string };
 
 // Study.context is the joined text of its sources, so it is rebuilt on every source change.
-async function rebuildStudyContext(studyId: string, entities: { Study: any; Source: any }) {
+async function rebuildStudyContext(studyId: string, entities: Parameters<AddSource>[1]['entities']) {
   const sources: Source[] = await entities.Source.findMany({ where: { studyId }, orderBy: { createdAt: 'asc' } });
-  const studyContext = sources
-    .map((source) => source.content)
-    .join('\n\n')
-    .slice(0, 60000);
   await entities.Study.update({
     where: { id: studyId },
-    data: { context: studyContext, reportRevision: { increment: 1 }, reportError: null },
+    data: { context: joinSourceContext(sources), reportRevision: { increment: 1 }, reportError: null },
   });
 }
 
@@ -280,8 +286,8 @@ export const finishInterview: FinishInterview<FinishInterviewInput, { interviewI
   if (
     questionSnapshot &&
     (!Array.isArray(questionSnapshot) ||
-      questionSnapshot.length > 50 ||
-      questionSnapshot.some((q) => typeof q !== 'string' || q.length > 2000))
+      questionSnapshot.length > MAX_QUESTIONS ||
+      questionSnapshot.some((q) => typeof q !== 'string' || q.length > MAX_QUESTION_LENGTH))
   )
     throw new HttpError(400, 'Invalid question snapshot.');
   const interview = await context.entities.Interview.upsert({
@@ -337,9 +343,7 @@ export const getReport: GetReport<{ studyId: string }, ReportView> = async ({ st
         ...theme,
         quotes: theme.quotes.map((quote) => ({
           ...quote,
-          audioUrl: quote.interviewId
-            ? `${config.serverUrl}/api/interviews/${quote.interviewId}/audio`
-            : quote.audioUrl,
+          audioUrl: quote.interviewId ? interviewAudioUrl(quote.interviewId) : quote.audioUrl,
         })),
       })),
     };
@@ -357,7 +361,7 @@ export const getReport: GetReport<{ studyId: string }, ReportView> = async ({ st
         startSec: quote.startSec,
         endSec: quote.endSec,
         interviewId: quote.interviewId,
-        audioUrl: `${config.serverUrl}/api/interviews/${quote.interviewId}/audio`,
+        audioUrl: interviewAudioUrl(quote.interviewId),
       })),
     })),
   };

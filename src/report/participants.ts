@@ -10,3 +10,8 @@ export function participantTitles(interviews: { id: string; createdAt: Date; tra
     .filter((call) => call.transcript && isSubstantive(call.transcript as FetchedConversation));
   return new Map(counted.map((call, index) => [call.id, participantTitle(index)]));
 }
+
+/** The question list saved when a call began; non-text entries from older rows are dropped. */
+export function savedQuestions(snapshot: unknown): string[] {
+  return Array.isArray(snapshot) ? snapshot.filter((q): q is string => typeof q === 'string') : [];
+}
