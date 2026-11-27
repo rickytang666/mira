@@ -9,11 +9,17 @@ const formatTimestamp = (seconds: number) =>
 function escapeLine(line: string): string {
   return line
     .replace(/[\\`*_[\]<~]/g, '\\$&')
-    .replace(/^(\s*)([#>+=-])/, '$1\\$2')
-    .replace(/^(\s*\d+)([.)])/, '$1\\$2');
+    .replace(/^[#>+=-]/, '\\$&')
+    .replace(/^(\d+)([.)])/, '$1\\$2');
 }
 
-const escapeBlock = (text: string) => text.trim().split(/\r?\n/).map(escapeLine).join('\n');
+// Lines are trimmed so an indented line can't turn into a code block.
+const escapeBlock = (text: string) =>
+  text
+    .trim()
+    .split(/\r?\n/)
+    .map((line) => escapeLine(line.trim()))
+    .join('\n');
 const escapeInline = (text: string) => escapeLine(text.trim().replace(/\s+/g, ' '));
 
 function quoteBlock(quote: StudyReport['themes'][number]['quotes'][number]): string {

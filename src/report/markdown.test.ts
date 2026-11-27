@@ -69,6 +69,11 @@ describe('toMarkdown', () => {
     );
   });
 
+  it('keeps indented quote lines out of code blocks', () => {
+    const md = toMarkdown(withQuote('First line\n    indented line\n\t# tabbed heading'));
+    expect(md).toContain('> First line\n> indented line\n> \\# tabbed heading');
+  });
+
   it('keeps headings on one line and escapes them', () => {
     const report = { ...sample, themes: [{ ...sample.themes[0], label: 'Pricing\n*feels* off' }] };
     expect(toMarkdown(report)).toContain('### Pricing \\*feels\\* off\n');
