@@ -5,15 +5,15 @@ const prisma = vi.hoisted(() => ({
   $transaction: vi.fn(),
 }));
 const fetchConversation = vi.hoisted(() => vi.fn());
-const rebuildReport = vi.hoisted(() => vi.fn());
+const queueReportRebuild = vi.hoisted(() => vi.fn());
 
 vi.mock('wasp/server', () => ({ prisma }));
 vi.mock('./elevenlabsClient', () => ({ fetchConversation, miraAgentId: () => 'agent_mira' }));
-vi.mock('../report/server', () => ({ rebuildReport }));
+vi.mock('../report/server', () => ({ queueReportRebuild }));
 
 const { processInterview } = await import('./processInterview');
 const run = (args: { interviewId: string }) =>
-  (processInterview as unknown as (args: { interviewId: string }) => Promise<{ themes: number }>)(args);
+  (processInterview as unknown as (args: { interviewId: string }) => Promise<void>)(args);
 
 const conversation = (agentId: string) => ({
   conversationId: 'conv_1',
@@ -31,9 +31,9 @@ beforeEach(() => {
 describe('processInterview', () => {
   it('does not save a conversation run by another agent', async () => {
     fetchConversation.mockResolvedValue(conversation('agent_other'));
-    await expect(run({ interviewId: 'i1' })).resolves.toEqual({ themes: 0 });
+    await expect(run({ interviewId: 'i1' })).resolves.toBeUndefined();
     expect(prisma.$transaction).not.toHaveBeenCalled();
-    expect(rebuildReport).not.toHaveBeenCalled();
+    expect(queueReportRebuild).not.toHaveBeenCalled();
     expect(prisma.interview.update).toHaveBeenLastCalledWith({
       where: { id: 'i1' },
       data: { status: 'failed', error: 'This conversation was not run by the Mira agent.' },
@@ -42,8 +42,8 @@ describe('processInterview', () => {
 
   it("saves a conversation run by Mira's agent", async () => {
     fetchConversation.mockResolvedValue(conversation('agent_mira'));
-    rebuildReport.mockResolvedValue({ themes: [] });
     await run({ interviewId: 'i1' });
     expect(prisma.$transaction).toHaveBeenCalledOnce();
+    expect(queueReportRebuild).toHaveBeenCalledWith('s1');
   });
 });
