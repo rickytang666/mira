@@ -26,7 +26,7 @@ describe('multi-call report synthesis', () => {
     expect(result.interviewsDone).toBe(12);
     expect(result.themes[0].count).toBe(12);
   });
-  it('requires every founder question to be addressed with supported or explicitly missing evidence', async () => {
+  it('requires every founder question to be addressed and repairs findings without supporting evidence', async () => {
     const request = { ...input, questions: ['What blocked setup?', 'Would you pay for it?'] };
     const raw = { ...answer(), questionFindings: [
       { questionIndex: 1, status: 'unanswered', finding: 'Willingness to pay was not discussed.', themeLabels: [] },
@@ -35,8 +35,9 @@ describe('multi-call report synthesis', () => {
     const report = await synthesizeReport(request, { generateJson: async () => raw });
     expect(report.questionFindings?.map(f => f.question)).toEqual(request.questions);
     expect(report.questionFindings?.[1]).toMatchObject({ status: 'unanswered', themeIds: [] });
-    raw.questionFindings[1].themeLabels = [];
-    await expect(synthesizeReport(request, { generateJson: async () => raw })).rejects.toThrow('supporting evidence');
+    raw.questionFindings[1].themeLabels = ['Imaginary finding'];
+    const repaired = await synthesizeReport(request, { generateJson: async () => raw });
+    expect(repaired.questionFindings?.[0]).toMatchObject({ status: 'unanswered', themeIds: [] });
     await expect(synthesizeReport(request, { generateJson: async () => answer() })).rejects.toThrow('each research question');
   });
   it('builds an evidence-backed report with exact quotes, times, and distinct-call counts', async () => {
@@ -53,9 +54,15 @@ describe('multi-call report synthesis', () => {
     expect(result.themes[0].count).toBe(2);
     expect(result.themes[0].quotes).toHaveLength(2);
   });
-  it.each([{ callId: 'call-1', turnId: 'turn-0' }, { callId: 'made-up', turnId: 'turn-1' }])('rejects unsupported evidence %j', async evidence => {
-    const raw = answer(); raw.themes[0].evidence = [evidence];
-    await expect(synthesizeReport(input, { generateJson: async () => raw })).rejects.toThrow('non-participant');
+  it.each([{ callId: 'call-1', turnId: 'turn-0' }, { callId: 'made-up', turnId: 'turn-1' }])('drops unsupported evidence %j', async evidence => {
+    const raw = answer(); raw.themes[0].evidence = [evidence, { callId: 'call-2', turnId: 'turn-1' }];
+    const partial = await synthesizeReport(input, { generateJson: async () => raw });
+    expect(partial.themes[0].count).toBe(1);
+    expect(partial.themes[0].quotes.map(q => q.interviewId)).toEqual(['call-2']);
+    raw.themes[0].evidence = [evidence];
+    const unsupported = await synthesizeReport(input, { generateJson: async () => raw });
+    expect(unsupported.themes).toEqual([]);
+    expect(unsupported.recommendations).toEqual([]);
   });
   it('keeps untimed quotes readable but never enables invented playback', async () => {
     const raw = answer(); raw.themes[0].evidence = [{ callId: 'plain', turnId: 'turn-0' }];
@@ -64,9 +71,11 @@ describe('multi-call report synthesis', () => {
     expect(quote.startSec).toBeNull();
     expect(playable({ ...quote, audioUrl: '/audio/file.mp3' })).toBe(false);
   });
-  it('rejects recommendations that are not connected to a finding', async () => {
+  it('drops recommendations that are not connected to a finding', async () => {
     const raw = answer(); raw.recommendations[0].themeLabels = ['Imaginary finding'];
-    await expect(synthesizeReport(input, { generateJson: async () => raw })).rejects.toThrow('not in the report');
+    const result = await synthesizeReport(input, { generateJson: async () => raw });
+    expect(result.themes).toHaveLength(1);
+    expect(result.recommendations).toEqual([]);
   });
   it('rejects duplicate calls before sending data to the provider', async () => {
     const generateJson = vi.fn();
