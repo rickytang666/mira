@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { FileText, Globe, Loader2, Pencil, Plug, Plus, Trash2, Upload, X } from 'lucide-react';
 import {
@@ -82,6 +82,18 @@ export function KnowledgePage() {
     setKind(null);
     setView(null);
   }
+  const modalOpen = Boolean(kind || view);
+  // on the document so Escape works even when focus never entered the dialog
+  useEffect(() => {
+    if (!modalOpen || busy) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      setKind(null);
+      setView(null);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [modalOpen, busy]);
   async function add(source: { title: string; content: string; detail: string }, sourceKind: SourceKind) {
     await addSource({ studyId, kind: sourceKind, ...source });
     setKind(null);
@@ -241,13 +253,11 @@ export function KnowledgePage() {
       </div>
       {(kind || view) && (
         // biome-ignore lint/a11y/noStaticElementInteractions: backdrop dismissal is a shortcut; the dialog's close button is the accessible control
+        // biome-ignore lint/a11y/useKeyWithClickEvents: Escape is handled on the document while the dialog is open
         <div
           className="modal-backdrop"
           onClick={(e) => {
             if (e.target === e.currentTarget) closeModal();
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') closeModal();
           }}
         >
           <section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
