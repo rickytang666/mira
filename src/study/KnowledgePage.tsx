@@ -156,7 +156,8 @@ export function KnowledgePage() {
             value={name ?? study?.name ?? ''}
             onChange={(e) => setName(e.target.value)}
             onBlur={() => {
-              if (name !== null) updateStudy({ studyId, name });
+              // The server rejects an empty name; show the saved one again instead of a name that never saved.
+              if (name !== null) updateStudy({ studyId, name }).catch(() => setName(null));
             }}
             placeholder="Give your product a name"
           />

@@ -5,6 +5,7 @@ import { Layout } from '../Layout';
 import { ReportContent } from './ReportContent';
 import { fromReportView } from './fromReportView';
 import { toMarkdown } from './markdown';
+import { transcriptHref } from '../transcript/turns';
 
 export function ReportPage() {
   const { studyId = '' } = useParams();
@@ -53,6 +54,9 @@ export function ReportPage() {
       ) : (
         <ReportContent
           report={fromReportView(report)}
+          participantHref={(quote) =>
+            quote.interviewId ? transcriptHref(studyId, quote.interviewId, quote.startSec) : undefined
+          }
           actions={
             <>
               <button
