@@ -280,8 +280,8 @@ export const finishInterview: FinishInterview<FinishInterviewInput, { interviewI
   if (
     questionSnapshot &&
     (!Array.isArray(questionSnapshot) ||
-      questionSnapshot.length > 50 ||
-      questionSnapshot.some((q) => typeof q !== 'string' || q.length > 2000))
+      questionSnapshot.length > MAX_QUESTIONS ||
+      questionSnapshot.some((q) => typeof q !== 'string' || q.length > MAX_QUESTION_LENGTH))
   )
     throw new HttpError(400, 'Invalid question snapshot.');
   const interview = await context.entities.Interview.upsert({

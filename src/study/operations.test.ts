@@ -125,4 +125,15 @@ describe('finishInterview', () => {
     ).rejects.toMatchObject({ statusCode: 400 });
     expect(findUnique).not.toHaveBeenCalled();
   });
+
+  it('rejects a question snapshot over the saved-question limits', async () => {
+    const upsert = vi.fn().mockResolvedValue({ id: 'i1', studyId: 's1', status: 'done' });
+    const context = { entities: { Study: { findUnique: async () => ({ questions: [] }) }, Interview: { upsert } } };
+    const finish = (questionSnapshot: unknown) =>
+      call(finishInterview, { studyId: 's1', conversationId: 'conv_1', questionSnapshot }, context);
+    await expect(finish(Array(51).fill('Why?'))).rejects.toMatchObject({ statusCode: 400 });
+    await expect(finish(['x'.repeat(2001)])).rejects.toMatchObject({ statusCode: 400 });
+    expect(upsert).not.toHaveBeenCalled();
+    await expect(finish([...Array(49).fill('Why?'), 'x'.repeat(2000)])).resolves.toEqual({ interviewId: 'i1' });
+  });
 });
