@@ -22,7 +22,7 @@ Mira is a user researcher you can hire in a minute. Give her your product's URL 
 
 ## Run it locally
 
-You need Node.js 24.22.1 or newer, the Wasp CLI 0.26.1, PostgreSQL, an ElevenLabs API key and agent, and an OpenRouter API key.
+You need Node.js 24.22.1 or newer, the Wasp CLI 0.26.1, PostgreSQL, an ElevenLabs API key and agent ([setup](docs/ELEVENLABS-AGENT.md)), and an OpenRouter API key.
 
 ```bash
 cp .env.server.example .env.server   # add your keys and DATABASE_URL
