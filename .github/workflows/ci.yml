@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  # only PR runs are superseded; every push to main keeps its own run
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # the curl installer can't install Wasp 0.21+, npm is the official method now
+      - name: Install Wasp CLI
+        run: |
+          npm install -g @wasp.sh/wasp-cli@0.26.1
+          wasp version
+
+      # no database or secrets: the DATABASE_URL notice from wasp compile is expected
+      - run: npm run verify
+
+      - name: Check for a clean working tree
+        run: |
+          changes="$(git status --porcelain)"
+          if [ -n "$changes" ]; then
+            echo "::error::verify left uncommitted changes"
+            echo "$changes"
+            git diff
+            exit 1
+          fi
